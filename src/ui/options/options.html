@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TextBlitz Options</title>
+  <link rel="stylesheet" href="./options.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-left">
+        <a href="#" class="logo">
+          <span class="logo-icon">⚡</span>
+          <span>TextBlitz</span>
+        </a>
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input
+            type="text"
+            class="search-input"
+            id="search-input"
+            placeholder="Search snippets..."
+            autocomplete="off"
+          >
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-secondary" id="import-btn">
+          <span>📥</span>
+          <span>Import</span>
+        </button>
+        <button class="btn btn-secondary" id="export-btn">
+          <span>📤</span>
+          <span>Export</span>
+        </button>
+        <button class="btn btn-primary" id="add-snippet-btn">
+          <span>+</span>
+          <span>New Snippet</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-section">
+          <div class="sidebar-title">Folders</div>
+          <div class="folder-list" id="folder-list">
+            <div class="folder-item active" data-folder="all">
+              <span class="folder-icon">📁</span>
+              <span>All Snippets</span>
+              <span class="folder-count" id="count-all">0</span>
+            </div>
+            <div class="folder-item" data-folder="work">
+              <span class="folder-icon">💼</span>
+              <span>Work</span>
+              <span class="folder-count" id="count-work">0</span>
+            </div>
+            <div class="folder-item" data-folder="personal">
+              <span class="folder-icon">👤</span>
+              <span>Personal</span>
+              <span class="folder-count" id="count-personal">0</span>
+            </div>
+          </div>
+          <button class="btn-new-folder" id="new-folder-btn">
+            <span>+</span>
+            <span>New Folder</span>
+          </button>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-title">Settings</div>
+          <div class="toggle-group">
+            <label class="toggle-switch">
+              <input type="checkbox" class="toggle-input" id="enabled-toggle" checked>
+              <span class="toggle-slider"></span>
+            </label>
+            <span class="toggle-label">Extension Enabled</span>
+          </div>
+          <button class="btn-new-folder" id="llm-settings-btn" style="margin-top: 12px;">
+            <span>🤖</span>
+            <span>LLM Settings</span>
+          </button>
+        </div>
+      </aside>
+
+      <!-- Content Area -->
+      <main class="content-area">
+        <div class="content-header">
+          <h1 class="content-title" id="content-title">All Snippets</h1>
+          <select class="form-select" id="sort-select" style="width: auto;">
+            <option value="recent">Recently Created</option>
+            <option value="usage">Most Used</option>
+            <option value="alpha">Alphabetical</option>
+          </select>
+        </div>
+
+        <!-- Snippets Grid -->
+        <div class="snippets-grid" id="snippets-grid">
+          <!-- Snippet cards will be inserted here -->
+          <div class="empty-state">
+            <div class="empty-icon">📝</div>
+            <div class="empty-title">No snippets yet</div>
+            <div class="empty-text">Create your first snippet to get started!</div>
+            <button class="btn btn-primary" onclick="document.getElementById('add-snippet-btn').click()">
+              <span>+</span>
+              <span>Create Snippet</span>
+            </button>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Add/Edit Snippet Modal -->
+  <div class="modal" id="snippet-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modal-title">New Snippet</h2>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="snippet-label">
+            Label
+            <span class="form-label-optional">(friendly name)</span>
+          </label>
+          <input
+            type="text"
+            class="form-input"
+            id="snippet-label"
+            placeholder="e.g., Be Right Back"
+            autocomplete="off"
+          >
+          <div class="form-help">A friendly name to identify this snippet</div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="snippet-trigger">Trigger</label>
+            <input
+              type="text"
+              class="form-input"
+              id="snippet-trigger"
+              placeholder="e.g., brb"
+              autocomplete="off"
+            >
+            <div class="form-help">Shortcut to type</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="snippet-folder">Folder</label>
+            <select class="form-select" id="snippet-folder">
+              <option value="">No Folder</option>
+              <option value="work">💼 Work</option>
+              <option value="personal">👤 Personal</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="snippet-type">Type</label>
+          <select class="form-select" id="snippet-type">
+            <option value="static">Static (fixed text)</option>
+            <option value="dynamic">🤖 Dynamic (AI-generated)</option>
+          </select>
+          <div class="form-help">Static snippets use fixed text. Dynamic snippets use AI to generate variations.</div>
+        </div>
+
+        <div class="form-group" id="static-fields">
+          <label class="form-label" for="snippet-expansion">Expansion</label>
+          <textarea
+            class="form-textarea"
+            id="snippet-expansion"
+            placeholder="e.g., be right back"
+          ></textarea>
+          <div class="form-help">Text that will replace the trigger. Use {cursor} to position the cursor.</div>
+        </div>
+
+        <div id="dynamic-fields" style="display: none;">
+          <div class="form-group">
+            <label class="form-label" for="snippet-llm-provider">LLM Provider</label>
+            <select class="form-select" id="snippet-llm-provider">
+              <option value="groq">Groq (recommended - fastest)</option>
+              <option value="anthropic">Anthropic (Claude Sonnet 4.5)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="snippet-llm-prompt">AI Prompt</label>
+            <textarea
+              class="form-textarea"
+              id="snippet-llm-prompt"
+              placeholder="e.g., Write a friendly professional greeting, under 5 words"
+              rows="3"
+            ></textarea>
+            <div class="form-help">Describe what text you want the AI to generate. Be specific about length and tone.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="snippet-fallback">Fallback Text (optional)</label>
+            <input
+              type="text"
+              class="form-input"
+              id="snippet-fallback"
+              placeholder="e.g., Hello!"
+            >
+            <div class="form-help">Used if AI request fails or times out.</div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="snippet-trigger-mode">Trigger Mode</label>
+            <select class="form-select" id="snippet-trigger-mode">
+              <option value="word">Word Break (Start)</option>
+              <option value="word-both">Word Break (Both Ends)</option>
+              <option value="anywhere">Anywhere</option>
+            </select>
+            <div class="form-help">When to trigger expansion</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Options</label>
+            <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" id="snippet-enabled" checked style="width: 16px; height: 16px;">
+                <span style="font-size: 14px;">Enabled</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" id="snippet-case-sensitive" style="width: 16px; height: 16px;">
+                <span style="font-size: 14px;">Case Sensitive</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="cancel-snippet-btn">Cancel</button>
+        <button class="btn btn-primary" id="save-snippet-btn">Save Snippet</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden file input for import -->
+  <input type="file" id="import-file-input" accept=".json" style="display: none;">
+
+  <!-- LLM Settings Modal -->
+  <div class="modal" id="llm-settings-modal">
+    <div class="modal-content" style="max-width: 600px;">
+      <div class="modal-header">
+        <h2 class="modal-title">🤖 LLM Settings</h2>
+      </div>
+      <div class="modal-body">
+        <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 6px; padding: 12px; margin-bottom: 16px;">
+          <div style="font-size: 14px; color: #0c4a6e; font-weight: 500; margin-bottom: 4px;">Privacy & Security</div>
+          <div style="font-size: 13px; color: #075985;">
+            API keys are stored locally in your browser and never sent to TextBlitz. Only your AI prompts are sent to the provider you choose.
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="llm-groq-key">
+            Groq API Key
+            <span class="form-label-optional">(recommended - fastest, free tier)</span>
+          </label>
+          <input
+            type="password"
+            class="form-input"
+            id="llm-groq-key"
+            placeholder="gsk_..."
+            autocomplete="off"
+          >
+          <div class="form-help">Get your key at <a href="https://console.groq.com/" target="_blank" style="color: #6366f1;">console.groq.com</a></div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="llm-anthropic-key">
+            Anthropic API Key
+            <span class="form-label-optional">(Claude Sonnet 4.5)</span>
+          </label>
+          <input
+            type="password"
+            class="form-input"
+            id="llm-anthropic-key"
+            placeholder="sk-ant-..."
+            autocomplete="off"
+          >
+          <div class="form-help">Get your key at <a href="https://console.anthropic.com/" target="_blank" style="color: #6366f1;">console.anthropic.com</a></div>
+        </div>
+
+        <div style="border-top: 1px solid #e5e7eb; margin: 24px 0; padding-top: 24px;">
+          <div style="font-size: 14px; font-weight: 500; margin-bottom: 12px;">Usage Statistics</div>
+
+          <div id="llm-usage-stats">
+            <div style="font-size: 13px; color: #6b7280;">No usage data yet. Create a dynamic snippet to get started!</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="close-llm-settings-btn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./options.js"></script>
+</body>
+</html>

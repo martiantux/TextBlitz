@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "TextBlitz",
+  "version": "0.4.0",
+  "description": "Lightning-fast text expansion. No paywalls, no BS. Just free, open-source productivity.",
+  "permissions": [
+    "storage",
+    "clipboardRead"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background/service-worker.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content/expander.js"],
+      "run_at": "document_idle",
+      "all_frames": true
+    }
+  ],
+  "options_page": "ui/options/options.html",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "action": {
+    "default_popup": "ui/popup/popup.html",
+    "default_title": "TextBlitz - Text Expansion"
+  }
+}
