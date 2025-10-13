@@ -84,6 +84,10 @@
             <span>🤖</span>
             <span>LLM Settings</span>
           </button>
+          <button class="btn-new-folder" id="generate-snippet-btn" style="margin-top: 8px;">
+            <span>✨</span>
+            <span>Generate Snippet</span>
+          </button>
         </div>
       </aside>
 
@@ -301,6 +305,48 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" id="close-llm-settings-btn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Generate Snippet Modal -->
+  <div class="modal" id="generate-snippet-modal">
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="modal-header">
+        <h2 class="modal-title">✨ Generate Snippet</h2>
+      </div>
+      <div class="modal-body">
+        <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 6px; padding: 12px; margin-bottom: 16px;">
+          <div style="font-size: 13px; color: #075985;">
+            Describe what you want in plain English. AI will generate a snippet with trigger, label, and expansion for you to review and edit.
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="generate-description">What do you want this snippet to do?</label>
+          <textarea
+            class="form-textarea"
+            id="generate-description"
+            placeholder="e.g., Create an email signature with my name 'John Smith' and today's date"
+            rows="4"
+            autofocus
+          ></textarea>
+          <div class="form-help">Be specific about what text should expand and any dynamic elements.</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="generate-provider">LLM Provider</label>
+          <select class="form-select" id="generate-provider">
+            <option value="groq">Groq (fastest)</option>
+            <option value="anthropic">Anthropic (Claude Sonnet 4.5)</option>
+          </select>
+        </div>
+
+        <div id="generate-status" style="display: none; margin-top: 16px; padding: 12px; border-radius: 6px; font-size: 13px;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="cancel-generate-btn">Cancel</button>
+        <button class="btn btn-primary" id="generate-btn">Generate</button>
       </div>
     </div>
   </div>

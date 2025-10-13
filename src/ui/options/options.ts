@@ -1,11 +1,13 @@
 import { StorageManager } from '../../lib/storage';
 import { Snippet, TriggerMode, SnippetType, LLMProvider } from '../../lib/types';
+import { llmManager } from '../../lib/llm/manager';
 
 class OptionsPage {
   private currentEditId: string | null = null;
   private currentFolder: string = 'all';
   private searchQuery: string = '';
   private sortBy: 'recent' | 'usage' | 'alpha' = 'recent';
+  private llmSettingsSaveCallback: (() => Promise<void>) | null = null;
 
   constructor() {
     this.initialize();
@@ -241,6 +243,25 @@ class OptionsPage {
     document.getElementById('llm-settings-modal')?.addEventListener('click', (e) => {
       if (e.target === e.currentTarget) {
         this.hideLLMSettings();
+      }
+    });
+
+    // Generate Snippet
+    document.getElementById('generate-snippet-btn')?.addEventListener('click', () => {
+      this.showGenerateSnippet();
+    });
+
+    document.getElementById('cancel-generate-btn')?.addEventListener('click', () => {
+      this.hideGenerateSnippet();
+    });
+
+    document.getElementById('generate-btn')?.addEventListener('click', () => {
+      this.generateSnippet();
+    });
+
+    document.getElementById('generate-snippet-modal')?.addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) {
+        this.hideGenerateSnippet();
       }
     });
 
@@ -507,13 +528,16 @@ class OptionsPage {
 
     // Save on input
     const saveKeys = async () => {
-      settings.llmKeys.groq = groqKeyInput.value || undefined;
-      settings.llmKeys.anthropic = anthropicKeyInput.value || undefined;
+      settings.llmKeys.groq = groqKeyInput.value.trim() || undefined;
+      settings.llmKeys.anthropic = anthropicKeyInput.value.trim() || undefined;
       await StorageManager.saveSettings(settings);
     };
 
     groqKeyInput.addEventListener('change', saveKeys);
     anthropicKeyInput.addEventListener('change', saveKeys);
+
+    // Save current values before showing modal
+    this.llmSettingsSaveCallback = saveKeys;
 
     // Load usage stats
     await this.loadUsageStats();
@@ -521,8 +545,136 @@ class OptionsPage {
     modal?.classList.add('active');
   }
 
-  private hideLLMSettings() {
+  private async hideLLMSettings() {
+    // Save keys before closing (in case user didn't blur the input)
+    if (this.llmSettingsSaveCallback) {
+      await this.llmSettingsSaveCallback();
+    }
     document.getElementById('llm-settings-modal')?.classList.remove('active');
+  }
+
+  private async showGenerateSnippet() {
+    const modal = document.getElementById('generate-snippet-modal');
+    const descInput = document.getElementById('generate-description') as HTMLTextAreaElement;
+    const statusDiv = document.getElementById('generate-status');
+
+    descInput.value = '';
+    statusDiv!.style.display = 'none';
+    modal?.classList.add('active');
+  }
+
+  private hideGenerateSnippet() {
+    document.getElementById('generate-snippet-modal')?.classList.remove('active');
+  }
+
+  private async generateSnippet() {
+    const descInput = document.getElementById('generate-description') as HTMLTextAreaElement;
+    const providerSelect = document.getElementById('generate-provider') as HTMLSelectElement;
+    const statusDiv = document.getElementById('generate-status');
+    const generateBtn = document.getElementById('generate-btn') as HTMLButtonElement;
+
+    const description = descInput.value.trim();
+    if (!description) {
+      alert('Please describe what you want the snippet to do');
+      return;
+    }
+
+    // Check if API key exists
+    const settings = await StorageManager.getSettings();
+    const provider = providerSelect.value as LLMProvider;
+    const hasKey = provider === 'groq' ? settings.llmKeys.groq : settings.llmKeys.anthropic;
+
+    if (!hasKey) {
+      alert(`Please add your ${provider === 'groq' ? 'Groq' : 'Anthropic'} API key in LLM Settings first`);
+      return;
+    }
+
+    // Initialize provider if needed
+    if (provider === 'groq' && settings.llmKeys.groq) {
+      llmManager.setProvider('groq', settings.llmKeys.groq, settings.llmTimeout);
+    } else if (provider === 'anthropic' && settings.llmKeys.anthropic) {
+      llmManager.setProvider('anthropic', settings.llmKeys.anthropic, settings.llmTimeout);
+    }
+
+    // Show loading
+    generateBtn.disabled = true;
+    statusDiv!.style.display = 'block';
+    statusDiv!.style.background = '#f0f9ff';
+    statusDiv!.style.borderLeft = '3px solid #6366f1';
+    statusDiv!.innerHTML = '⏳ Generating snippet...';
+
+    try {
+      const prompt = `You are a snippet generator for a text expansion tool. Generate a snippet based on this description:
+
+"${description}"
+
+Return ONLY valid JSON in this exact format:
+{
+  "label": "Friendly name for the snippet",
+  "trigger": "shortcut text to type (lowercase, no spaces, 2-5 chars)",
+  "expansion": "The text that will replace the trigger. Use {date}, {time}, {clipboard}, {cursor} for dynamic content."
+}
+
+Examples:
+- Description: "email signature with my name John and today's date"
+  Response: {"label":"Email Signature","trigger":"sig","expansion":"Best,\\nJohn Smith\\n{date}"}
+
+- Description: "insert current time in 12h format"
+  Response: {"label":"Current Time","trigger":"now","expansion":"{time:12h}"}
+
+Return ONLY the JSON, no explanation.`;
+
+      const response = await llmManager.complete(provider, {
+        prompt,
+        maxTokens: 200,
+        temperature: 0.3,
+      });
+
+      // Parse JSON response
+      let snippetData;
+      try {
+        snippetData = JSON.parse(response.text);
+      } catch (e) {
+        // Try to extract JSON from response
+        const jsonMatch = response.text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          snippetData = JSON.parse(jsonMatch[0]);
+        } else {
+          throw new Error('Could not parse LLM response as JSON');
+        }
+      }
+
+      // Validate required fields
+      if (!snippetData.label || !snippetData.trigger || !snippetData.expansion) {
+        throw new Error('Generated snippet missing required fields');
+      }
+
+      // Show success
+      statusDiv!.style.background = '#f0fdf4';
+      statusDiv!.style.borderLeft = '3px solid #22c55e';
+      statusDiv!.innerHTML = '✅ Snippet generated! Opening editor...';
+
+      // Close generator modal
+      setTimeout(() => {
+        this.hideGenerateSnippet();
+
+        // Pre-fill snippet editor with generated data
+        const snippet: Partial<Snippet> = {
+          label: snippetData.label,
+          trigger: snippetData.trigger,
+          expansion: snippetData.expansion,
+        };
+        this.showModal(snippet as Snippet);
+      }, 500);
+
+    } catch (error) {
+      console.error('Snippet generation failed:', error);
+      statusDiv!.style.background = '#fef2f2';
+      statusDiv!.style.borderLeft = '3px solid #ef4444';
+      statusDiv!.innerHTML = `❌ Failed: ${error instanceof Error ? error.message : 'Unknown error'}`;
+    } finally {
+      generateBtn.disabled = false;
+    }
   }
 
   private async loadUsageStats() {

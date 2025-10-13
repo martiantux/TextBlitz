@@ -10,8 +10,8 @@ export interface ParsedCommand {
 }
 
 export class CommandParser {
-  // Match {command} or {command:options}
-  private static readonly COMMAND_REGEX = /\{(date|time|clipboard|cursor|enter|tab|delay)(?:\s+([^}]+))?\}/g;
+  // Match {command} or {command:options} or {command options}
+  private static readonly COMMAND_REGEX = /\{(date|time|clipboard|cursor|enter|tab|delay)(?:[\s:]([^}]+))?\}/g;
 
   // Parse all commands from text
   static parse(text: string): ParsedCommand[] {
@@ -110,7 +110,7 @@ export class CommandParser {
 
   // Format a time based on format string
   static formatTime(date: Date, format?: string): string {
-    const defaultFormat = 'HH:MM'; // 24-hour
+    const defaultFormat = 'HH:mm'; // 24-hour
     const fmt = format || defaultFormat;
 
     const hours24 = date.getHours();

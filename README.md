@@ -16,7 +16,7 @@
 
 **Your snippets, your data, your computer.** No accounts, no servers, no tracking.
 
-Built for customer service, credit & collections, support teams, developers, and anyone who types the same things repeatedly.
+Built for anyone who types the same things repeatedly.
 
 **Privacy-first AI:** Optional LLM features use your own API keys, stored locally. Code is open source and auditable. You control what gets sent, if anything.
 

@@ -73,6 +73,13 @@ class TextBlitzExpander {
           this.settings = changes.settings.newValue;
           // Update debug mode when settings change
           TextReplacer.setDebugMode(this.settings.debugMode);
+          // Re-initialize LLM providers when keys change
+          if (this.settings.llmKeys.groq) {
+            llmManager.setProvider('groq', this.settings.llmKeys.groq, this.settings.llmTimeout);
+          }
+          if (this.settings.llmKeys.anthropic) {
+            llmManager.setProvider('anthropic', this.settings.llmKeys.anthropic, this.settings.llmTimeout);
+          }
         }
       }
     });
@@ -89,18 +96,36 @@ class TextBlitzExpander {
   }
 
   private async checkForMatch(element: HTMLElement): Promise<boolean> {
-    // Only handle regular inputs and textareas for now
-    if (!(element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement)) {
+    let textBeforeCursor: string;
+    let textAfter: string;
+
+    // Handle different element types
+    if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
+      // Regular input/textarea
+      const cursorPos = element.selectionStart ?? element.value.length;
+      if (cursorPos === 0) return false;
+
+      textBeforeCursor = element.value.substring(0, cursorPos);
+      textAfter = element.value.substring(cursorPos);
+    } else if (element.isContentEditable) {
+      // Contenteditable element
+      const selection = window.getSelection();
+      if (!selection || selection.rangeCount === 0) return false;
+
+      const range = selection.getRangeAt(0);
+      const { startContainer, startOffset } = range;
+
+      if (startContainer.nodeType !== Node.TEXT_NODE) return false;
+
+      const textNode = startContainer as Text;
+      const text = textNode.textContent || '';
+
+      textBeforeCursor = text.substring(0, startOffset);
+      textAfter = text.substring(startOffset);
+    } else {
       return false;
     }
 
-    // Some input types (email, number, date) don't support selectionStart per HTML spec
-    // Fall back to value.length (cursor is at end during input events)
-    const cursorPos = element.selectionStart ?? element.value.length;
-    if (cursorPos === 0) return false;
-
-    // Get text before cursor from the actual input value
-    const textBeforeCursor = element.value.substring(0, cursorPos);
     if (!textBeforeCursor) return false;
 
     // Try to find a matching trigger
@@ -116,7 +141,6 @@ class TextBlitzExpander {
 
     // Extract context for word boundary checking
     const textBefore = textBeforeCursor.substring(0, textBeforeCursor.length - trigger.length);
-    const textAfter = element.value.substring(cursorPos);
 
     // Check if trigger should match based on mode
     if (!shouldTriggerMatch(textBefore, trigger, textAfter, snippet.triggerMode)) {
@@ -143,7 +167,7 @@ class TextBlitzExpander {
     }
   }
 
-  private async expandDynamic(element: HTMLInputElement | HTMLTextAreaElement, snippet: Snippet) {
+  private async expandDynamic(element: HTMLElement, snippet: Snippet) {
     this.isExpanding = true;
 
     try {
@@ -173,12 +197,24 @@ class TextBlitzExpander {
     } catch (error) {
       console.error('TextBlitz: LLM expansion failed:', error);
 
+      // Determine error message
+      let errorMsg = 'LLM failed';
+      if (error instanceof Error) {
+        if (error.message.includes('not initialized') || error.message.includes('API key')) {
+          errorMsg = 'LLM not configured - add API key in settings';
+        } else if (error.message.includes('rate limit')) {
+          errorMsg = 'Rate limited - wait a moment';
+        } else {
+          errorMsg = `LLM error: ${error.message}`;
+        }
+      }
+
       // Fallback to static text if available
       if (snippet.fallbackText) {
         await TextReplacer.replace(element, snippet.trigger, snippet.fallbackText);
       } else {
-        // Show error to user (keep trigger text visible)
-        console.error('TextBlitz: No fallback text available');
+        // Show error to user by replacing trigger with error message
+        await TextReplacer.replace(element, snippet.trigger, `[${errorMsg}]`);
       }
     } finally {
       this.isExpanding = false;
