@@ -93,34 +93,51 @@ export class TextReplacer {
       this.log('TextBlitz: Before:', textBefore, '| After:', textAfter);
       this.log('TextBlitz: Replacing trigger:', trigger, 'with:', expansion);
 
-      // Process commands (date, time, clipboard) before cursor parsing
+      // Process commands (date, time, clipboard) first
       const processedExpansion = await CommandParser.processCommands(expansion);
 
-      // Extract keyboard actions before parsing cursor
-      const { text: textWithoutKeyboard, actions } = CommandParser.extractKeyboardActions(processedExpansion);
-
       // Parse {cursor} from expansion
-      const { text: cleanExpansion, cursorOffset } = this.parseCursor(textWithoutKeyboard);
+      const { text: textWithCursor, cursorOffset } = this.parseCursor(processedExpansion);
 
-      // Set the new value
-      element.value = textBefore + cleanExpansion + textAfter;
+      // Split text by keyboard actions (enter, tab, delay)
+      const { chunks, actions } = CommandParser.splitTextByKeyboardActions(textWithCursor);
 
-      // Position cursor at {cursor} location or end of expanded text
-      // Some input types don't support setSelectionRange, wrap in try/catch
-      const newPos = textBefore.length + cursorOffset;
-      try {
-        element.setSelectionRange(newPos, newPos);
-      } catch (e) {
-        // Input type doesn't support selection (email, number, etc.) - cursor will be at end anyway
+      // Insert text in chunks with actions between them
+      let currentValue = textBefore;
+      let insertedLength = 0;
+      let finalCursorPos = textBefore.length + cursorOffset;
+
+      for (let i = 0; i < chunks.length; i++) {
+        const chunk = chunks[i];
+        currentValue += chunk;
+        insertedLength += chunk.length;
+
+        // Update element value
+        element.value = currentValue + textAfter;
+
+        // Trigger input event
+        const inputEvent = new Event('input', { bubbles: true });
+        element.dispatchEvent(inputEvent);
+
+        // Execute action after this chunk (if any)
+        if (i < actions.length) {
+          const action = actions[i];
+          if (action.type === 'delay') {
+            const ms = CommandParser.parseDelayMs(action.options);
+            await new Promise(resolve => setTimeout(resolve, ms));
+          } else if (action.type === 'enter') {
+            this.dispatchKey(element, 'Enter');
+          } else if (action.type === 'tab') {
+            this.dispatchKey(element, 'Tab');
+          }
+        }
       }
 
-      // Trigger input event so frameworks like React notice the change
-      const inputEvent = new Event('input', { bubbles: true });
-      element.dispatchEvent(inputEvent);
-
-      // Execute keyboard actions after text insertion
-      if (actions.length > 0) {
-        await this.executeKeyboardActions(element, actions);
+      // Position cursor at {cursor} location or end of expanded text
+      try {
+        element.setSelectionRange(finalCursorPos, finalCursorPos);
+      } catch (e) {
+        // Input type doesn't support selection
       }
 
       this.log('TextBlitz: New value:', element.value);
@@ -156,35 +173,51 @@ export class TextReplacer {
 
       // Calculate the position to start deleting from
       const deleteStart = startOffset - trigger.length;
+      const textAfter = text.substring(startOffset);
 
-      // Process commands (date, time, clipboard) before cursor parsing
+      // Process commands (date, time, clipboard) first
       const processedExpansion = await CommandParser.processCommands(expansion);
 
-      // Extract keyboard actions before parsing cursor
-      const { text: textWithoutKeyboard, actions } = CommandParser.extractKeyboardActions(processedExpansion);
-
       // Parse {cursor} from expansion
-      const { text: cleanExpansion, cursorOffset } = this.parseCursor(textWithoutKeyboard);
+      const { text: textWithCursor, cursorOffset } = this.parseCursor(processedExpansion);
 
-      // Create new text content
-      const newText = text.substring(0, deleteStart) + cleanExpansion + text.substring(startOffset);
-      textNode.textContent = newText;
+      // Split text by keyboard actions
+      const { chunks, actions } = CommandParser.splitTextByKeyboardActions(textWithCursor);
+
+      // Insert text in chunks with actions between them
+      let currentText = text.substring(0, deleteStart);
+      let finalCursorOffset = deleteStart + cursorOffset;
+
+      for (let i = 0; i < chunks.length; i++) {
+        const chunk = chunks[i];
+        currentText += chunk;
+
+        // Update text content
+        textNode.textContent = currentText + textAfter;
+
+        // Trigger input event
+        const inputEvent = new Event('input', { bubbles: true });
+        element.dispatchEvent(inputEvent);
+
+        // Execute action after this chunk (if any)
+        if (i < actions.length) {
+          const action = actions[i];
+          if (action.type === 'delay') {
+            const ms = CommandParser.parseDelayMs(action.options);
+            await new Promise(resolve => setTimeout(resolve, ms));
+          } else if (action.type === 'enter') {
+            this.dispatchKey(element, 'Enter');
+          } else if (action.type === 'tab') {
+            this.dispatchKey(element, 'Tab');
+          }
+        }
+      }
 
       // Set cursor at {cursor} location or end of expansion
-      const newOffset = deleteStart + cursorOffset;
-      range.setStart(textNode, newOffset);
-      range.setEnd(textNode, newOffset);
+      range.setStart(textNode, finalCursorOffset);
+      range.setEnd(textNode, finalCursorOffset);
       selection.removeAllRanges();
       selection.addRange(range);
-
-      // Trigger input event
-      const inputEvent = new Event('input', { bubbles: true });
-      element.dispatchEvent(inputEvent);
-
-      // Execute keyboard actions after text insertion
-      if (actions.length > 0) {
-        await this.executeKeyboardActions(element, actions);
-      }
 
       return true;
     } catch (error) {

@@ -101,21 +101,18 @@ LLM-powered snippets + dynamic content commands
 
 ---
 
-## 🚀 v0.4.0 - Keyboard Automation & Date Arithmetic
+## 🚀 v0.4.0 - Keyboard Automation & Snippet Generator
 
 **Status:** ✅ Complete (2025-10-13)
 
 ### Goal
-Complete form automation - keyboard commands and date arithmetic
-
-### Why This Priority
-Real-world use case: Form automation for data entry requires Enter/Tab key simulation and future date calculations. This is more immediately useful than interactive forms (which require complex UI development).
+Form automation with keyboard commands, date arithmetic, and LLM-powered snippet generation
 
 ### Features Completed ✅
 - [x] **Keyboard automation commands**:
   - `{enter}` - Simulate Enter/Return key press
   - `{tab}` - Simulate Tab key press
-  - `{delay}` or `{delay +Xs}` - Pause execution (e.g., `{delay +0.3s}`)
+  - `{delay}` or `{delay +Xs}` - Pause execution with chunked text insertion
   - Combine for form navigation: `field1 {tab} field2 {enter}`
 - [x] **Date arithmetic**:
   - `{date shift +3M}` - Add 3 months to current date
@@ -126,6 +123,11 @@ Real-world use case: Form automation for data entry requires Enter/Tab key simul
 - [x] **Ordinal date formats**:
   - `Do` format → 1st, 2nd, 3rd, 21st, 22nd, 23rd
   - Example: `{date:MMMM Do, YYYY}` → "October 13th, 2025"
+- [x] **Snippet Generator**:
+  - LLM-powered snippet creation from natural language descriptions
+  - Auto-generates trigger, label, and expansion
+  - Modal UI with provider selection (Groq/Anthropic)
+  - Pre-fills snippet editor for review before saving
 
 ### Real-World Examples
 ```
@@ -133,18 +135,26 @@ Real-world use case: Form automation for data entry requires Enter/Tab key simul
 out {enter} {delay +.3s} {tab} left {enter} {tab} money {enter} {tab} OUTBOUND
 
 // Future date calculation
-{clipboard} REASSESS IN 3 MONTHS - NEXT POSSIBLE ASSESSMENT DATE {MMMM Do YYYY shift +3M}
+{clipboard} REASSESS IN 3 MONTHS - NEXT POSSIBLE ASSESSMENT DATE {date:MMMM Do YYYY shift +3M}
+
+// Delay visualization
+Before delay{delay +3s}After 3 seconds
 ```
 
 ### Testing Status
-- [ ] Enter key simulation in forms
-- [ ] Tab key navigation between fields
-- [ ] Delay timing accuracy
-- [ ] Date arithmetic for days/months/years
-- [ ] Ordinal suffix correctness (1st vs 21st)
-- [ ] Combined commands (keyboard + date)
+- [x] Enter key simulation in forms
+- [x] Tab key navigation between fields
+- [x] Delay timing accuracy (chunked text insertion working)
+- [x] Date arithmetic for days/months/years
+- [x] Ordinal suffix correctness (1st vs 21st)
+- [x] Combined commands (keyboard + date + clipboard)
+- [x] Snippet generator with Groq and Anthropic providers
 
-*Implementation complete, testing pending*
+### Technical Implementation
+- Refactored text replacement to support chunked insertion
+- Added `splitTextByKeyboardActions()` to command parser
+- Delays now execute between text chunks, not after all text
+- All keyboard commands work with both regular inputs and contenteditable
 
 ---
 

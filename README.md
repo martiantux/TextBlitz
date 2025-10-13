@@ -35,7 +35,8 @@ Built for anyone who types the same things repeatedly.
 - 📋 **{clipboard} command** - Insert clipboard content into snippets
 - ⌨️ **{enter} & {tab}** - Simulate keyboard presses for form automation
 - ⏱️ **{delay}** - Pause between actions ({delay +0.3s} or {delay +300ms})
-- 🤖 **LLM-powered snippets** - AI-generated text variations with Groq or Anthropic (tested & working!)
+- 🤖 **LLM-powered snippets** - LLM-generated text variations with Groq or Anthropic
+- ✨ **Snippet generator** - Create snippets from natural language descriptions
 - 💰 **Usage & cost tracking** - Monitor API usage, tokens, and estimated costs
 - 🚦 **Rate limiting** - Built-in protection against API abuse (25/min for Groq)
 - 🎨 **Modern UI** - Clean two-panel layout with sidebar navigation

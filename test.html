@@ -7,7 +7,7 @@
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      max-width: 800px;
+      max-width: 900px;
       margin: 40px auto;
       padding: 20px;
       background: #f5f5f5;
@@ -18,6 +18,7 @@
       padding: 30px;
       border-radius: 8px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
     }
 
     h1 {
@@ -48,6 +49,11 @@
     }
 
     input[type="text"],
+    input[type="email"],
+    input[type="search"],
+    input[type="url"],
+    input[type="tel"],
+    input[type="number"],
     textarea {
       width: 100%;
       padding: 12px;
@@ -56,9 +62,10 @@
       font-size: 14px;
       font-family: inherit;
       margin-bottom: 10px;
+      box-sizing: border-box;
     }
 
-    input[type="text"]:focus,
+    input:focus,
     textarea:focus {
       outline: none;
       border-color: #4a90e2;
@@ -78,6 +85,7 @@
       font-size: 14px;
       font-family: inherit;
       margin-bottom: 10px;
+      box-sizing: border-box;
     }
 
     .contenteditable:focus {
@@ -115,75 +123,236 @@
       font-family: 'Monaco', 'Courier New', monospace;
       font-size: 13px;
     }
+
+    .form-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .form-group input {
+      flex: 1;
+      margin-bottom: 0;
+    }
+
+    .test-note {
+      background: #fef3c7;
+      border: 1px solid #fde047;
+      border-radius: 6px;
+      padding: 12px;
+      margin-top: 10px;
+      font-size: 13px;
+      color: #854d0e;
+    }
+
+    .section-header {
+      background: #f3f4f6;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      border-left: 4px solid #4a90e2;
+    }
+
+    .section-header h2 {
+      margin: 0;
+      font-size: 16px;
+      color: #1f2937;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>⚡ TextBlitz Test Page</h1>
-    <p class="subtitle">Use this page to test if TextBlitz is working properly</p>
+    <p class="subtitle">Comprehensive testing for v0.4.0 features</p>
 
     <div class="instructions">
-      <h3>Test Instructions:</h3>
+      <h3>Basic Test Snippets (Pre-installed):</h3>
       <ul>
-        <li>Try typing <code>btw</code> followed by a space in any field below</li>
-        <li>It should expand to "by the way"</li>
-        <li>Also try <code>thx</code> → "thank you" and <code>brb</code> → "be right back"</li>
-        <li>Open the browser console (F12) to see TextBlitz logs</li>
+        <li><code>btw</code> → "by the way"</li>
+        <li><code>thx</code> → "thank you"</li>
+        <li><code>brb</code> → "be right back"</li>
+      </ul>
+      <h3>v0.4.0 Test Snippets (Import test-snippets.json):</h3>
+      <ul>
+        <li><code>tdate</code>, <code>tdateus</code>, <code>tdatelong</code> → Date formatting</li>
+        <li><code>ttime</code>, <code>ttime12</code> → Time formatting</li>
+        <li><code>t3months</code>, <code>t1year</code>, <code>t7days</code> → Date arithmetic</li>
+        <li><code>tdateord</code> → Ordinal dates (13th, 21st, etc.)</li>
+        <li><code>tdelay3s</code> → Delay test (3 seconds)</li>
+        <li><code>tformfull</code> → Full form automation</li>
+        <li><code>treassess</code> → Clipboard + date combo</li>
       </ul>
     </div>
+  </div>
 
-    <div class="test-section">
-      <h2>Regular Text Input</h2>
-      <label>Single-line input field:</label>
-      <input type="text" placeholder="Type 'btw ' here...">
+  <!-- Basic Input Types -->
+  <div class="container">
+    <div class="section-header">
+      <h2>📝 Basic Input Types</h2>
     </div>
 
     <div class="test-section">
-      <h2>Textarea</h2>
-      <label>Multi-line textarea:</label>
-      <textarea placeholder="Type 'btw ' here..."></textarea>
+      <label>Text Input:</label>
+      <input type="text" placeholder="Try 'btw ' here">
     </div>
 
     <div class="test-section">
-      <h2>Content Editable</h2>
-      <label>Rich text editor (contenteditable):</label>
-      <div class="contenteditable" contenteditable="true">Type 'btw ' here...</div>
+      <label>Textarea:</label>
+      <textarea placeholder="Try 'btw ' here"></textarea>
     </div>
 
     <div class="test-section">
-      <h2>Email Input</h2>
-      <label>Email field:</label>
-      <input type="email" placeholder="Type 'btw ' here...">
+      <label>Content Editable:</label>
+      <div class="contenteditable" contenteditable="true">Try 'btw ' here</div>
+    </div>
+  </div>
+
+  <!-- Specialized Input Types -->
+  <div class="container">
+    <div class="section-header">
+      <h2>📧 Specialized Input Types</h2>
     </div>
 
     <div class="test-section">
-      <h2>Search Input</h2>
-      <label>Search field:</label>
-      <input type="search" placeholder="Type 'btw ' here...">
+      <label>Email Input:</label>
+      <input type="email" placeholder="Try 'btw ' here">
     </div>
 
     <div class="test-section">
-      <h2>URL Input</h2>
-      <label>URL field:</label>
-      <input type="url" placeholder="Type 'btw ' here...">
+      <label>Search Input:</label>
+      <input type="search" placeholder="Try 'btw ' here">
     </div>
 
     <div class="test-section">
-      <h2>Tel Input</h2>
-      <label>Tel field:</label>
-      <input type="tel" placeholder="Type 'btw ' here...">
+      <label>URL Input:</label>
+      <input type="url" placeholder="Try 'btw ' here">
     </div>
 
     <div class="test-section">
-      <h2>Number Input</h2>
-      <label>Number field (may not support selection):</label>
-      <input type="number" placeholder="Type 'btw ' here...">
+      <label>Tel Input:</label>
+      <input type="tel" placeholder="Try 'btw ' here">
+    </div>
+
+    <div class="test-section">
+      <label>Number Input:</label>
+      <input type="number" placeholder="Try 'btw ' here">
+      <div class="test-note">⚠️ Number inputs may not support text expansion (browser limitation)</div>
+    </div>
+  </div>
+
+  <!-- Date & Time Testing -->
+  <div class="container">
+    <div class="section-header">
+      <h2>📅 Date & Time Commands</h2>
+    </div>
+
+    <div class="test-section">
+      <label>Date Formatting Test:</label>
+      <input type="text" placeholder="Try 'tdate', 'tdateus', 'tdatelong'">
+      <div class="test-note">Should expand to dates in different formats (YYYY-MM-DD, MM/DD/YYYY, MMMM D, YYYY)</div>
+    </div>
+
+    <div class="test-section">
+      <label>Time Formatting Test:</label>
+      <input type="text" placeholder="Try 'ttime', 'ttime12'">
+      <div class="test-note">Should show current time in 24h and 12h formats</div>
+    </div>
+
+    <div class="test-section">
+      <label>Date Arithmetic Test:</label>
+      <input type="text" placeholder="Try 't3months', 't1year', 't7days'">
+      <div class="test-note">Should calculate future/past dates (+3 months, -1 year, +7 days)</div>
+    </div>
+
+    <div class="test-section">
+      <label>Ordinal Dates Test:</label>
+      <input type="text" placeholder="Try 'tdateord'">
+      <div class="test-note">Should show date with ordinal suffix (e.g., "October 13th, 2025")</div>
+    </div>
+  </div>
+
+  <!-- Keyboard Automation Testing -->
+  <div class="container">
+    <div class="section-header">
+      <h2>⌨️ Keyboard Automation (Form Simulation)</h2>
+    </div>
+
+    <div class="test-section">
+      <label>Multi-Field Form (for tab/enter testing):</label>
+      <div class="form-group">
+        <input type="text" placeholder="Field 1">
+        <input type="text" placeholder="Field 2">
+        <input type="text" placeholder="Field 3">
+      </div>
+      <div class="form-group">
+        <input type="text" placeholder="Field 4">
+        <input type="text" placeholder="Field 5">
+      </div>
+      <div class="test-note">Try 'tformfull' or 'tkeyboard' in first field to test tab/enter navigation</div>
+    </div>
+
+    <div class="test-section">
+      <label>Delay Test:</label>
+      <input type="text" placeholder="Try 'tdelay3s'">
+      <div class="test-note">Should type "Before delay", wait 3 seconds, then type "After 3 seconds"</div>
+    </div>
+  </div>
+
+  <!-- Clipboard & Cursor Testing -->
+  <div class="container">
+    <div class="section-header">
+      <h2>📋 Clipboard & Cursor Commands</h2>
+    </div>
+
+    <div class="test-section">
+      <label>Clipboard Test:</label>
+      <input type="text" placeholder="Try 'tclip' (copy something to clipboard first)">
+      <div class="test-note">Should paste clipboard content</div>
+    </div>
+
+    <div class="test-section">
+      <label>Cursor Positioning Test:</label>
+      <textarea placeholder="Try 'tsig'"></textarea>
+      <div class="test-note">Should position cursor between "Best," and "Sent {date}"</div>
+    </div>
+
+    <div class="test-section">
+      <label>Complex Combo Test:</label>
+      <textarea placeholder="Try 'tcombo' (copy a name to clipboard first)"></textarea>
+      <div class="test-note">Tests clipboard + cursor + date + keyboard combo</div>
+    </div>
+  </div>
+
+  <!-- LLM Snippet Generator -->
+  <div class="container">
+    <div class="section-header">
+      <h2>✨ Snippet Generator</h2>
+    </div>
+
+    <div class="test-section">
+      <label>How to Test:</label>
+      <ol style="margin-left: 20px; color: #374151;">
+        <li>Right-click TextBlitz icon → Options</li>
+        <li>Click "✨ Generate Snippet" in sidebar</li>
+        <li>Add your Groq or Anthropic API key if needed (click "🤖 LLM Settings")</li>
+        <li>Try description: "email signature with my name Brad and today's date"</li>
+        <li>Review generated snippet in editor</li>
+      </ol>
+      <div class="test-note">Generator should create snippet with trigger, label, and expansion pre-filled</div>
     </div>
   </div>
 
   <script>
-    console.log('Test page loaded. TextBlitz should initialize on this page.');
-    console.log('Open the browser console and look for "TextBlitz: Initialized" message.');
+    console.log('TextBlitz test page loaded');
+    console.log('Open browser console (F12) to see TextBlitz debug logs');
+    console.log('');
+    console.log('Test checklist:');
+    console.log('1. Basic expansion (btw, thx, brb)');
+    console.log('2. Date/time commands (tdate, ttime)');
+    console.log('3. Date arithmetic (t3months, t1year, t7days)');
+    console.log('4. Keyboard automation (tformfull, tdelay3s)');
+    console.log('5. Clipboard & cursor (tclip, tsig, tcombo)');
+    console.log('6. Snippet generator (Options → Generate Snippet)');
   </script>
 </body>
 </html>

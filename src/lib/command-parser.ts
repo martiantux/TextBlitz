@@ -221,4 +221,37 @@ export class CommandParser {
 
     return { text: result, actions };
   }
+
+  // Split text into chunks with actions between them
+  // Example: "A{delay +1s}B{tab}C" → chunks: ["A", "B", "C"], actions: [delay, tab]
+  static splitTextByKeyboardActions(text: string): {
+    chunks: string[];
+    actions: Array<{ type: 'enter' | 'tab' | 'delay'; options?: string }>;
+  } {
+    const commands = this.parse(text);
+    const keyboardCommands = commands.filter(
+      cmd => cmd.type === 'enter' || cmd.type === 'tab' || cmd.type === 'delay'
+    );
+
+    if (keyboardCommands.length === 0) {
+      return { chunks: [text], actions: [] };
+    }
+
+    const chunks: string[] = [];
+    const actions: Array<{ type: 'enter' | 'tab' | 'delay'; options?: string }> = [];
+    let lastIndex = 0;
+
+    for (const cmd of keyboardCommands) {
+      // Add text chunk before this command
+      chunks.push(text.substring(lastIndex, cmd.startIndex));
+      // Add the action
+      actions.push({ type: cmd.type, options: cmd.options });
+      lastIndex = cmd.endIndex;
+    }
+
+    // Add final chunk after last command
+    chunks.push(text.substring(lastIndex));
+
+    return { chunks, actions };
+  }
 }

@@ -167,6 +167,62 @@
       "usageCount": 0,
       "createdAt": 1697203200000,
       "lastUsed": null
+    },
+    {
+      "id": "test-reassess",
+      "label": "Test: Clipboard + Date Arithmetic",
+      "trigger": "treassess",
+      "expansion": "{clipboard} REASSESS IN 3 MONTHS - NEXT POSSIBLE ASSESSMENT DATE {date:MMMM Do YYYY shift +3M}",
+      "caseSensitive": false,
+      "enabled": true,
+      "triggerMode": "word",
+      "folder": "Work",
+      "type": "static",
+      "usageCount": 0,
+      "createdAt": 1697203200000,
+      "lastUsed": null
+    },
+    {
+      "id": "test-formfull",
+      "label": "Test: Full form automation (friend's example)",
+      "trigger": "tformfull",
+      "expansion": "out {enter} {delay +0.3s} {tab} left {enter} {tab} money {enter} {tab} OUTBOUND",
+      "caseSensitive": false,
+      "enabled": true,
+      "triggerMode": "word",
+      "folder": "Work",
+      "type": "static",
+      "usageCount": 0,
+      "createdAt": 1697203200000,
+      "lastUsed": null
+    },
+    {
+      "id": "test-delaylong",
+      "label": "Test: Longer delay (3 seconds)",
+      "trigger": "tdelay3s",
+      "expansion": "Before delay{delay +3s}After 3 seconds",
+      "caseSensitive": false,
+      "enabled": true,
+      "triggerMode": "word",
+      "folder": "Work",
+      "type": "static",
+      "usageCount": 0,
+      "createdAt": 1697203200000,
+      "lastUsed": null
+    },
+    {
+      "id": "test-combo",
+      "label": "Test: Complex combo (cursor + clipboard + date + keyboard)",
+      "trigger": "tcombo",
+      "expansion": "Hi {clipboard},{cursor}\n\nFollow up on {date:MMMM Do YYYY shift +7d}{tab}{tab}",
+      "caseSensitive": false,
+      "enabled": true,
+      "triggerMode": "word",
+      "folder": "Work",
+      "type": "static",
+      "usageCount": 0,
+      "createdAt": 1697203200000,
+      "lastUsed": null
     }
   ]
 }
