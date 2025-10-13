@@ -219,83 +219,78 @@ Interactive forms with popup UI + advanced organization features
 
 ---
 
-## 🚀 v0.7.0 - Site Compatibility & Reliability
+## 🚀 v0.7.0 - Site Compatibility & Reliability (MERGED INTO v0.9.0)
 
-**Status:** 📋 Planned (Next Up!)
+**Status:** ⚠️ Being merged directly into v0.9.0 beta
 
-### Goal
-Make TextBlitz work flawlessly on all major websites - the foundation for v1.0.0
+### Why Skipping Separate v0.7.0/v0.8.0
+To streamline the path to Chrome Web Store, we're combining site compatibility testing, beta testing, and polish into a single v0.9.0 beta release. This gets us to v1.0.0 faster.
 
-### Priority Features
-- [ ] **Better ContentEditable support** (CRITICAL):
-  - Fix Selection API issues in Gmail compose/reply
-  - Fix rich text preservation in Google Docs
-  - Fix Slack message composition
-  - Handle framework-wrapped contenteditable (React/Vue)
-  - Test and document limitations
-- [ ] **Cross-site testing and fixes** (10+ major sites):
-  - Gmail ✅
-  - Google Docs ✅
-  - Slack ✅
-  - LinkedIn (posts, messages, comments)
-  - Twitter/X (tweets, replies)
-  - Discord (messages)
-  - Notion (blocks, pages)
-  - Salesforce (various input fields)
-  - WordPress admin
-  - GitHub issues/PRs
-- [ ] **Performance optimization**:
-  - Test with 1000+ snippets
-  - Bundle size optimization (<100KB target)
-  - Memory leak detection
-  - Expansion latency testing (<50ms static, <2s LLM)
-- [ ] **Bug fixes & edge cases**:
-  - Email/number input field handling
-  - Multi-line snippet improvements
-  - Error message clarity
-  - Keyboard shortcut conflicts
-
-### Testing
-- [ ] 1000+ snippets performance test
-- [ ] Memory profiling
-- [ ] Extension lifecycle testing
-- [ ] Chrome/Edge/Brave compatibility
-
-**🎯 Success Criteria**: Reliable expansion on 10+ major sites, ready for beta testing
+**New Strategy:**
+- v0.6.0 (current) → v0.9.0 (beta) → v1.0.0 (Chrome Web Store)
+- See v0.9.0 section below for consolidated plan
 
 ---
 
-## 🚀 v0.8.0 - Beta Testing & Polish
+## 🚀 v0.9.0 - Beta Release (CURRENT FOCUS)
 
-**Status:** 📋 Planned
+**Status:** 🚧 In Progress
 
 ### Goal
-Production-ready polish and real-world validation before Chrome Web Store launch
+Consolidated beta release combining site compatibility, testing, and polish. Ready for friend beta testing, then Chrome Web Store submission as v1.0.0.
 
-### Features
-- [ ] **Beta testing program** (5-10 testers):
-  - Recruit diverse users (various workflows)
-  - Create feedback form/issue template
-  - Address critical bugs
-  - Gather real-world usage data
-- [ ] **UI/UX polish**:
-  - Onboarding flow for new users
-  - Better empty states
-  - Tooltip improvements
-  - Loading states for LLM expansions
-- [ ] **Documentation improvements**:
-  - Update README with real examples
-  - Create troubleshooting guide
-  - Document known limitations
-  - Add FAQ section
-- [ ] **Final bug fixes** from beta feedback
+### Phase 1: Core Testing (YOU - This Week)
+- [ ] **Better ContentEditable support** (IN PROGRESS):
+  - [x] Multi-node text handling with TreeWalker
+  - [x] execCommand fallback for Gmail/Docs/Slack
+  - [x] Framework-aware input events
+  - [ ] Test on Gmail compose/reply
+  - [ ] Test on Google Docs
+  - [ ] Test on Slack (if available)
+  - [ ] Test on basic sites (GitHub, Twitter, Reddit)
+
+- [ ] **Performance validation**:
+  - [ ] Test with 100+ snippets
+  - [ ] Check expansion latency (<100ms target)
+  - [ ] Memory usage check (<100MB target)
+  - [ ] No memory leaks after prolonged use
+
+- [ ] **Feature validation**:
+  - [ ] All trigger modes work
+  - [ ] All commands work (date, time, clipboard, cursor, etc.)
+  - [ ] Forms work
+  - [ ] Case transformation works
+  - [ ] LLM features work (if API keys configured)
+  - [ ] Import/Export works
+  - [ ] Dark mode works
+
+### Phase 2: Bug Fixes (YOU - This Week)
+- [ ] Fix any critical bugs from testing
+- [ ] Address console errors
+- [ ] Improve error messages
+
+### Phase 3: Beta Testing (FRIEND - 1-2 Weeks)
+- [ ] Version bump to v0.9.0
+- [ ] Create beta installation guide
+- [ ] Friend tests in real-world usage
+- [ ] Gather feedback and bug reports
+- [ ] Fix reported issues
+
+### Phase 4: Final Polish (YOU - 1 Week)
+- [ ] Address beta feedback
+- [ ] Final bug fixes
+- [ ] Performance optimization if needed
+- [ ] Documentation updates
 
 ### Success Criteria
-- ✅ All core features working reliably
-- ✅ No critical bugs from beta testers
-- ✅ Performance targets met (<50ms static, <2s LLM)
-- ✅ Documentation complete and tested
-- ✅ Ready for public release
+- ✅ Works on Gmail, Docs, Slack (priority sites)
+- ✅ Works on basic sites (GitHub, Twitter, Reddit)
+- ✅ No critical bugs from beta tester
+- ✅ Performance feels instant
+- ✅ Friend can use for daily workflow
+- ✅ Ready to version bump to v1.0.0
+
+**🎯 See BETA_CHECKLIST.md for detailed testing plan**
 
 ---
 

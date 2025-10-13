@@ -156,6 +156,70 @@ export class TextReplacer {
     }
   }
 
+  // Get all text before cursor in contenteditable (handles multiple text nodes)
+  private static getTextBeforeCursor(): { text: string; nodes: Text[]; lastNode: Text; offset: number } | null {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return null;
+
+    const range = selection.getRangeAt(0);
+    const { startContainer, startOffset } = range;
+
+    // Find the contenteditable root
+    let editableRoot: Node | null = startContainer;
+    while (editableRoot && editableRoot.nodeType !== Node.ELEMENT_NODE) {
+      editableRoot = editableRoot.parentNode;
+    }
+    if (!editableRoot || !(editableRoot as HTMLElement).isContentEditable) {
+      // Walk up to find contenteditable
+      let parent = startContainer.parentElement;
+      while (parent && !parent.isContentEditable) {
+        parent = parent.parentElement;
+      }
+      editableRoot = parent;
+    }
+
+    if (!editableRoot) return null;
+
+    // Collect all text nodes before cursor
+    const textNodes: Text[] = [];
+    let currentNode: Node | null = null;
+    let found = false;
+
+    const walker = document.createTreeWalker(
+      editableRoot,
+      NodeFilter.SHOW_TEXT,
+      null
+    );
+
+    while (walker.nextNode()) {
+      const node = walker.currentNode as Text;
+      if (node === startContainer) {
+        textNodes.push(node);
+        currentNode = node;
+        found = true;
+        break;
+      }
+      textNodes.push(node);
+    }
+
+    if (!found || !currentNode) return null;
+
+    // Build text from all nodes
+    let fullText = '';
+    for (let i = 0; i < textNodes.length - 1; i++) {
+      fullText += textNodes[i].textContent || '';
+    }
+    // Add partial text from last node
+    fullText += (currentNode.textContent || '').substring(0, startOffset);
+
+    return {
+      text: fullText,
+      nodes: textNodes,
+      lastNode: currentNode as Text,
+      offset: startOffset
+    };
+  }
+
   static async replaceInContentEditable(
     element: HTMLElement,
     trigger: string,
@@ -163,79 +227,198 @@ export class TextReplacer {
     caseTransform?: CaseTransform
   ): Promise<boolean> {
     try {
+      this.log('TextBlitz: replaceInContentEditable called');
+
       const selection = window.getSelection();
-      if (!selection || selection.rangeCount === 0) return false;
+      if (!selection || selection.rangeCount === 0) {
+        this.log('TextBlitz: No selection available');
+        return false;
+      }
 
       const range = selection.getRangeAt(0);
       const { startContainer, startOffset } = range;
 
-      // Only handle text nodes for now
-      if (startContainer.nodeType !== Node.TEXT_NODE) return false;
+      // Try simple approach first (single text node)
+      if (startContainer.nodeType === Node.TEXT_NODE) {
+        const textNode = startContainer as Text;
+        const text = textNode.textContent || '';
+        const beforeCursor = text.substring(0, startOffset);
 
-      const textNode = startContainer as Text;
+        if (beforeCursor.endsWith(trigger)) {
+          this.log('TextBlitz: Using simple text node replacement');
+          return await this.replaceInSimpleTextNode(
+            element,
+            textNode,
+            startOffset,
+            trigger,
+            expansion,
+            caseTransform
+          );
+        }
+      }
+
+      // Try multi-node approach (complex contenteditable)
+      this.log('TextBlitz: Trying multi-node replacement');
+      const cursorInfo = this.getTextBeforeCursor();
+      if (!cursorInfo) {
+        this.log('TextBlitz: Could not get text before cursor');
+        return false;
+      }
+
+      const { text, lastNode, offset } = cursorInfo;
+      this.log('TextBlitz: Text before cursor:', text);
+
+      if (!text.endsWith(trigger)) {
+        this.log('TextBlitz: Trigger not found at end of text');
+        return false;
+      }
+
+      // Use execCommand for better compatibility with rich editors
+      this.log('TextBlitz: Using execCommand approach');
+      return await this.replaceWithExecCommand(
+        element,
+        lastNode,
+        offset,
+        trigger,
+        expansion,
+        caseTransform
+      );
+    } catch (error) {
+      console.error('TextBlitz: Error replacing in contenteditable', error);
+      return false;
+    }
+  }
+
+  // Simple replacement for single text node (most textareas, simple contenteditable)
+  private static async replaceInSimpleTextNode(
+    element: HTMLElement,
+    textNode: Text,
+    cursorOffset: number,
+    trigger: string,
+    expansion: string,
+    caseTransform?: CaseTransform
+  ): Promise<boolean> {
+    try {
       const text = textNode.textContent || '';
+      const deleteStart = cursorOffset - trigger.length;
+      const textAfter = text.substring(cursorOffset);
 
-      // Check if the trigger is right before the cursor
-      const beforeCursor = text.substring(0, startOffset);
-      if (!beforeCursor.endsWith(trigger)) return false;
-
-      // Calculate the position to start deleting from
-      const deleteStart = startOffset - trigger.length;
-      const textAfter = text.substring(startOffset);
-
-      // Process commands (date, time, clipboard) first
+      // Process commands
       let processedExpansion = await CommandParser.processCommands(expansion);
-
-      // Apply case transformation if specified
       if (caseTransform && caseTransform !== 'none') {
         processedExpansion = CaseTransformer.transform(processedExpansion, caseTransform, trigger);
       }
 
-      // Parse {cursor} from expansion
-      const { text: textWithCursor, cursorOffset } = this.parseCursor(processedExpansion);
-
-      // Split text by keyboard actions
+      const { text: textWithCursor, cursorOffset: finalCursorOffset } = this.parseCursor(processedExpansion);
       const { chunks, actions } = CommandParser.splitTextByKeyboardActions(textWithCursor);
 
-      // Insert text in chunks with actions between them
+      // Insert text
       let currentText = text.substring(0, deleteStart);
-      let finalCursorOffset = deleteStart + cursorOffset;
-
       for (let i = 0; i < chunks.length; i++) {
-        const chunk = chunks[i];
-        currentText += chunk;
-
-        // Update text content
+        currentText += chunks[i];
         textNode.textContent = currentText + textAfter;
 
-        // Trigger input event
-        const inputEvent = new Event('input', { bubbles: true });
+        // Dispatch input event with more properties for framework compatibility
+        const inputEvent = new InputEvent('input', {
+          bubbles: true,
+          cancelable: true,
+          inputType: 'insertText',
+          data: chunks[i]
+        });
         element.dispatchEvent(inputEvent);
 
-        // Execute action after this chunk (if any)
         if (i < actions.length) {
-          const action = actions[i];
-          if (action.type === 'delay') {
-            const ms = CommandParser.parseDelayMs(action.options);
-            await new Promise(resolve => setTimeout(resolve, ms));
-          } else if (action.type === 'enter') {
-            this.dispatchKey(element, 'Enter');
-          } else if (action.type === 'tab') {
-            this.dispatchKey(element, 'Tab');
-          }
+          await this.executeKeyboardAction(element, actions[i]);
         }
       }
 
-      // Set cursor at {cursor} location or end of expansion
-      range.setStart(textNode, finalCursorOffset);
-      range.setEnd(textNode, finalCursorOffset);
-      selection.removeAllRanges();
-      selection.addRange(range);
+      // Set cursor position
+      const selection = window.getSelection();
+      if (selection) {
+        const range = document.createRange();
+        const newCursorPos = deleteStart + finalCursorOffset;
+        range.setStart(textNode, Math.min(newCursorPos, textNode.textContent?.length || 0));
+        range.setEnd(textNode, Math.min(newCursorPos, textNode.textContent?.length || 0));
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
 
       return true;
     } catch (error) {
-      console.error('TextBlitz: Error replacing in contenteditable', error);
+      this.log('TextBlitz: Error in simple text node replacement', error);
       return false;
+    }
+  }
+
+  // Replacement using execCommand (better for Gmail, Docs, etc.)
+  private static async replaceWithExecCommand(
+    element: HTMLElement,
+    lastNode: Text,
+    cursorOffset: number,
+    trigger: string,
+    expansion: string,
+    caseTransform?: CaseTransform
+  ): Promise<boolean> {
+    try {
+      // Process expansion
+      let processedExpansion = await CommandParser.processCommands(expansion);
+      if (caseTransform && caseTransform !== 'none') {
+        processedExpansion = CaseTransformer.transform(processedExpansion, caseTransform, trigger);
+      }
+
+      const { text: textWithCursor, cursorOffset: finalCursorOffset } = this.parseCursor(processedExpansion);
+      const { chunks } = CommandParser.splitTextByKeyboardActions(textWithCursor);
+      const fullText = chunks.join('');
+
+      // Select the trigger text to delete it
+      const selection = window.getSelection();
+      if (!selection) return false;
+
+      const range = document.createRange();
+
+      // Calculate where trigger starts
+      const textBefore = (lastNode.textContent || '').substring(0, cursorOffset);
+      const triggerStart = cursorOffset - trigger.length;
+
+      // Select trigger
+      range.setStart(lastNode, triggerStart);
+      range.setEnd(lastNode, cursorOffset);
+      selection.removeAllRanges();
+      selection.addRange(range);
+
+      // Delete trigger and insert expansion using execCommand (better compatibility)
+      document.execCommand('delete', false);
+      document.execCommand('insertText', false, fullText);
+
+      // Dispatch input event for framework reactivity
+      const inputEvent = new InputEvent('input', {
+        bubbles: true,
+        cancelable: false,
+        inputType: 'insertText',
+        data: fullText
+      });
+      element.dispatchEvent(inputEvent);
+
+      this.log('TextBlitz: ✅ execCommand replacement successful');
+      return true;
+    } catch (error) {
+      this.log('TextBlitz: Error in execCommand replacement', error);
+      return false;
+    }
+  }
+
+  // Helper to execute keyboard actions
+  private static async executeKeyboardAction(
+    element: HTMLElement,
+    action: { type: 'enter' | 'tab' | 'delay'; options?: string }
+  ): Promise<void> {
+    if (action.type === 'delay') {
+      const ms = CommandParser.parseDelayMs(action.options);
+      await new Promise(resolve => setTimeout(resolve, ms));
+    } else if (action.type === 'enter') {
+      this.dispatchKey(element, 'Enter');
+    } else if (action.type === 'tab') {
+      this.dispatchKey(element, 'Tab');
     }
   }
 
