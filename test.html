@@ -163,7 +163,7 @@
 <body>
   <div class="container">
     <h1>⚡ TextBlitz Test Page</h1>
-    <p class="subtitle">Comprehensive testing for v0.4.0 features</p>
+    <p class="subtitle">Comprehensive testing for v0.6.0 features</p>
 
     <div class="instructions">
       <h3>Basic Test Snippets (Pre-installed):</h3>
@@ -172,7 +172,7 @@
         <li><code>thx</code> → "thank you"</li>
         <li><code>brb</code> → "be right back"</li>
       </ul>
-      <h3>v0.4.0 Test Snippets (Import test-snippets.json):</h3>
+      <h3>Test Snippets (Import test-snippets.json):</h3>
       <ul>
         <li><code>tdate</code>, <code>tdateus</code>, <code>tdatelong</code> → Date formatting</li>
         <li><code>ttime</code>, <code>ttime12</code> → Time formatting</li>
@@ -181,6 +181,7 @@
         <li><code>tdelay3s</code> → Delay test (3 seconds)</li>
         <li><code>tformfull</code> → Full form automation</li>
         <li><code>treassess</code> → Clipboard + date combo</li>
+        <li><code>tformtext</code>, <code>tformmenu</code>, <code>tformdate</code>, <code>tformtoggle</code>, <code>tformpara</code>, <code>tformmulti</code> → Interactive forms</li>
       </ul>
     </div>
   </div>
@@ -323,14 +324,14 @@
     </div>
   </div>
 
-  <!-- LLM Snippet Generator -->
+  <!-- LLM & Advanced Features -->
   <div class="container">
     <div class="section-header">
-      <h2>✨ Snippet Generator</h2>
+      <h2>✨ LLM & Advanced Features</h2>
     </div>
 
     <div class="test-section">
-      <label>How to Test:</label>
+      <label>Snippet Generator Test:</label>
       <ol style="margin-left: 20px; color: #374151;">
         <li>Right-click TextBlitz icon → Options</li>
         <li>Click "✨ Generate Snippet" in sidebar</li>
@@ -340,10 +341,87 @@
       </ol>
       <div class="test-note">Generator should create snippet with trigger, label, and expansion pre-filled</div>
     </div>
+
+    <div class="test-section">
+      <label>Interactive Forms Test:</label>
+      <input type="text" placeholder="Try 'tformtext', 'tformmenu', 'tformdate', etc.">
+      <div class="test-note">Should open popup modal for user input, then insert filled template</div>
+    </div>
+  </div>
+
+  <!-- v0.6.0 Features -->
+  <div class="container">
+    <div class="section-header">
+      <h2>🆕 v0.6.0 New Features</h2>
+    </div>
+
+    <div class="test-section">
+      <label>1. Default Folder Persistence:</label>
+      <ol style="margin-left: 20px; color: #374151;">
+        <li>Create a snippet and assign it to a folder (e.g., "Work")</li>
+        <li>Create another new snippet</li>
+        <li>Folder dropdown should auto-select the last used folder</li>
+      </ol>
+      <div class="test-note">Last used folder should persist between new snippets</div>
+    </div>
+
+    <div class="test-section">
+      <label>2. Snippet Duplication:</label>
+      <ol style="margin-left: 20px; color: #374151;">
+        <li>Go to Options page</li>
+        <li>Hover over any snippet card</li>
+        <li>Click the 📋 (clipboard) button</li>
+        <li>Duplicate should appear with "(copy)" suffix and "copy" appended to trigger</li>
+      </ol>
+      <div class="test-note">Duplicated snippet should have new ID, reset usage count</div>
+    </div>
+
+    <div class="test-section">
+      <label>3. Keyboard Shortcut (Ctrl+Shift+S):</label>
+      <ol style="margin-left: 20px; color: #374151;">
+        <li>Go to Options page</li>
+        <li>Press Ctrl+Shift+S</li>
+        <li>New snippet modal should open</li>
+      </ol>
+      <div class="test-note">Quick add snippet without clicking button</div>
+    </div>
+
+    <div class="test-section">
+      <label>4. Export Individual Folders:</label>
+      <ol style="margin-left: 20px; color: #374151;">
+        <li>Go to Options page</li>
+        <li>Click on a folder (e.g., "Work")</li>
+        <li>Click "📤 Export" button in header</li>
+        <li>Should export only snippets from that folder</li>
+      </ol>
+      <div class="test-note">Filename should include folder name (e.g., "textblitz-work-123456.json")</div>
+    </div>
+
+    <div class="test-section">
+      <label>5. Folder Rename (from v0.5.0):</label>
+      <ol style="margin-left: 20px; color: #374151;">
+        <li>Go to Options page</li>
+        <li>Create a custom folder</li>
+        <li>Double-click on the folder OR click the ✏️ edit button</li>
+        <li>Modify name/icon and save</li>
+      </ol>
+      <div class="test-note">Edit button appears on hover, double-click also works</div>
+    </div>
+
+    <div class="test-section">
+      <label>6. Dark Mode (from v0.5.0):</label>
+      <ol style="margin-left: 20px; color: #374151;">
+        <li>Go to Options page</li>
+        <li>In sidebar, find "Theme" dropdown</li>
+        <li>Switch between Light/Dark/System</li>
+        <li>Theme should change immediately and persist</li>
+      </ol>
+      <div class="test-note">System option should follow OS theme preference</div>
+    </div>
   </div>
 
   <script>
-    console.log('TextBlitz test page loaded');
+    console.log('TextBlitz v0.6.0 test page loaded');
     console.log('Open browser console (F12) to see TextBlitz debug logs');
     console.log('');
     console.log('Test checklist:');
@@ -352,7 +430,16 @@
     console.log('3. Date arithmetic (t3months, t1year, t7days)');
     console.log('4. Keyboard automation (tformfull, tdelay3s)');
     console.log('5. Clipboard & cursor (tclip, tsig, tcombo)');
-    console.log('6. Snippet generator (Options → Generate Snippet)');
+    console.log('6. Interactive forms (tformtext, tformmenu, tformdate)');
+    console.log('7. Snippet generator (Options → Generate Snippet)');
+    console.log('');
+    console.log('v0.6.0 Features:');
+    console.log('✓ Default folder persistence');
+    console.log('✓ Snippet duplication (📋 button)');
+    console.log('✓ Keyboard shortcut (Ctrl+Shift+S)');
+    console.log('✓ Export individual folders');
+    console.log('✓ Folder rename (double-click or ✏️)');
+    console.log('✓ Dark mode (light/dark/system)');
   </script>
 </body>
 </html>

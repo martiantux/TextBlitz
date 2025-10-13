@@ -120,6 +120,9 @@ class OptionsPage {
             <span class="snippet-trigger">${this.escapeHtml(snippet.trigger)}</span>
           </div>
           <div class="snippet-actions">
+            <button class="btn btn-icon btn-secondary duplicate-btn" data-id="${snippet.id}" title="Duplicate">
+              📋
+            </button>
             <button class="btn btn-icon btn-secondary edit-btn" data-id="${snippet.id}" title="Edit">
               ✏️
             </button>
@@ -151,6 +154,15 @@ class OptionsPage {
   }
 
   private attachSnippetEventListeners() {
+    // Duplicate buttons
+    document.querySelectorAll('.duplicate-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = (e.currentTarget as HTMLElement).getAttribute('data-id');
+        if (id) this.duplicateSnippet(id);
+      });
+    });
+
     // Edit buttons
     document.querySelectorAll('.edit-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
@@ -313,6 +325,14 @@ class OptionsPage {
     typeSelect?.addEventListener('change', () => {
       this.toggleSnippetTypeFields();
     });
+
+    // Keyboard shortcut: Ctrl+Shift+S to quick add snippet
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'S') {
+        e.preventDefault();
+        this.showModal();
+      }
+    });
   }
 
   private switchFolder(folder: string) {
@@ -393,13 +413,17 @@ class OptionsPage {
       </div>
       <div class="folder-item ${this.currentFolder === 'work' ? 'active' : ''}" data-folder="work">
         <span class="folder-icon">💼</span>
-        <span>Work</span>
+        <span class="folder-name">Work</span>
         <span class="folder-count" id="count-work">0</span>
+        <button class="folder-edit-btn" data-folder-id="work" title="Rename folder">✏️</button>
+        <button class="folder-delete-btn" data-folder-id="work" title="Delete folder">×</button>
       </div>
       <div class="folder-item ${this.currentFolder === 'personal' ? 'active' : ''}" data-folder="personal">
         <span class="folder-icon">👤</span>
-        <span>Personal</span>
+        <span class="folder-name">Personal</span>
         <span class="folder-count" id="count-personal">0</span>
+        <button class="folder-edit-btn" data-folder-id="personal" title="Rename folder">✏️</button>
+        <button class="folder-delete-btn" data-folder-id="personal" title="Delete folder">×</button>
       </div>
     `;
 
@@ -408,8 +432,9 @@ class OptionsPage {
       html += `
         <div class="folder-item ${this.currentFolder === folder.id ? 'active' : ''}" data-folder="${folder.id}">
           <span class="folder-icon">${folder.icon}</span>
-          <span>${this.escapeHtml(folder.name)}</span>
+          <span class="folder-name">${this.escapeHtml(folder.name)}</span>
           <span class="folder-count" id="count-${folder.id}">0</span>
+          <button class="folder-edit-btn" data-folder-id="${folder.id}" title="Rename folder">✏️</button>
           <button class="folder-delete-btn" data-folder-id="${folder.id}" title="Delete folder">×</button>
         </div>
       `;
@@ -420,12 +445,32 @@ class OptionsPage {
     // Re-attach folder click listeners
     document.querySelectorAll('.folder-item').forEach(item => {
       item.addEventListener('click', (e) => {
-        // Don't switch folder if clicking delete button
-        if ((e.target as HTMLElement).classList.contains('folder-delete-btn')) {
+        const target = e.target as HTMLElement;
+        // Don't switch folder if clicking action buttons
+        if (target.classList.contains('folder-delete-btn') ||
+            target.classList.contains('folder-edit-btn')) {
           return;
         }
         const folder = (e.currentTarget as HTMLElement).getAttribute('data-folder');
         if (folder) this.switchFolder(folder);
+      });
+
+      // Double-click to rename any folder except 'all'
+      const folderId = item.getAttribute('data-folder');
+      if (folderId && folderId !== 'all') {
+        item.addEventListener('dblclick', (e) => {
+          e.stopPropagation();
+          this.showFolderModal(folderId);
+        });
+      }
+    });
+
+    // Attach edit listeners
+    document.querySelectorAll('.folder-edit-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const folderId = (e.currentTarget as HTMLElement).getAttribute('data-folder-id');
+        if (folderId) this.showFolderModal(folderId);
       });
     });
 
@@ -479,7 +524,12 @@ class OptionsPage {
       labelInput.value = '';
       triggerInput.value = '';
       expansionInput.value = '';
-      folderSelect.value = this.currentFolder === 'all' ? '' : this.currentFolder;
+
+      // Use lastUsedFolder if available, otherwise current folder
+      const settings = await StorageManager.getSettings();
+      const defaultFolder = settings.lastUsedFolder || (this.currentFolder === 'all' ? '' : this.currentFolder);
+      folderSelect.value = defaultFolder;
+
       triggerModeSelect.value = 'word';
       enabledCheckbox.checked = true;
       caseSensitiveCheckbox.checked = false;
@@ -572,6 +622,14 @@ class OptionsPage {
     };
 
     await StorageManager.saveSnippet(snippet);
+
+    // Remember the selected folder for next time
+    if (!this.currentEditId) {
+      const settings = await StorageManager.getSettings();
+      settings.lastUsedFolder = folderSelect.value || undefined;
+      await StorageManager.saveSettings(settings);
+    }
+
     await this.loadSnippets();
     await this.updateFolderCounts();
     this.hideModal();
@@ -582,6 +640,26 @@ class OptionsPage {
     if (snippet) {
       this.showModal(snippet);
     }
+  }
+
+  private async duplicateSnippet(id: string) {
+    const original = await StorageManager.getSnippet(id);
+    if (!original) return;
+
+    // Create duplicate with new ID and modified label/trigger
+    const duplicate: Snippet = {
+      ...original,
+      id: `snippet-${Date.now()}`,
+      label: `${original.label} (copy)`,
+      trigger: `${original.trigger}copy`,
+      createdAt: Date.now(),
+      usageCount: 0,
+      lastUsed: undefined,
+    };
+
+    await StorageManager.saveSnippet(duplicate);
+    await this.loadSnippets();
+    await this.updateFolderCounts();
   }
 
   private async deleteSnippet(id: string) {
@@ -596,12 +674,58 @@ class OptionsPage {
   }
 
   private async exportData() {
-    const data = await StorageManager.exportData();
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    // Check if we're viewing a specific folder
+    if (this.currentFolder !== 'all') {
+      await this.exportFolder(this.currentFolder);
+    } else {
+      // Export all data
+      const data = await StorageManager.exportData();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `textblitz-export-${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  }
+
+  private async exportFolder(folderId: string) {
+    const allSnippets = await StorageManager.getSnippets();
+    const folderSnippets = Object.values(allSnippets).filter(s => s.folder === folderId);
+
+    if (folderSnippets.length === 0) {
+      alert('This folder has no snippets to export');
+      return;
+    }
+
+    // Get folder name
+    const settings = await StorageManager.getSettings();
+    let folderName = folderId;
+    if (folderId === 'work') folderName = 'Work';
+    else if (folderId === 'personal') folderName = 'Personal';
+    else {
+      const folder = settings.customFolders?.find(f => f.id === folderId);
+      if (folder) folderName = folder.name;
+    }
+
+    // Create export data with only folder snippets
+    const exportData = {
+      snippets: folderSnippets.reduce((acc, snippet) => {
+        acc[snippet.id] = snippet;
+        return acc;
+      }, {} as Record<string, typeof folderSnippets[0]>),
+      settings: { ...settings }, // Include settings for compatibility
+      version: '1.0',
+      exportedAt: Date.now(),
+      folderName
+    };
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `textblitz-export-${Date.now()}.json`;
+    a.download = `textblitz-${folderName.toLowerCase()}-${Date.now()}.json`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -649,14 +773,24 @@ class OptionsPage {
     if (folderId) {
       this.currentEditFolderId = folderId;
       if (title) title.textContent = 'Edit Folder';
-      // Load existing folder data
-      StorageManager.getSettings().then(settings => {
-        const folder = settings.customFolders?.find(f => f.id === folderId);
-        if (folder) {
-          nameInput.value = folder.name;
-          iconInput.value = folder.icon;
-        }
-      });
+
+      // Load default folder data
+      if (folderId === 'work') {
+        nameInput.value = 'Work';
+        iconInput.value = '💼';
+      } else if (folderId === 'personal') {
+        nameInput.value = 'Personal';
+        iconInput.value = '👤';
+      } else {
+        // Load custom folder data
+        StorageManager.getSettings().then(settings => {
+          const folder = settings.customFolders?.find(f => f.id === folderId);
+          if (folder) {
+            nameInput.value = folder.name;
+            iconInput.value = folder.icon;
+          }
+        });
+      }
     } else {
       this.currentEditFolderId = null;
       if (title) title.textContent = 'New Folder';
@@ -690,11 +824,22 @@ class OptionsPage {
     const customFolders = settings.customFolders || [];
 
     if (this.currentEditFolderId) {
-      // Edit existing folder
-      const folder = customFolders.find(f => f.id === this.currentEditFolderId);
-      if (folder) {
-        folder.name = name;
-        folder.icon = icon;
+      // Convert default folders to custom folders when edited
+      if (this.currentEditFolderId === 'work' || this.currentEditFolderId === 'personal') {
+        const newFolder: CustomFolder = {
+          id: this.currentEditFolderId,
+          name,
+          icon,
+          order: customFolders.length,
+        };
+        customFolders.push(newFolder);
+      } else {
+        // Edit existing custom folder
+        const folder = customFolders.find(f => f.id === this.currentEditFolderId);
+        if (folder) {
+          folder.name = name;
+          folder.icon = icon;
+        }
       }
     } else {
       // Create new folder
@@ -716,17 +861,29 @@ class OptionsPage {
 
   private async deleteFolder(folderId: string) {
     const settings = await StorageManager.getSettings();
-    const folder = settings.customFolders?.find(f => f.id === folderId);
 
-    if (!folder) return;
+    // Get folder name
+    let folderName: string;
+    let isCustom = false;
+
+    if (folderId === 'work') {
+      folderName = 'Work';
+    } else if (folderId === 'personal') {
+      folderName = 'Personal';
+    } else {
+      const folder = settings.customFolders?.find(f => f.id === folderId);
+      if (!folder) return;
+      folderName = folder.name;
+      isCustom = true;
+    }
 
     // Check if folder has snippets
     const snippets = await StorageManager.getSnippets();
     const snippetCount = Object.values(snippets).filter(s => s.folder === folderId).length;
 
     const confirmMsg = snippetCount > 0
-      ? `Delete "${folder.name}"? ${snippetCount} snippet(s) will be moved to "No Folder".`
-      : `Delete "${folder.name}"?`;
+      ? `Delete "${folderName}"? ${snippetCount} snippet(s) will be moved to "No Folder".`
+      : `Delete "${folderName}"?`;
 
     if (!confirm(confirmMsg)) return;
 
@@ -740,9 +897,11 @@ class OptionsPage {
       }
     }
 
-    // Remove folder from settings
-    settings.customFolders = settings.customFolders?.filter(f => f.id !== folderId);
-    await StorageManager.saveSettings(settings);
+    // Remove custom folder from settings
+    if (isCustom) {
+      settings.customFolders = settings.customFolders?.filter(f => f.id !== folderId);
+      await StorageManager.saveSettings(settings);
+    }
 
     // Switch to "All Snippets" if we're viewing the deleted folder
     if (this.currentFolder === folderId) {

@@ -197,14 +197,31 @@ Interactive forms with popup UI + advanced organization features
 
 ---
 
-## 🚀 v0.6.0 - Power Features & Site Compatibility
+## 🚀 v0.6.0 - UI Polish & Power Features
 
-**Status:** 📋 Planned
+**Status:** 🚧 In Progress (Phase 1 Complete ✅, Phase 2 Planned 📋)
 
-### Goal
-Power user features + robust site compatibility
+### Phase 1: UI Polish & Quality of Life (COMPLETE ✅)
 
-### Features
+**Features Completed:**
+- [x] **Default folder persistence** - Remembers last used folder for new snippets
+- [x] **Snippet duplication** - Clone snippets with 📋 button (adds "(copy)" suffix)
+- [x] **Keyboard shortcut** - Ctrl+Shift+S to quickly add new snippet
+- [x] **Context-aware export** - Export individual folders or all snippets
+- [x] **Folder rename** - Double-click or ✏️ edit button to rename custom folders (from v0.5.0)
+- [x] **Dark mode** - Light/dark/system theme support (from v0.5.0)
+
+**Testing Status:**
+- [x] TypeScript build successful (37.74 kB options, 34.44 kB content)
+- [ ] Manual testing pending (see TESTING_v0.6.0.md)
+
+---
+
+### Phase 2: Power Features & Site Compatibility (PLANNED 📋)
+
+**Goal:** Advanced text manipulation + robust site compatibility
+
+**Features:**
 - [ ] **Case transformation**:
   - Match trigger case (BTW → BY THE WAY)
   - Transform options: upper, lower, title, capitalize
@@ -231,7 +248,7 @@ Power user features + robust site compatibility
 - [ ] Google Docs editing
 - [ ] Slack message composition
 
-**🎯 Feature Complete Checkpoint**: After v0.6.0, TextBlitz will have comprehensive text expansion functionality including conditionals, formulas, and site compatibility.
+**🎯 Feature Complete Checkpoint**: After v0.6.0 Phase 2, TextBlitz will have comprehensive text expansion functionality including conditionals, formulas, and site compatibility.
 
 ---
 

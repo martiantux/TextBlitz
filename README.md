@@ -22,7 +22,7 @@ Built for anyone who types the same things repeatedly.
 
 ---
 
-## ✨ Current Features (v0.5.0)
+## ✨ Current Features (v0.6.0)
 
 ### What Works Now
 - ⚡ **Text expansion** - Works in all input types (text, email, search, textarea, etc.)
@@ -46,19 +46,23 @@ Built for anyone who types the same things repeatedly.
 - 📊 **Sort options** - By recent, most used, or alphabetical
 - 🏷️ **Labels & triggers** - Separate friendly names from shortcut text
 - 📝 **Interactive forms** - {formtext}, {formmenu}, {formdate}, {formtoggle}, {formparagraph}
-- 💾 **Import/Export** - Backup and restore your snippets
+- 💾 **Import/Export** - Backup and restore your snippets (including individual folders)
 - 🚀 **Fast matching** - Trie data structure for O(m) lookup time
 - 🔒 **Privacy-first** - Your snippets never leave your computer, API keys stored locally
 - 📈 **Usage tracking** - See which snippets you use most
 - 🐛 **Debug mode** - Optional verbose logging for troubleshooting
+- 📋 **Snippet duplication** - Clone existing snippets with one click
+- ⌨️ **Keyboard shortcuts** - Ctrl+Shift+S to quickly add new snippets
+- 🗂️ **Smart folder management** - Remembers last used folder, rename with double-click or edit button
+- 📤 **Context-aware export** - Export all snippets or just current folder
 
 ### Current Limitations
-- ⚠️ **Limited contenteditable** - Gmail/Google Docs may have issues
-- ⚠️ **Basic folder management** - No drag-and-drop or bulk operations yet
+- ⚠️ **Limited contenteditable** - Gmail/Google Docs may have issues (improving in v0.6 Phase 2)
+- ⚠️ **No drag-and-drop yet** - Reordering snippets/folders coming in future version
 
 ### Coming Soon (see ROADMAP.md)
-- ⚙️ **Power features** - Conditionals, formulas, case matching (v0.6)
-- 🎨 **Advanced UI** - Drag-and-drop, bulk operations (v0.6)
+- ⚙️ **Power features** - Conditionals, formulas, case matching (v0.6 Phase 2)
+- 🌐 **Better site compatibility** - Improved Gmail/Docs/Slack support (v0.6 Phase 2)
 - 🤝 **Snippet packs** - Import/export collections (v1.0)
 
 ---
@@ -142,7 +146,7 @@ TextBlitz comes with 3 example snippets pre-installed:
 
 ### Common Use Cases
 
-**Current capabilities (v0.5.0):**
+**Current capabilities (v0.6.0):**
 - **Email templates**: `followup` → "Hi [name], just following up on..."
 - **Date stamps**: `td` → `{date}` → "2025-10-13"
 - **Signatures with dates**: `sig` → "Best regards,\n{cursor}\nSent on {date:MMMM D, YYYY}"
@@ -153,8 +157,9 @@ TextBlitz comes with 3 example snippets pre-installed:
 - **Code snippets**: `arrow` → `() => {}`
 - **URLs**: `gh` → `https://github.com/yourusername`
 
-**Coming in v0.6.0:**
+**Coming in v0.6.0 Phase 2:**
 - **Conditionals & formulas**: Advanced logic and calculations in snippets
+- **Better site compatibility**: Improved support for Gmail, Google Docs, Slack
 
 ---
 
@@ -232,15 +237,14 @@ npm run build
 
 See [ROADMAP.md](./ROADMAP.md) for detailed feature plans and version milestones.
 
-**v0.5.0 - Complete! ✅**
-- Interactive forms with 5 field types and popup UI
-- 4 LLM providers with 8 models and tier configuration
-- Custom folders with emoji icons
-- Dark mode (light/dark/system)
-- Simplified LLM settings UX
-- **Achievement:** Full-featured forms and organization!
+**v0.6.0 Phase 1 - Complete! ✅**
+- UI Polish: Default folder persistence, snippet duplication, keyboard shortcuts
+- Context-aware export (individual folders or all snippets)
+- Folder rename with double-click or edit button
+- All v0.5.0 features stable (forms, LLM, custom folders, dark mode)
+- **Achievement:** Polished UX and quality-of-life improvements!
 
-**Next Up - v0.6.0: Power Features**
+**Next Up - v0.6.0 Phase 2: Power Features**
 - Conditionals, formulas, and case transformations
 - Better contenteditable support (Gmail, Google Docs, Slack)
 - Snippet chaining and regex transformations

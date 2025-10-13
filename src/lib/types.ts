@@ -69,6 +69,7 @@ export interface Settings {
   debugMode: boolean;
   darkMode?: 'light' | 'dark' | 'system'; // Theme preference
   customFolders?: CustomFolder[]; // User-created folders
+  lastUsedFolder?: string; // Remember last folder for new snippets
   // LLM settings
   llmKeys: {
     groq?: string;
