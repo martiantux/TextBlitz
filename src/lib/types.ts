@@ -54,12 +54,21 @@ export interface LLMUsageStats {
   monthStart?: number; // Track monthly usage for limits
 }
 
+export interface CustomFolder {
+  id: string;
+  name: string;
+  icon: string; // Emoji
+  order: number;
+}
+
 export interface Settings {
   enabled: boolean;
   delimiter: string;
   expandOnDelimiter: boolean;
   caseSensitive: boolean;
   debugMode: boolean;
+  darkMode?: 'light' | 'dark' | 'system'; // Theme preference
+  customFolders?: CustomFolder[]; // User-created folders
   // LLM settings
   llmKeys: {
     groq?: string;
@@ -109,6 +118,8 @@ export const DEFAULT_SETTINGS: Settings = {
   expandOnDelimiter: true,
   caseSensitive: false,
   debugMode: false,
+  darkMode: 'system',
+  customFolders: [],
   llmKeys: {},
   llmDefaultProvider: 'groq',
   llmTimeout: 5000,

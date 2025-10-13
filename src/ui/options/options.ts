@@ -1,9 +1,10 @@
 import { StorageManager } from '../../lib/storage';
-import { Snippet, TriggerMode, SnippetType, LLMProvider } from '../../lib/types';
+import { Snippet, TriggerMode, SnippetType, LLMProvider, CustomFolder } from '../../lib/types';
 import { llmManager } from '../../lib/llm/manager';
 
 class OptionsPage {
   private currentEditId: string | null = null;
+  private currentEditFolderId: string | null = null;
   private currentFolder: string = 'all';
   private searchQuery: string = '';
   private sortBy: 'recent' | 'usage' | 'alpha' = 'recent';
@@ -16,17 +17,35 @@ class OptionsPage {
   private async initialize() {
     await StorageManager.initialize();
     await this.loadSettings();
+    await this.renderFolders();
     await this.loadSnippets();
     this.setupEventListeners();
-    this.updateFolderCounts();
+    this.applyTheme();
   }
 
   private async loadSettings() {
     const settings = await StorageManager.getSettings();
     const enabledToggle = document.getElementById('enabled-toggle') as HTMLInputElement;
+    const themeSelect = document.getElementById('theme-select') as HTMLSelectElement;
+
     if (enabledToggle) {
       enabledToggle.checked = settings.enabled;
     }
+    if (themeSelect) {
+      themeSelect.value = settings.darkMode || 'system';
+    }
+  }
+
+  private async applyTheme() {
+    const settings = await StorageManager.getSettings();
+    const theme = settings.darkMode || 'system';
+
+    let effectiveTheme = theme;
+    if (theme === 'system') {
+      effectiveTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+
+    document.documentElement.setAttribute('data-theme', effectiveTheme);
   }
 
   private async loadSnippets() {
@@ -169,6 +188,15 @@ class OptionsPage {
       await StorageManager.saveSettings(settings);
     });
 
+    // Theme selector
+    const themeSelect = document.getElementById('theme-select') as HTMLSelectElement;
+    themeSelect?.addEventListener('change', async () => {
+      const settings = await StorageManager.getSettings();
+      settings.darkMode = themeSelect.value as 'light' | 'dark' | 'system';
+      await StorageManager.saveSettings(settings);
+      await this.applyTheme();
+    });
+
     // Add snippet button
     document.getElementById('add-snippet-btn')?.addEventListener('click', () => {
       this.showModal();
@@ -226,9 +254,24 @@ class OptionsPage {
       if (file) this.importData(file);
     });
 
-    // New folder button (future feature)
+    // New folder button
     document.getElementById('new-folder-btn')?.addEventListener('click', () => {
-      alert('Custom folders coming soon!');
+      this.showFolderModal();
+    });
+
+    // Folder modal actions
+    document.getElementById('cancel-folder-btn')?.addEventListener('click', () => {
+      this.hideFolderModal();
+    });
+
+    document.getElementById('save-folder-btn')?.addEventListener('click', () => {
+      this.saveFolder();
+    });
+
+    document.getElementById('folder-modal')?.addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) {
+        this.hideFolderModal();
+      }
     });
 
     // LLM Settings
@@ -305,6 +348,7 @@ class OptionsPage {
   private async updateFolderCounts() {
     const snippets = await StorageManager.getSnippets();
     const snippetArray = Object.values(snippets);
+    const settings = await StorageManager.getSettings();
 
     const allCount = snippetArray.length;
     const workCount = snippetArray.filter(s => s.folder === 'work').length;
@@ -317,9 +361,87 @@ class OptionsPage {
     if (countAll) countAll.textContent = allCount.toString();
     if (countWork) countWork.textContent = workCount.toString();
     if (countPersonal) countPersonal.textContent = personalCount.toString();
+
+    // Update snippet counter
+    const counterEl = document.getElementById('snippet-counter');
+    if (counterEl) {
+      counterEl.textContent = `${allCount}/∞`;
+    }
+
+    // Update custom folder counts
+    const customFolders = settings.customFolders || [];
+    customFolders.forEach(folder => {
+      const count = snippetArray.filter(s => s.folder === folder.id).length;
+      const countEl = document.getElementById(`count-${folder.id}`);
+      if (countEl) countEl.textContent = count.toString();
+    });
   }
 
-  private showModal(snippet?: Snippet) {
+  private async renderFolders() {
+    const folderList = document.getElementById('folder-list');
+    if (!folderList) return;
+
+    const settings = await StorageManager.getSettings();
+    const customFolders = settings.customFolders || [];
+
+    // Build folder HTML
+    let html = `
+      <div class="folder-item ${this.currentFolder === 'all' ? 'active' : ''}" data-folder="all">
+        <span class="folder-icon">📁</span>
+        <span>All Snippets</span>
+        <span class="folder-count" id="count-all">0</span>
+      </div>
+      <div class="folder-item ${this.currentFolder === 'work' ? 'active' : ''}" data-folder="work">
+        <span class="folder-icon">💼</span>
+        <span>Work</span>
+        <span class="folder-count" id="count-work">0</span>
+      </div>
+      <div class="folder-item ${this.currentFolder === 'personal' ? 'active' : ''}" data-folder="personal">
+        <span class="folder-icon">👤</span>
+        <span>Personal</span>
+        <span class="folder-count" id="count-personal">0</span>
+      </div>
+    `;
+
+    // Add custom folders
+    customFolders.forEach(folder => {
+      html += `
+        <div class="folder-item ${this.currentFolder === folder.id ? 'active' : ''}" data-folder="${folder.id}">
+          <span class="folder-icon">${folder.icon}</span>
+          <span>${this.escapeHtml(folder.name)}</span>
+          <span class="folder-count" id="count-${folder.id}">0</span>
+          <button class="folder-delete-btn" data-folder-id="${folder.id}" title="Delete folder">×</button>
+        </div>
+      `;
+    });
+
+    folderList.innerHTML = html;
+
+    // Re-attach folder click listeners
+    document.querySelectorAll('.folder-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        // Don't switch folder if clicking delete button
+        if ((e.target as HTMLElement).classList.contains('folder-delete-btn')) {
+          return;
+        }
+        const folder = (e.currentTarget as HTMLElement).getAttribute('data-folder');
+        if (folder) this.switchFolder(folder);
+      });
+    });
+
+    // Attach delete listeners
+    document.querySelectorAll('.folder-delete-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const folderId = (e.currentTarget as HTMLElement).getAttribute('data-folder-id');
+        if (folderId) this.deleteFolder(folderId);
+      });
+    });
+
+    await this.updateFolderCounts();
+  }
+
+  private async showModal(snippet?: Snippet) {
     const modal = document.getElementById('snippet-modal');
     const title = document.getElementById('modal-title');
     const labelInput = document.getElementById('snippet-label') as HTMLInputElement;
@@ -333,6 +455,9 @@ class OptionsPage {
     const llmProviderSelect = document.getElementById('snippet-llm-provider') as HTMLSelectElement;
     const llmPromptInput = document.getElementById('snippet-llm-prompt') as HTMLTextAreaElement;
     const fallbackInput = document.getElementById('snippet-fallback') as HTMLInputElement;
+
+    // Update folder dropdown with custom folders
+    await this.updateFolderDropdown();
 
     if (snippet) {
       this.currentEditId = snippet.id;
@@ -494,6 +619,139 @@ class OptionsPage {
       alert('Failed to import data. Please check the file format.');
       console.error(error);
     }
+  }
+
+  private async updateFolderDropdown() {
+    const folderSelect = document.getElementById('snippet-folder') as HTMLSelectElement;
+    if (!folderSelect) return;
+
+    const settings = await StorageManager.getSettings();
+    const customFolders = settings.customFolders || [];
+
+    // Build folder options
+    let html = '<option value="">No Folder</option>';
+    html += '<option value="work">💼 Work</option>';
+    html += '<option value="personal">👤 Personal</option>';
+
+    customFolders.forEach(folder => {
+      html += `<option value="${folder.id}">${folder.icon} ${this.escapeHtml(folder.name)}</option>`;
+    });
+
+    folderSelect.innerHTML = html;
+  }
+
+  private showFolderModal(folderId?: string) {
+    const modal = document.getElementById('folder-modal');
+    const title = document.getElementById('folder-modal-title');
+    const nameInput = document.getElementById('folder-name') as HTMLInputElement;
+    const iconInput = document.getElementById('folder-icon') as HTMLInputElement;
+
+    if (folderId) {
+      this.currentEditFolderId = folderId;
+      if (title) title.textContent = 'Edit Folder';
+      // Load existing folder data
+      StorageManager.getSettings().then(settings => {
+        const folder = settings.customFolders?.find(f => f.id === folderId);
+        if (folder) {
+          nameInput.value = folder.name;
+          iconInput.value = folder.icon;
+        }
+      });
+    } else {
+      this.currentEditFolderId = null;
+      if (title) title.textContent = 'New Folder';
+      nameInput.value = '';
+      iconInput.value = '📂';
+    }
+
+    modal?.classList.add('active');
+    nameInput.focus();
+  }
+
+  private hideFolderModal() {
+    document.getElementById('folder-modal')?.classList.remove('active');
+    this.currentEditFolderId = null;
+  }
+
+  private async saveFolder() {
+    const nameInput = document.getElementById('folder-name') as HTMLInputElement;
+    const iconInput = document.getElementById('folder-icon') as HTMLInputElement;
+
+    const name = nameInput.value.trim();
+    const icon = iconInput.value.trim() || '📂';
+
+    if (!name) {
+      alert('Please enter a folder name');
+      nameInput.focus();
+      return;
+    }
+
+    const settings = await StorageManager.getSettings();
+    const customFolders = settings.customFolders || [];
+
+    if (this.currentEditFolderId) {
+      // Edit existing folder
+      const folder = customFolders.find(f => f.id === this.currentEditFolderId);
+      if (folder) {
+        folder.name = name;
+        folder.icon = icon;
+      }
+    } else {
+      // Create new folder
+      const newFolder: CustomFolder = {
+        id: `folder-${Date.now()}`,
+        name,
+        icon,
+        order: customFolders.length,
+      };
+      customFolders.push(newFolder);
+    }
+
+    settings.customFolders = customFolders;
+    await StorageManager.saveSettings(settings);
+    await this.renderFolders();
+    await this.updateFolderDropdown();
+    this.hideFolderModal();
+  }
+
+  private async deleteFolder(folderId: string) {
+    const settings = await StorageManager.getSettings();
+    const folder = settings.customFolders?.find(f => f.id === folderId);
+
+    if (!folder) return;
+
+    // Check if folder has snippets
+    const snippets = await StorageManager.getSnippets();
+    const snippetCount = Object.values(snippets).filter(s => s.folder === folderId).length;
+
+    const confirmMsg = snippetCount > 0
+      ? `Delete "${folder.name}"? ${snippetCount} snippet(s) will be moved to "No Folder".`
+      : `Delete "${folder.name}"?`;
+
+    if (!confirm(confirmMsg)) return;
+
+    // Move snippets to no folder
+    if (snippetCount > 0) {
+      for (const snippet of Object.values(snippets)) {
+        if (snippet.folder === folderId) {
+          snippet.folder = undefined;
+          await StorageManager.saveSnippet(snippet);
+        }
+      }
+    }
+
+    // Remove folder from settings
+    settings.customFolders = settings.customFolders?.filter(f => f.id !== folderId);
+    await StorageManager.saveSettings(settings);
+
+    // Switch to "All Snippets" if we're viewing the deleted folder
+    if (this.currentFolder === folderId) {
+      this.switchFolder('all');
+    }
+
+    await this.renderFolders();
+    await this.updateFolderDropdown();
+    await this.loadSnippets();
   }
 
   private escapeHtml(text: string): string {

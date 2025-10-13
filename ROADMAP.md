@@ -160,35 +160,40 @@ Before delay{delay +3s}After 3 seconds
 
 ## 🚀 v0.5.0 - Interactive Forms & Organization
 
-**Status:** 📋 Planned
+**Status:** ✅ Complete (2025-10-13)
 
 ### Goal
 Interactive forms with popup UI + advanced organization features
 
-### Features
-- [ ] **Form popup system** - Modal appears when snippet has form fields
-- [ ] **Basic form commands**:
+### Features Completed ✅
+- [x] **Form popup system** - Modal appears when snippet has form fields
+- [x] **Basic form commands**:
   - `{formtext: label=Customer Name}` - Single line input
   - `{formparagraph: label=Notes}` - Multi-line input
   - `{formmenu: label=Status; options=Active,Inactive}` - Dropdown
   - `{formdate: label=Due Date}` - Date picker
   - `{formtoggle: label=Include Footer}` - Toggle switch
-- [ ] **Variable substitution** - Use form values in expansion
-- [ ] **Form validation** - Required fields, format checking
-- [ ] **Default values** - Pre-fill form fields
-- [ ] **Custom folders** - Create/delete/rename custom folders
-- [ ] **Bulk operations** - Select multiple, export, delete
-- [ ] **Drag-and-drop** - Reorder snippets and folders
-- [ ] **Dark mode** - System-aware theme toggle
+- [x] **Variable substitution** - Use form values in expansion
+- [x] **Form validation** - Required fields, format checking
+- [x] **Default values** - Pre-fill form fields
+- [x] **Custom folders** - Create/delete custom folders with emoji icons
+- [x] **Dark mode** - System-aware theme toggle (light/dark/system)
+- [x] **Snippet counter** - "X/∞" unlimited indicator
+- [x] **LLM configuration** - 4 providers (Groq, OpenAI, Anthropic, Gemini), 8 models, tier config
+- [x] **Visual usage alerts** - Color-coded rate limit warnings
 
-### Testing
-- [ ] Form popup appearance/styling
-- [ ] Form submission and cancellation
-- [ ] Variable replacement accuracy
-- [ ] Multiple forms in one snippet
-- [ ] Custom folder CRUD operations
-- [ ] Search performance with 500+ snippets
-- [ ] Drag-and-drop reliability
+### Deferred to v0.6.0
+- [ ] **Bulk operations** - Select multiple, export, delete (nice-to-have)
+- [ ] **Drag-and-drop** - Reorder snippets and folders (nice-to-have)
+- [ ] **Folder rename** - Edit folder name/icon in-place (nice-to-have)
+
+### Testing Status
+- [x] Build compiles successfully (35.55 kB options, 34.44 kB content)
+- [x] TypeScript types complete
+- [ ] Manual testing pending (see HANDOVER.md for test checklist)
+- [ ] Form testing on Gmail, Google Docs, Slack (deferred)
+- [ ] LLM providers with real API keys (deferred)
+- [ ] Performance with 500+ snippets (deferred)
 
 ---
 

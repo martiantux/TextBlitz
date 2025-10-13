@@ -22,7 +22,7 @@ Built for anyone who types the same things repeatedly.
 
 ---
 
-## ✨ Current Features (v0.4.0)
+## ✨ Current Features (v0.5.0)
 
 ### What Works Now
 - ⚡ **Text expansion** - Works in all input types (text, email, search, textarea, etc.)
@@ -35,15 +35,17 @@ Built for anyone who types the same things repeatedly.
 - 📋 **{clipboard} command** - Insert clipboard content into snippets
 - ⌨️ **{enter} & {tab}** - Simulate keyboard presses for form automation
 - ⏱️ **{delay}** - Pause between actions ({delay +0.3s} or {delay +300ms})
-- 🤖 **LLM-powered snippets** - LLM-generated text variations with Groq or Anthropic
+- 🤖 **LLM-powered snippets** - 4 providers (Groq, OpenAI, Anthropic, Gemini), 8 models
 - ✨ **Snippet generator** - Create snippets from natural language descriptions
-- 💰 **Usage & cost tracking** - Monitor API usage, tokens, and estimated costs
-- 🚦 **Rate limiting** - Built-in protection against API abuse (25/min for Groq)
+- 💰 **Usage & cost tracking** - Monitor API usage, tokens, and estimated costs per provider
+- 🚦 **Rate limiting** - Tier-aware protection with visual alerts (green/orange/red)
 - 🎨 **Modern UI** - Clean two-panel layout with sidebar navigation
-- 📁 **Folder organization** - Organize snippets into Work, Personal, or custom folders
+- 📁 **Custom folders** - Create/delete/organize with emoji icons
+- 🌙 **Dark mode** - Light/dark/system theme support
 - 🔍 **Search & filter** - Real-time search by label, trigger, or expansion
 - 📊 **Sort options** - By recent, most used, or alphabetical
 - 🏷️ **Labels & triggers** - Separate friendly names from shortcut text
+- 📝 **Interactive forms** - {formtext}, {formmenu}, {formdate}, {formtoggle}, {formparagraph}
 - 💾 **Import/Export** - Backup and restore your snippets
 - 🚀 **Fast matching** - Trie data structure for O(m) lookup time
 - 🔒 **Privacy-first** - Your snippets never leave your computer, API keys stored locally
@@ -51,15 +53,12 @@ Built for anyone who types the same things repeatedly.
 - 🐛 **Debug mode** - Optional verbose logging for troubleshooting
 
 ### Current Limitations
-- ⚠️ **No forms/variables** - Can't prompt for input during expansion yet (v0.5.0)
 - ⚠️ **Limited contenteditable** - Gmail/Google Docs may have issues
-- ⚠️ **Static folders** - Can't create/delete custom folders yet
+- ⚠️ **Basic folder management** - No drag-and-drop or bulk operations yet
 
 ### Coming Soon (see ROADMAP.md)
-- 📝 **Interactive forms** - {formtext}, {formmenu}, {formdate} with popup (v0.5)
-- 📁 **Custom folders** - Create/delete/organize folders (v0.5)
 - ⚙️ **Power features** - Conditionals, formulas, case matching (v0.6)
-- 🎨 **Dark mode & polish** - Better UI, drag-and-drop, bulk operations (v0.5)
+- 🎨 **Advanced UI** - Drag-and-drop, bulk operations (v0.6)
 - 🤝 **Snippet packs** - Import/export collections (v1.0)
 
 ---
@@ -143,18 +142,19 @@ TextBlitz comes with 3 example snippets pre-installed:
 
 ### Common Use Cases
 
-**Current capabilities (v0.4.0):**
+**Current capabilities (v0.5.0):**
 - **Email templates**: `followup` → "Hi [name], just following up on..."
 - **Date stamps**: `td` → `{date}` → "2025-10-13"
 - **Signatures with dates**: `sig` → "Best regards,\n{cursor}\nSent on {date:MMMM D, YYYY}"
 - **Clipboard insertion**: `dear` → "Dear {clipboard}, thank you for..."
 - **Form automation**: `sss` → `out {enter} {delay +0.3s} {tab} left {enter}` - Navigate through form fields
 - **Future dates**: `followup` → "Contact on {date:MMMM Do YYYY shift +3M}" → "Contact on January 13th, 2026"
+- **Interactive forms**: `contact` → Popup asks for Name, Email, Message → Fills template with values
 - **Code snippets**: `arrow` → `() => {}`
 - **URLs**: `gh` → `https://github.com/yourusername`
 
-**Coming in v0.5.0:**
-- **Interactive forms**: Popup prompts for user input during expansion
+**Coming in v0.6.0:**
+- **Conditionals & formulas**: Advanced logic and calculations in snippets
 
 ---
 
@@ -232,17 +232,19 @@ npm run build
 
 See [ROADMAP.md](./ROADMAP.md) for detailed feature plans and version milestones.
 
-**v0.4.0 - Complete! ✅**
-- Keyboard automation (`{enter}`, `{tab}`, `{delay}`)
-- Date arithmetic (`{date shift +3M}` add/subtract days/months/years)
-- Ordinal date formats (`Do` → 1st, 2nd, 3rd)
-- **Achievement:** Full-featured form automation!
+**v0.5.0 - Complete! ✅**
+- Interactive forms with 5 field types and popup UI
+- 4 LLM providers with 8 models and tier configuration
+- Custom folders with emoji icons
+- Dark mode (light/dark/system)
+- Simplified LLM settings UX
+- **Achievement:** Full-featured forms and organization!
 
-**Next Up - v0.5.0: Interactive Forms & Organization**
-- Form commands with popup UI (`{formtext}`, `{formmenu}`, `{formdate}`)
-- Custom folders (create/delete/organize)
-- Dark mode and UI polish
-- **Goal:** Dynamic user input during expansion
+**Next Up - v0.6.0: Power Features**
+- Conditionals, formulas, and case transformations
+- Better contenteditable support (Gmail, Google Docs, Slack)
+- Snippet chaining and regex transformations
+- **Goal:** Advanced text manipulation and site compatibility
 
 **Future Highlights:**
 - **v0.5**: Interactive forms with popup UI

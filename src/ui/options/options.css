@@ -14,25 +14,25 @@
   --color-danger: #ef4444;
   --color-danger-hover: #dc2626;
 
-  /* Backgrounds */
+  /* Backgrounds - Light */
   --bg-page: #f9fafb;
   --bg-card: #ffffff;
   --bg-sidebar: #f3f4f6;
   --bg-hover: #f9fafb;
   --bg-input: #ffffff;
 
-  /* Text */
+  /* Text - Light */
   --text-primary: #111827;
   --text-secondary: #6b7280;
   --text-tertiary: #9ca3af;
   --text-inverse: #ffffff;
 
-  /* Borders */
+  /* Borders - Light */
   --border-color: #e5e7eb;
   --border-radius: 8px;
   --border-radius-sm: 6px;
 
-  /* Shadows */
+  /* Shadows - Light */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
@@ -46,6 +46,30 @@
 
   /* Transitions */
   --transition: 200ms ease;
+}
+
+/* Dark Mode */
+[data-theme="dark"] {
+  /* Backgrounds - Dark */
+  --bg-page: #0f172a;
+  --bg-card: #1e293b;
+  --bg-sidebar: #1a2332;
+  --bg-hover: #334155;
+  --bg-input: #1e293b;
+
+  /* Text - Dark */
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-tertiary: #94a3b8;
+  --text-inverse: #0f172a;
+
+  /* Borders - Dark */
+  --border-color: #334155;
+
+  /* Shadows - Dark */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.4);
 }
 
 body {
@@ -210,6 +234,43 @@ body {
   color: rgba(255, 255, 255, 0.8);
 }
 
+.folder-delete-btn {
+  margin-left: auto;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--color-danger);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  padding: 0;
+  opacity: 0;
+  transition: all var(--transition);
+}
+
+.folder-item:hover .folder-delete-btn {
+  opacity: 1;
+}
+
+.folder-delete-btn:hover {
+  background: var(--color-danger);
+  color: var(--text-inverse);
+}
+
+.folder-item.active .folder-delete-btn {
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--text-inverse);
+}
+
+.folder-item.active:hover .folder-delete-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
 .btn-new-folder {
   display: flex;
   align-items: center;
@@ -230,6 +291,10 @@ body {
   border-color: var(--color-primary);
   color: var(--color-primary);
   background: rgba(99, 102, 241, 0.05);
+}
+
+.theme-selector {
+  margin-top: var(--spacing-md);
 }
 
 /* Content Area */
