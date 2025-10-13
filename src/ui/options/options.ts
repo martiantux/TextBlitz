@@ -518,38 +518,107 @@ class OptionsPage {
 
   private async showLLMSettings() {
     const modal = document.getElementById('llm-settings-modal');
+
+    // Get all form elements
+    const defaultProviderSelect = document.getElementById('llm-default-provider') as HTMLSelectElement;
     const groqKeyInput = document.getElementById('llm-groq-key') as HTMLInputElement;
+    const groqModelSelect = document.getElementById('llm-groq-model') as HTMLSelectElement;
+    const groqTierSelect = document.getElementById('llm-groq-tier') as HTMLSelectElement;
     const openaiKeyInput = document.getElementById('llm-openai-key') as HTMLInputElement;
+    const openaiModelSelect = document.getElementById('llm-openai-model') as HTMLSelectElement;
+    const openaiTierSelect = document.getElementById('llm-openai-tier') as HTMLSelectElement;
     const anthropicKeyInput = document.getElementById('llm-anthropic-key') as HTMLInputElement;
+    const anthropicModelSelect = document.getElementById('llm-anthropic-model') as HTMLSelectElement;
+    const anthropicTierSelect = document.getElementById('llm-anthropic-tier') as HTMLSelectElement;
     const geminiKeyInput = document.getElementById('llm-gemini-key') as HTMLInputElement;
+    const geminiModelSelect = document.getElementById('llm-gemini-model') as HTMLSelectElement;
+    const geminiTierSelect = document.getElementById('llm-gemini-tier') as HTMLSelectElement;
     const systemPromptInput = document.getElementById('llm-system-prompt') as HTMLTextAreaElement;
+    const alertThresholdInput = document.getElementById('llm-alert-threshold') as HTMLInputElement;
+    const monthlyBudgetInput = document.getElementById('llm-monthly-budget') as HTMLInputElement;
 
     // Load current settings
     const settings = await StorageManager.getSettings();
-    groqKeyInput.value = settings.llmKeys.groq || '';
-    openaiKeyInput.value = settings.llmKeys.openai || '';
-    anthropicKeyInput.value = settings.llmKeys.anthropic || '';
-    geminiKeyInput.value = settings.llmKeys.gemini || '';
-    systemPromptInput.value = settings.llmSystemPrompt || '';
 
-    // Save on input
-    const saveKeys = async () => {
+    // Set values
+    defaultProviderSelect.value = settings.llmDefaultProvider;
+    groqKeyInput.value = settings.llmKeys.groq || '';
+    groqModelSelect.value = settings.llmModels.groq || 'llama-3.3-70b-versatile';
+    groqTierSelect.value = settings.llmTiers.groq || 'free';
+    openaiKeyInput.value = settings.llmKeys.openai || '';
+    openaiModelSelect.value = settings.llmModels.openai || 'gpt-4o-mini';
+    openaiTierSelect.value = settings.llmTiers.openai || 'tier1';
+    anthropicKeyInput.value = settings.llmKeys.anthropic || '';
+    anthropicModelSelect.value = settings.llmModels.anthropic || 'claude-sonnet-4-20250514';
+    anthropicTierSelect.value = settings.llmTiers.anthropic || 'tier1';
+    geminiKeyInput.value = settings.llmKeys.gemini || '';
+    geminiModelSelect.value = settings.llmModels.gemini || 'gemini-2.0-flash-exp';
+    geminiTierSelect.value = settings.llmTiers.gemini || 'free';
+    systemPromptInput.value = settings.llmSystemPrompt || '';
+    alertThresholdInput.value = settings.llmUsageAlert?.toString() || '80';
+    monthlyBudgetInput.value = settings.llmMonthlyBudget?.toString() || '';
+
+    // Save function
+    const saveSettings = async () => {
+      settings.llmDefaultProvider = defaultProviderSelect.value as LLMProvider;
       settings.llmKeys.groq = groqKeyInput.value.trim() || undefined;
       settings.llmKeys.openai = openaiKeyInput.value.trim() || undefined;
       settings.llmKeys.anthropic = anthropicKeyInput.value.trim() || undefined;
       settings.llmKeys.gemini = geminiKeyInput.value.trim() || undefined;
+      settings.llmModels.groq = groqModelSelect.value;
+      settings.llmModels.openai = openaiModelSelect.value;
+      settings.llmModels.anthropic = anthropicModelSelect.value;
+      settings.llmModels.gemini = geminiModelSelect.value;
+      settings.llmTiers.groq = groqTierSelect.value as any;
+      settings.llmTiers.openai = openaiTierSelect.value as any;
+      settings.llmTiers.anthropic = anthropicTierSelect.value as any;
+      settings.llmTiers.gemini = geminiTierSelect.value as any;
       settings.llmSystemPrompt = systemPromptInput.value.trim() || undefined;
+      settings.llmUsageAlert = parseInt(alertThresholdInput.value) || 80;
+      settings.llmMonthlyBudget = monthlyBudgetInput.value ? parseFloat(monthlyBudgetInput.value) : undefined;
       await StorageManager.saveSettings(settings);
     };
 
-    groqKeyInput.addEventListener('change', saveKeys);
-    openaiKeyInput.addEventListener('change', saveKeys);
-    anthropicKeyInput.addEventListener('change', saveKeys);
-    geminiKeyInput.addEventListener('change', saveKeys);
-    systemPromptInput.addEventListener('change', saveKeys);
+    // Attach change listeners
+    defaultProviderSelect.addEventListener('change', saveSettings);
+    groqKeyInput.addEventListener('change', saveSettings);
+    groqModelSelect.addEventListener('change', saveSettings);
+    groqTierSelect.addEventListener('change', saveSettings);
+    openaiKeyInput.addEventListener('change', saveSettings);
+    openaiModelSelect.addEventListener('change', saveSettings);
+    openaiTierSelect.addEventListener('change', saveSettings);
+    anthropicKeyInput.addEventListener('change', saveSettings);
+    anthropicModelSelect.addEventListener('change', saveSettings);
+    anthropicTierSelect.addEventListener('change', saveSettings);
+    geminiKeyInput.addEventListener('change', saveSettings);
+    geminiModelSelect.addEventListener('change', saveSettings);
+    geminiTierSelect.addEventListener('change', saveSettings);
+    systemPromptInput.addEventListener('change', saveSettings);
+    alertThresholdInput.addEventListener('change', saveSettings);
+    monthlyBudgetInput.addEventListener('change', saveSettings);
 
-    // Save current values before showing modal
-    this.llmSettingsSaveCallback = saveKeys;
+    // Advanced settings toggle
+    const advancedToggle = document.getElementById('advanced-settings-toggle');
+    const advancedContent = document.getElementById('advanced-settings-content');
+    const advancedIcon = document.getElementById('advanced-settings-icon');
+
+    advancedToggle?.addEventListener('click', () => {
+      const isHidden = advancedContent!.style.display === 'none';
+      advancedContent!.style.display = isHidden ? 'block' : 'none';
+      advancedIcon!.textContent = isHidden ? '▼' : '▶';
+    });
+
+    // Reset all stats button
+    const resetAllBtn = document.getElementById('reset-all-stats-btn');
+    resetAllBtn?.addEventListener('click', async () => {
+      if (confirm('Reset all usage statistics? This cannot be undone.')) {
+        await llmManager.getUsageTracker().resetAllStats();
+        await this.loadUsageStats();
+      }
+    });
+
+    // Save callback
+    this.llmSettingsSaveCallback = saveSettings;
 
     // Load usage stats
     await this.loadUsageStats();
@@ -696,41 +765,73 @@ Return ONLY the JSON, no explanation.`;
     try {
       const result = await chrome.storage.local.get('llmUsage');
       const usage = result.llmUsage;
+      const settings = await StorageManager.getSettings();
+      const alertThreshold = settings.llmUsageAlert || 80;
 
-      if (!usage || (!usage.groq && !usage.anthropic)) {
+      if (!usage || (!usage.groq && !usage.anthropic && !usage.openai && !usage.gemini)) {
         statsContainer.innerHTML = '<div style="font-size: 13px; color: #6b7280;">No usage data yet. Create a dynamic snippet to get started!</div>';
         return;
       }
 
+      const tracker = llmManager.getUsageTracker();
       let html = '<div style="display: flex; flex-direction: column; gap: 16px;">';
 
-      if (usage.groq && usage.groq.requests > 0) {
-        html += `
-          <div>
-            <div style="font-weight: 500; margin-bottom: 8px;">Groq</div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 13px; color: #6b7280;">
-              <div>Requests: ${usage.groq.requests}</div>
-              <div>Tokens: ${usage.groq.tokensTotal.toLocaleString()}</div>
-              <div>This minute: ${usage.groq.requestsThisMinute}/25</div>
-              <div>Cost: $${usage.groq.estimatedCost.toFixed(4)}</div>
-            </div>
-          </div>
-        `;
-      }
+      // Helper to render a provider's stats
+      const renderProviderStats = async (
+        provider: 'groq' | 'anthropic' | 'openai' | 'gemini',
+        displayName: string
+      ) => {
+        const stats = usage[provider];
+        if (!stats || stats.requests === 0) return '';
 
-      if (usage.anthropic && usage.anthropic.requests > 0) {
-        html += `
-          <div>
-            <div style="font-weight: 500; margin-bottom: 8px;">Anthropic</div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 13px; color: #6b7280;">
-              <div>Requests: ${usage.anthropic.requests}</div>
-              <div>Tokens: ${usage.anthropic.tokensTotal.toLocaleString()}</div>
-              <div>This minute: ${usage.anthropic.requestsThisMinute}/50</div>
-              <div>Cost: $${usage.anthropic.estimatedCost.toFixed(4)}</div>
+        // Get rate limit for this provider
+        const rateLimit = await tracker.getRateLimit(provider as any);
+        const limit = rateLimit.requestsPerMinute;
+        const current = stats.requestsThisMinute;
+        const percentage = (current / limit) * 100;
+
+        // Determine status color
+        let statusColor = '#10b981'; // green
+        let statusIcon = '✅';
+        if (percentage >= 100) {
+          statusColor = '#ef4444'; // red
+          statusIcon = '🔴';
+        } else if (percentage >= alertThreshold) {
+          statusColor = '#f59e0b'; // orange
+          statusIcon = '⚠️';
+        }
+
+        // Model info
+        const modelName = stats.model || 'N/A';
+        const tier = settings.llmTiers[provider] || '';
+
+        return `
+          <div style="border-left: 3px solid ${statusColor}; padding-left: 12px;">
+            <div style="display: flex; align-items: center; gap: 8px; font-weight: 500; margin-bottom: 8px;">
+              <span>${statusIcon}</span>
+              <span>${displayName}</span>
+              <span style="font-size: 12px; color: #6b7280; font-weight: normal;">(${modelName}${tier ? ', ' + tier : ''})</span>
             </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 13px; color: #6b7280;">
+              <div>Requests: ${stats.requests}</div>
+              <div>Tokens: ${stats.tokensTotal.toLocaleString()}</div>
+              <div style="color: ${statusColor};">This minute: ${current}/${limit}</div>
+              <div>Cost: $${stats.estimatedCost.toFixed(4)}</div>
+            </div>
+            ${percentage >= alertThreshold ? `
+              <div style="margin-top: 8px; padding: 8px; background: ${percentage >= 100 ? '#fef2f2' : '#fef3c7'}; border-radius: 4px; font-size: 12px; color: ${percentage >= 100 ? '#991b1b' : '#92400e'};">
+                ${percentage >= 100 ? 'Rate limit reached!' : `Approaching rate limit (${percentage.toFixed(0)}%)`}
+              </div>
+            ` : ''}
           </div>
         `;
-      }
+      };
+
+      // Render all 4 providers
+      html += await renderProviderStats('groq', 'Groq');
+      html += await renderProviderStats('openai', 'OpenAI');
+      html += await renderProviderStats('anthropic', 'Anthropic');
+      html += await renderProviderStats('gemini', 'Gemini');
 
       html += '</div>';
       statsContainer.innerHTML = html;

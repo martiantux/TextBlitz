@@ -16,11 +16,11 @@ export class LLMManager {
     this.usageTracker = new UsageTracker();
   }
 
-  // Initialize a provider with API key
-  setProvider(providerType: LLMProviderType, apiKey: string, timeout?: number, systemPrompt?: string) {
+  // Initialize a provider with API key and model
+  setProvider(providerType: LLMProviderType, apiKey: string, model?: string, timeout?: number, systemPrompt?: string) {
     let provider: LLMProvider;
 
-    const config = { apiKey, timeout, systemPrompt };
+    const config = { apiKey, model, timeout, systemPrompt };
 
     switch (providerType) {
       case 'groq':
@@ -49,13 +49,13 @@ export class LLMManager {
       throw new Error(`Provider ${providerType} not initialized. Please add an API key in settings.`);
     }
 
-    // Check rate limits
-    if (!this.usageTracker.canMakeRequest(providerType)) {
+    // Check rate limits (now async)
+    if (!(await this.usageTracker.canMakeRequest(providerType))) {
       throw new Error(`Rate limit exceeded for ${providerType}. Please wait a minute.`);
     }
 
-    // Warn if approaching limit
-    if (this.usageTracker.isApproachingLimit(providerType)) {
+    // Warn if approaching limit (now async)
+    if (await this.usageTracker.isApproachingLimit(providerType)) {
       console.warn(`TextBlitz: Approaching rate limit for ${providerType}`);
     }
 

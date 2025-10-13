@@ -1,6 +1,7 @@
 // LLM usage tracking and rate limiting
 
-import { LLMProvider, LLMResponse, RATE_LIMITS, PRICING, UsageStats } from './types';
+import { LLMProvider, LLMResponse, UsageStats, getRateLimitForTier, getPricingForModel } from './types';
+import { StorageManager } from '../storage';
 
 export class UsageTracker {
   private stats: Map<LLMProvider, UsageStats> = new Map();
@@ -13,15 +14,12 @@ export class UsageTracker {
     try {
       const result = await chrome.storage.local.get('llmUsage');
       if (result.llmUsage) {
-        // Convert stored data to Map
-        const groq = result.llmUsage.groq;
-        const anthropic = result.llmUsage.anthropic;
-
-        if (groq) {
-          this.stats.set('groq', groq);
-        }
-        if (anthropic) {
-          this.stats.set('anthropic', anthropic);
+        // Load all 4 providers
+        for (const provider of ['groq', 'anthropic', 'openai', 'gemini'] as LLMProvider[]) {
+          const providerStats = result.llmUsage[provider];
+          if (providerStats) {
+            this.stats.set(provider, providerStats);
+          }
         }
       }
     } catch (error) {
@@ -33,11 +31,11 @@ export class UsageTracker {
     try {
       const llmUsage: any = {};
 
-      if (this.stats.has('groq')) {
-        llmUsage.groq = this.stats.get('groq');
-      }
-      if (this.stats.has('anthropic')) {
-        llmUsage.anthropic = this.stats.get('anthropic');
+      // Save all 4 providers
+      for (const provider of ['groq', 'anthropic', 'openai', 'gemini'] as LLMProvider[]) {
+        if (this.stats.has(provider)) {
+          llmUsage[provider] = this.stats.get(provider);
+        }
       }
 
       await chrome.storage.local.set({ llmUsage });
@@ -46,10 +44,15 @@ export class UsageTracker {
     }
   }
 
-  private getOrCreateStats(provider: LLMProvider): UsageStats {
+  private async getOrCreateStats(provider: LLMProvider): Promise<UsageStats> {
     if (!this.stats.has(provider)) {
+      // Get the configured model for this provider
+      const settings = await StorageManager.getSettings();
+      const model = settings.llmModels[provider] || '';
+
       this.stats.set(provider, {
         provider,
+        model,
         requests: 0,
         tokensInput: 0,
         tokensOutput: 0,
@@ -63,9 +66,10 @@ export class UsageTracker {
     return this.stats.get(provider)!;
   }
 
-  // Check if request would exceed rate limit
-  canMakeRequest(provider: LLMProvider): boolean {
-    const stats = this.getOrCreateStats(provider);
+  // Check if request would exceed rate limit (tier-aware)
+  async canMakeRequest(provider: LLMProvider): Promise<boolean> {
+    const stats = await this.getOrCreateStats(provider);
+    const settings = await StorageManager.getSettings();
     const now = Date.now();
 
     // Reset minute window if needed
@@ -74,13 +78,22 @@ export class UsageTracker {
       stats.minuteWindowStart = now;
     }
 
-    const limit = RATE_LIMITS[provider].requestsPerMinute;
+    // Get tier-aware limit or custom override
+    let limit: number;
+    if (settings.llmCustomLimits?.[provider]?.requestsPerMinute) {
+      limit = settings.llmCustomLimits[provider].requestsPerMinute!;
+    } else {
+      const tier = settings.llmTiers[provider] || this.getDefaultTier(provider);
+      const rateLimitConfig = getRateLimitForTier(provider, tier as any);
+      limit = rateLimitConfig.requestsPerMinute;
+    }
+
     return stats.requestsThisMinute < limit;
   }
 
-  // Track a completed request
+  // Track a completed request with model-specific pricing
   async trackRequest(response: LLMResponse) {
-    const stats = this.getOrCreateStats(response.provider);
+    const stats = await this.getOrCreateStats(response.provider);
     const now = Date.now();
 
     // Reset minute window if needed
@@ -96,8 +109,11 @@ export class UsageTracker {
     stats.tokensOutput += response.tokensUsed.output;
     stats.tokensTotal += response.tokensUsed.total;
 
-    // Calculate cost (per 1M tokens)
-    const pricing = PRICING[response.provider];
+    // Update model if it changed
+    stats.model = response.model;
+
+    // Calculate cost using model-specific pricing
+    const pricing = getPricingForModel(response.model);
     const inputCost = (response.tokensUsed.input / 1_000_000) * pricing.input;
     const outputCost = (response.tokensUsed.output / 1_000_000) * pricing.output;
     stats.estimatedCost += inputCost + outputCost;
@@ -106,21 +122,27 @@ export class UsageTracker {
   }
 
   // Get stats for a provider
-  getStats(provider: LLMProvider): UsageStats {
-    return this.getOrCreateStats(provider);
+  async getStats(provider: LLMProvider): Promise<UsageStats> {
+    return await this.getOrCreateStats(provider);
   }
 
   // Get all stats
-  getAllStats(): Record<LLMProvider, UsageStats> {
+  async getAllStats(): Promise<Record<LLMProvider, UsageStats>> {
     return {
-      groq: this.getOrCreateStats('groq'),
-      anthropic: this.getOrCreateStats('anthropic'),
+      groq: await this.getOrCreateStats('groq'),
+      anthropic: await this.getOrCreateStats('anthropic'),
+      openai: await this.getOrCreateStats('openai'),
+      gemini: await this.getOrCreateStats('gemini'),
     };
   }
 
   // Reset stats for a provider
   async resetStats(provider: LLMProvider) {
-    const stats = this.getOrCreateStats(provider);
+    const stats = await this.getOrCreateStats(provider);
+    const settings = await StorageManager.getSettings();
+    const model = settings.llmModels[provider] || '';
+
+    stats.model = model;
     stats.requests = 0;
     stats.tokensInput = 0;
     stats.tokensOutput = 0;
@@ -132,10 +154,50 @@ export class UsageTracker {
     await this.saveStats();
   }
 
-  // Check if approaching rate limit (80% threshold)
-  isApproachingLimit(provider: LLMProvider): boolean {
-    const stats = this.getOrCreateStats(provider);
-    const limit = RATE_LIMITS[provider].requestsPerMinute;
-    return stats.requestsThisMinute >= limit * 0.8;
+  // Reset all stats
+  async resetAllStats() {
+    for (const provider of ['groq', 'anthropic', 'openai', 'gemini'] as LLMProvider[]) {
+      await this.resetStats(provider);
+    }
+  }
+
+  // Check if approaching rate limit (configurable threshold)
+  async isApproachingLimit(provider: LLMProvider, threshold: number = 80): Promise<boolean> {
+    const stats = await this.getOrCreateStats(provider);
+    const settings = await StorageManager.getSettings();
+
+    // Get tier-aware limit or custom override
+    let limit: number;
+    if (settings.llmCustomLimits?.[provider]?.requestsPerMinute) {
+      limit = settings.llmCustomLimits[provider].requestsPerMinute!;
+    } else {
+      const tier = settings.llmTiers[provider] || this.getDefaultTier(provider);
+      const rateLimitConfig = getRateLimitForTier(provider, tier as any);
+      limit = rateLimitConfig.requestsPerMinute;
+    }
+
+    return stats.requestsThisMinute >= limit * (threshold / 100);
+  }
+
+  // Get current rate limit for provider
+  async getRateLimit(provider: LLMProvider): Promise<{ requestsPerMinute: number; tokensPerMinute?: number }> {
+    const settings = await StorageManager.getSettings();
+
+    if (settings.llmCustomLimits?.[provider]) {
+      return settings.llmCustomLimits[provider];
+    }
+
+    const tier = settings.llmTiers[provider] || this.getDefaultTier(provider);
+    return getRateLimitForTier(provider, tier as any);
+  }
+
+  private getDefaultTier(provider: LLMProvider): string {
+    const defaults: Record<LLMProvider, string> = {
+      groq: 'free',
+      openai: 'tier1',
+      anthropic: 'tier1',
+      gemini: 'free',
+    };
+    return defaults[provider];
   }
 }

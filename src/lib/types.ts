@@ -72,7 +72,29 @@ export interface Settings {
   llmMaxTokens: number;
   llmSystemPrompt?: string; // Universal system instructions
   llmUsageLimit?: number; // Monthly request limit (0 = unlimited)
-  llmUsageAlert?: number; // Alert threshold percentage (e.g., 80 = alert at 80%)
+  llmUsageAlert: number; // Alert threshold percentage (default 80)
+  // Model and tier configuration
+  llmModels: {
+    groq?: string;
+    anthropic?: string;
+    openai?: string;
+    gemini?: string;
+  };
+  llmTiers: {
+    groq?: 'free' | 'paid';
+    openai?: 'tier1' | 'tier2' | 'tier3' | 'tier4' | 'tier5';
+    anthropic?: 'tier1' | 'tier2' | 'tier3' | 'tier4';
+    gemini?: 'free' | 'paid';
+  };
+  // Custom rate limit overrides (advanced)
+  llmCustomLimits?: {
+    [provider: string]: {
+      requestsPerMinute?: number;
+      tokensPerMinute?: number;
+      requestsPerDay?: number;
+    };
+  };
+  llmMonthlyBudget?: number; // USD alert threshold
 }
 
 export interface StorageData {
@@ -91,4 +113,17 @@ export const DEFAULT_SETTINGS: Settings = {
   llmDefaultProvider: 'groq',
   llmTimeout: 5000,
   llmMaxTokens: 100,
+  llmUsageAlert: 80,
+  llmModels: {
+    groq: 'llama-3.3-70b-versatile',
+    openai: 'gpt-4o-mini',
+    anthropic: 'claude-sonnet-4-20250514',
+    gemini: 'gemini-2.0-flash-exp',
+  },
+  llmTiers: {
+    groq: 'free',
+    openai: 'tier1',
+    anthropic: 'tier1',
+    gemini: 'free',
+  },
 };
