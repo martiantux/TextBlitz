@@ -55,14 +55,15 @@ Built for anyone who types the same things repeatedly.
 - ⌨️ **Keyboard shortcuts** - Ctrl+Shift+S to quickly add new snippets
 - 🗂️ **Smart folder management** - Remembers last used folder, rename with double-click or edit button
 - 📤 **Context-aware export** - Export all snippets or just current folder
+- 🔄 **Case transformation** - 6 modes including match trigger case (btw → "by the way", BTW → "BY THE WAY")
 
 ### Current Limitations
-- ⚠️ **Limited contenteditable** - Gmail/Google Docs may have issues (improving in v0.6 Phase 2)
+- ⚠️ **Limited contenteditable** - Gmail/Google Docs may have issues (improving in v0.7.0)
 - ⚠️ **No drag-and-drop yet** - Reordering snippets/folders coming in future version
 
 ### Coming Soon (see ROADMAP.md)
-- ⚙️ **Power features** - Conditionals, formulas, case matching (v0.6 Phase 2)
-- 🌐 **Better site compatibility** - Improved Gmail/Docs/Slack support (v0.6 Phase 2)
+- 🌐 **Better site compatibility** - Improved Gmail/Docs/Slack support (v0.7.0)
+- ⚙️ **Power features** - Conditionals, formulas (v1.1.0+ post-launch)
 - 🤝 **Snippet packs** - Import/export collections (v1.0)
 
 ---
@@ -154,12 +155,15 @@ TextBlitz comes with 3 example snippets pre-installed:
 - **Form automation**: `sss` → `out {enter} {delay +0.3s} {tab} left {enter}` - Navigate through form fields
 - **Future dates**: `followup` → "Contact on {date:MMMM Do YYYY shift +3M}" → "Contact on January 13th, 2026"
 - **Interactive forms**: `contact` → Popup asks for Name, Email, Message → Fills template with values
+- **Case matching**: `btw` → "by the way", `BTW` → "BY THE WAY" (with match mode)
 - **Code snippets**: `arrow` → `() => {}`
 - **URLs**: `gh` → `https://github.com/yourusername`
 
-**Coming in v0.6.0 Phase 2:**
+**Coming next (v0.7.0):**
+- **Better site compatibility**: Rock-solid Gmail, Google Docs, Slack support
+
+**Coming later (v1.1.0+):**
 - **Conditionals & formulas**: Advanced logic and calculations in snippets
-- **Better site compatibility**: Improved support for Gmail, Google Docs, Slack
 
 ---
 
@@ -237,25 +241,25 @@ npm run build
 
 See [ROADMAP.md](./ROADMAP.md) for detailed feature plans and version milestones.
 
-**v0.6.0 Phase 1 - Complete! ✅**
+**v0.6.0 - Complete! ✅**
 - UI Polish: Default folder persistence, snippet duplication, keyboard shortcuts
 - Context-aware export (individual folders or all snippets)
-- Folder rename with double-click or edit button
-- All v0.5.0 features stable (forms, LLM, custom folders, dark mode)
-- **Achievement:** Polished UX and quality-of-life improvements!
+- Case transformation system (6 modes including match trigger case)
+- All features stable and ready for real-world testing
 
-**Next Up - v0.6.0 Phase 2: Power Features**
-- Conditionals, formulas, and case transformations
+**Next Up - v0.7.0: Site Compatibility & Reliability**
 - Better contenteditable support (Gmail, Google Docs, Slack)
-- Snippet chaining and regex transformations
-- **Goal:** Advanced text manipulation and site compatibility
+- Cross-site testing on 10+ major platforms
+- Performance optimization (1000+ snippets)
+- Bug fixes and edge cases
 
-**Future Highlights:**
-- **v0.5**: Interactive forms with popup UI
-- **v0.6**: Power features (conditionals, formulas, case matching)
-- **v0.7-0.8**: Polish, testing, and refinement
-- **v0.9**: Beta testing (feature-complete + AI)
-- **v1.0**: Production release on Chrome Web Store
+**Road to v1.0.0 Chrome Web Store (4-6 weeks):**
+- **v0.7.0**: Site compatibility & reliability (2-3 weeks)
+- **v0.8.0**: Beta testing & polish (1-2 weeks)
+- **v1.0.0**: Chrome Web Store launch 🚀
+
+**Post-Launch Power Features:**
+- **v1.1.0+**: Conditionals, formulas, snippet chaining
 
 ---
 
