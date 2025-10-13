@@ -1,5 +1,6 @@
-import { Snippet } from './types';
+import { Snippet, CaseTransform } from './types';
 import { CommandParser } from './command-parser';
+import { CaseTransformer } from './case-transform';
 
 export class TextReplacer {
   private static debugMode = false;
@@ -63,7 +64,8 @@ export class TextReplacer {
   static async replaceInInput(
     element: HTMLInputElement | HTMLTextAreaElement,
     trigger: string,
-    expansion: string
+    expansion: string,
+    caseTransform?: CaseTransform
   ): Promise<boolean> {
     try {
       this.log('TextBlitz: replaceInInput called');
@@ -94,7 +96,12 @@ export class TextReplacer {
       this.log('TextBlitz: Replacing trigger:', trigger, 'with:', expansion);
 
       // Process commands (date, time, clipboard) first
-      const processedExpansion = await CommandParser.processCommands(expansion);
+      let processedExpansion = await CommandParser.processCommands(expansion);
+
+      // Apply case transformation if specified
+      if (caseTransform && caseTransform !== 'none') {
+        processedExpansion = CaseTransformer.transform(processedExpansion, caseTransform, trigger);
+      }
 
       // Parse {cursor} from expansion
       const { text: textWithCursor, cursorOffset } = this.parseCursor(processedExpansion);
@@ -152,7 +159,8 @@ export class TextReplacer {
   static async replaceInContentEditable(
     element: HTMLElement,
     trigger: string,
-    expansion: string
+    expansion: string,
+    caseTransform?: CaseTransform
   ): Promise<boolean> {
     try {
       const selection = window.getSelection();
@@ -176,7 +184,12 @@ export class TextReplacer {
       const textAfter = text.substring(startOffset);
 
       // Process commands (date, time, clipboard) first
-      const processedExpansion = await CommandParser.processCommands(expansion);
+      let processedExpansion = await CommandParser.processCommands(expansion);
+
+      // Apply case transformation if specified
+      if (caseTransform && caseTransform !== 'none') {
+        processedExpansion = CaseTransformer.transform(processedExpansion, caseTransform, trigger);
+      }
 
       // Parse {cursor} from expansion
       const { text: textWithCursor, cursorOffset } = this.parseCursor(processedExpansion);
@@ -226,15 +239,20 @@ export class TextReplacer {
     }
   }
 
-  static async replace(element: HTMLElement, trigger: string, expansion: string): Promise<boolean> {
+  static async replace(
+    element: HTMLElement,
+    trigger: string,
+    expansion: string,
+    caseTransform?: CaseTransform
+  ): Promise<boolean> {
     // Check if it's a regular input or textarea
     if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
-      return await this.replaceInInput(element, trigger, expansion);
+      return await this.replaceInInput(element, trigger, expansion, caseTransform);
     }
 
     // Check if it's contenteditable
     if (element.isContentEditable) {
-      return await this.replaceInContentEditable(element, trigger, expansion);
+      return await this.replaceInContentEditable(element, trigger, expansion, caseTransform);
     }
 
     return false;

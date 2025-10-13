@@ -164,7 +164,7 @@ class TextBlitzExpander {
     } else {
       // Static expansion (existing behavior)
       this.isExpanding = true;
-      const success = await TextReplacer.replace(element, snippet.trigger, snippet.expansion);
+      const success = await TextReplacer.replace(element, snippet.trigger, snippet.expansion, snippet.caseTransform);
       this.isExpanding = false;
 
       if (success) {
@@ -202,7 +202,7 @@ class TextBlitzExpander {
               processedExpansion = await CommandParser.processCommands(processedExpansion);
 
               // Replace trigger with processed expansion
-              const success = await TextReplacer.replace(element, snippet.trigger, processedExpansion);
+              const success = await TextReplacer.replace(element, snippet.trigger, processedExpansion, snippet.caseTransform);
 
               if (success) {
                 StorageManager.incrementUsage(snippet.id).catch(err => {
@@ -250,7 +250,7 @@ class TextBlitzExpander {
       });
 
       // Replace trigger with LLM response
-      const success = await TextReplacer.replace(element, snippet.trigger, response.text);
+      const success = await TextReplacer.replace(element, snippet.trigger, response.text, snippet.caseTransform);
 
       if (success) {
         StorageManager.incrementUsage(snippet.id).catch(err => {
@@ -274,10 +274,10 @@ class TextBlitzExpander {
 
       // Fallback to static text if available
       if (snippet.fallbackText) {
-        await TextReplacer.replace(element, snippet.trigger, snippet.fallbackText);
+        await TextReplacer.replace(element, snippet.trigger, snippet.fallbackText, snippet.caseTransform);
       } else {
         // Show error to user by replacing trigger with error message
-        await TextReplacer.replace(element, snippet.trigger, `[${errorMsg}]`);
+        await TextReplacer.replace(element, snippet.trigger, `[${errorMsg}]`, snippet.caseTransform);
       }
     } finally {
       this.isExpanding = false;

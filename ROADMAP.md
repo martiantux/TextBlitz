@@ -197,163 +197,234 @@ Interactive forms with popup UI + advanced organization features
 
 ---
 
-## 🚀 v0.6.0 - UI Polish & Power Features
+## 🚀 v0.6.0 - UI Polish & Case Transformation
 
-**Status:** 🚧 In Progress (Phase 1 Complete ✅, Phase 2 Planned 📋)
+**Status:** ✅ Complete (2025-10-13)
 
-### Phase 1: UI Polish & Quality of Life (COMPLETE ✅)
-
-**Features Completed:**
+### Features Completed
 - [x] **Default folder persistence** - Remembers last used folder for new snippets
 - [x] **Snippet duplication** - Clone snippets with 📋 button (adds "(copy)" suffix)
 - [x] **Keyboard shortcut** - Ctrl+Shift+S to quickly add new snippet
 - [x] **Context-aware export** - Export individual folders or all snippets
-- [x] **Folder rename** - Double-click or ✏️ edit button to rename custom folders (from v0.5.0)
-- [x] **Dark mode** - Light/dark/system theme support (from v0.5.0)
+- [x] **Folder rename** - Double-click or ✏️ edit button to rename custom folders
+- [x] **Case transformation** - 6 modes including match trigger case (btw/BTW/Btw)
+  - none, upper, lower, title, capitalize, match
 
-**Testing Status:**
-- [x] TypeScript build successful (37.74 kB options, 34.44 kB content)
-- [ ] Manual testing pending (see TESTING_v0.6.0.md)
+### Testing Status
+- [x] TypeScript build successful
+- [x] Case transformation implementation complete
+- [ ] Manual testing pending
 
----
-
-### Phase 2: Power Features & Site Compatibility (PLANNED 📋)
-
-**Goal:** Advanced text manipulation + robust site compatibility
-
-**Features:**
-- [ ] **Case transformation**:
-  - Match trigger case (BTW → BY THE WAY)
-  - Transform options: upper, lower, title, capitalize
-- [ ] **Conditional logic** - `{if: condition}...{endif}`
-- [ ] **Formula support** - `{=2+2}`, `{=date+7days}`
-- [ ] **Snippet chaining** - Reference other snippets
-- [ ] **Multi-line snippets** - Proper newline handling
-- [ ] **Regex transformations** - Advanced text manipulation
-- [ ] **Better contenteditable** - Robust Gmail/Docs support
-  - Improved Selection API handling
-  - Rich text preservation
-  - Framework compatibility (React, Vue, etc.)
-- [ ] **Real-world site testing** - Test and fix issues on major sites
-  - Gmail (compose, reply, all views)
-  - Google Docs (editing, comments)
-  - Slack (messages, threads, DMs)
-
-### Testing
-- [ ] Case matching accuracy
-- [ ] Formula evaluation
-- [ ] Conditional logic edge cases
-- [ ] Performance with complex snippets
-- [ ] Gmail compose and replies
-- [ ] Google Docs editing
-- [ ] Slack message composition
-
-**🎯 Feature Complete Checkpoint**: After v0.6.0 Phase 2, TextBlitz will have comprehensive text expansion functionality including conditionals, formulas, and site compatibility.
+**🎯 Milestone Reached**: TextBlitz v0.6.0 is feature-complete with solid UI/UX foundation
 
 ---
 
-## 🚀 v0.7.0 - Polish & Refinement
+## 🚀 v0.7.0 - Site Compatibility & Reliability
 
-**Status:** 📋 Planned
+**Status:** 📋 Planned (Next Up!)
 
 ### Goal
-UI polish, performance optimization, and preparation for beta testing
+Make TextBlitz work flawlessly on all major websites - the foundation for v1.0.0
 
-### Features
-- [ ] **Extended site compatibility**:
+### Priority Features
+- [ ] **Better ContentEditable support** (CRITICAL):
+  - Fix Selection API issues in Gmail compose/reply
+  - Fix rich text preservation in Google Docs
+  - Fix Slack message composition
+  - Handle framework-wrapped contenteditable (React/Vue)
+  - Test and document limitations
+- [ ] **Cross-site testing and fixes** (10+ major sites):
+  - Gmail ✅
+  - Google Docs ✅
+  - Slack ✅
   - LinkedIn (posts, messages, comments)
   - Twitter/X (tweets, replies)
-  - Salesforce (various input fields)
+  - Discord (messages)
   - Notion (blocks, pages)
+  - Salesforce (various input fields)
+  - WordPress admin
+  - GitHub issues/PRs
 - [ ] **Performance optimization**:
-  - Bundle size optimization
-  - Memory usage profiling
-  - Expansion latency testing
-  - Trie rebuild optimization
-- [ ] **Bug fixes** from real-world usage
-- [ ] **Documentation updates**
-- [ ] **User testing feedback** incorporation
-- [ ] **Keyboard shortcuts** - Quick add snippet (Ctrl+Shift+S), popup assistant (Ctrl+Shift+Space)
+  - Test with 1000+ snippets
+  - Bundle size optimization (<100KB target)
+  - Memory leak detection
+  - Expansion latency testing (<50ms static, <2s LLM)
+- [ ] **Bug fixes & edge cases**:
+  - Email/number input field handling
+  - Multi-line snippet improvements
+  - Error message clarity
+  - Keyboard shortcut conflicts
 
 ### Testing
 - [ ] 1000+ snippets performance test
-- [ ] Memory leak detection
+- [ ] Memory profiling
 - [ ] Extension lifecycle testing
 - [ ] Chrome/Edge/Brave compatibility
 
+**🎯 Success Criteria**: Reliable expansion on 10+ major sites, ready for beta testing
+
 ---
 
-## 🚀 v0.8.0 - Beta Testing
+## 🚀 v0.8.0 - Beta Testing & Polish
 
 **Status:** 📋 Planned
 
 ### Goal
-Feature-complete with LLM-powered snippets ready for real-world testing
+Production-ready polish and real-world validation before Chrome Web Store launch
 
 ### Features
-- [ ] All v0.3-v0.7 features complete (full feature set + LLM)
-- [ ] Test with friend/beta users
-- [ ] Document bugs and issues
-- [ ] Performance testing with 500+ snippets
-- [ ] Works reliably on Gmail, Google Docs, Slack
-- [ ] Gather feedback on LLM features
+- [ ] **Beta testing program** (5-10 testers):
+  - Recruit diverse users (various workflows)
+  - Create feedback form/issue template
+  - Address critical bugs
+  - Gather real-world usage data
+- [ ] **UI/UX polish**:
+  - Onboarding flow for new users
+  - Better empty states
+  - Tooltip improvements
+  - Loading states for LLM expansions
+- [ ] **Documentation improvements**:
+  - Update README with real examples
+  - Create troubleshooting guide
+  - Document known limitations
+  - Add FAQ section
+- [ ] **Final bug fixes** from beta feedback
 
 ### Success Criteria
-- ✅ All core features working (expansion, commands, automation)
-- ✅ LLM providers tested and functional (Groq ✅, Anthropic pending)
-- ✅ No critical bugs reported by beta testers
-- ✅ Performance targets met (< 50ms expansion latency)
-- ✅ Documentation complete
+- ✅ All core features working reliably
+- ✅ No critical bugs from beta testers
+- ✅ Performance targets met (<50ms static, <2s LLM)
+- ✅ Documentation complete and tested
+- ✅ Ready for public release
 
 ---
 
-## 🚀 v1.0.0 - Production Ready
+## 🚀 v1.0.0 - Chrome Web Store Launch 🎉
 
 **Status:** 📋 Planned
 
 ### Goal
-Stable, polished, Chrome Web Store ready - **The first free, open-source text expander with AI**
+Stable, polished, Chrome Web Store ready - **Free, open-source text expansion with LLM support**
 
 ### Features
-- [ ] **Comprehensive testing** - All features tested on major sites
-- [ ] **Performance optimization** - Memory, CPU, latency targets met
-- [ ] **Documentation** - Full user guide, examples, tutorials
-- [ ] **Video tutorials** - Getting started, advanced features, LLM setup
-- [ ] **Snippet library** - Pre-built packs (Customer Service, Development, etc.)
-- [ ] **LLM prompt library** - Example dynamic snippet prompts
-- [ ] **Chrome Web Store** - Published and discoverable
-- [ ] **GitHub presence** - Clean repo, good README, active issues
-- [ ] **Privacy policy** - Clear documentation of data handling (especially LLM features)
+- [ ] **User documentation** (4-5 hours):
+  - Complete user guide
+  - Quick start tutorial
+  - Example snippet library (10-20 useful snippets)
+  - LLM setup walkthrough
+  - Video demo (3-5 minutes)
+- [ ] **Chrome Web Store preparation** (3-4 hours):
+  - Store listing copy (compelling description)
+  - 5 screenshots (showing key features)
+  - Promotional images (1400x560, 440x280)
+  - Privacy policy (especially LLM/API key handling)
+  - Category selection and keywords
+- [ ] **Final QA & launch** (2-3 hours):
+  - Full regression test
+  - Cross-browser testing (Chrome, Edge, Brave)
+  - Version bump to 1.0.0
+  - Submit to Chrome Web Store
+  - Create launch announcement
 
-### Targets
-- Works reliably on Gmail, Google Docs, Slack, Salesforce
+### Performance Targets
+- Works reliably on 10+ major sites
 - Handles 1000+ snippets smoothly
-- < 50ms expansion latency (static snippets)
-- < 2s latency for LLM snippets (with Groq)
-- < 10MB memory usage
-- 5-star reviews on Chrome Web Store
+- <50ms expansion latency (static snippets)
+- <2s latency for LLM snippets (with Groq)
+- <10MB memory usage
 
 ### Marketing Position
-**"TextBlitz: Lightning-fast text expansion with LLM-generated variations. Open source. Privacy-first."**
+**"TextBlitz: Lightning-fast text expansion with LLM support. Open source. Privacy-first. Free forever."**
+
+**🎯 LAUNCH MILESTONE**: TextBlitz v1.0.0 on Chrome Web Store!
+
+---
+
+## 🚀 v1.1.0 - Conditional Logic (POST-LAUNCH)
+
+**Status:** 💭 Planned (After v1.0.0 is stable in production)
+
+### Goal
+Add conditional logic for dynamic snippet behavior based on context
+
+### Features
+- [ ] **Conditional parser** (`src/lib/conditional-parser.ts`):
+  - Parse `{if: expression}...{elseif: expr}...{else}...{endif}` syntax
+  - Support comparison operators: `=`, `<>`, `<`, `>`, `<=`, `>=`
+  - Support logical operators: `and`, `or`, `not`
+  - Variables: form values, date comparisons, text matching
+  - Integrate with CommandParser
+- [ ] **Examples and documentation**:
+  - Conditional greetings based on time of day
+  - Form-based conditional templates
+  - Date-based conditional content
+
+### Why After Launch
+- High complexity (8-10 hours)
+- Current features sufficient for v1.0.0
+- Better to debug with real user feedback
+- Not critical for most workflows
+
+---
+
+## 🚀 v1.2.0 - Formula Evaluation (POST-LAUNCH)
+
+**Status:** 💭 Planned (After v1.1.0)
+
+### Goal
+Add expression evaluation for calculations and text manipulation
+
+### Features
+- [ ] **Formula evaluator** (`src/lib/formula-evaluator.ts`):
+  - Parse `{=expression}` syntax
+  - Math operations: `+`, `-`, `*`, `/`, `%`, `^`
+  - String functions: `length()`, `upper()`, `lower()`, `trim()`, `contains()`, `split()`, `join()`
+  - Date arithmetic (extend existing system)
+  - List operations: `[1,2,3]`, indexing, `size()`
+  - Safe evaluation (NO `eval()` - use expression parser)
+- [ ] **Examples and documentation**:
+  - Invoice calculations
+  - Text transformations
+  - Date calculations
+
+### Why After Launch
+- Medium-high complexity (10-12 hours)
+- Requires safe expression parser
+- Better to gather user needs first
+- Most use cases covered by existing commands
+
+---
+
+## 🚀 v1.3.0+ - Advanced Features (POST-LAUNCH)
+
+**Status:** 💭 Ideas for future consideration
+
+### Snippet Enhancement
+- [ ] **Snippet chaining** - Reference other snippets with `{snippet:trigger}`
+- [ ] **Regex transformations** - Advanced text pattern matching
+- [ ] **Multi-line improvements** - Better newline/paragraph handling
+- [ ] **Variable persistence** - Save values between expansions
+
+### Site Integrations
+- [ ] **URL loading** - Fetch data from APIs
+- [ ] **Data extraction** - Pull data from current page
+- [ ] **Click simulation** - Advanced form automation
 
 ---
 
 ## 🌍 v2.0+ - Future Considerations
 
-**Status:** 💭 Ideas
-
-Exploring but not committed to:
+**Status:** 💭 Long-term possibilities
 
 ### Cross-Platform
 - [ ] Firefox extension port
-- [ ] Edge extension (may work with Chrome version)
-- [ ] Safari extension (requires different approach)
+- [ ] Edge extension (likely works with Chrome version)
+- [ ] Safari extension (requires WebKit approach)
 
-### Advanced Integrations
+### Cloud Features
 - [ ] Encrypted cloud sync (user's own storage)
 - [ ] GitHub Gist backup integration
 - [ ] Team collaboration features (snippet sharing)
-- [ ] Advanced LLM features (context-aware expansions, snippet generation)
 
 ### Mobile
 - [ ] Android keyboard integration (complex)

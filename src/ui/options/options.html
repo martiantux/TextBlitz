@@ -255,6 +255,21 @@
           </div>
 
           <div class="form-group">
+            <label class="form-label" for="snippet-case-transform">Case Transform</label>
+            <select class="form-select" id="snippet-case-transform">
+              <option value="none">None (keep original)</option>
+              <option value="match">Match trigger case</option>
+              <option value="upper">UPPERCASE</option>
+              <option value="lower">lowercase</option>
+              <option value="title">Title Case</option>
+              <option value="capitalize">Capitalize first</option>
+            </select>
+            <div class="form-help">Transform expansion case</div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
             <label class="form-label">Options</label>
             <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
               <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">

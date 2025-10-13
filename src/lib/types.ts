@@ -2,6 +2,7 @@ export type TriggerMode = 'word' | 'word-both' | 'anywhere';
 export type SnippetType = 'static' | 'dynamic';
 export type LLMProvider = 'groq' | 'anthropic' | 'openai' | 'gemini';
 export type FormFieldType = 'text' | 'paragraph' | 'menu' | 'date' | 'toggle';
+export type CaseTransform = 'none' | 'upper' | 'lower' | 'title' | 'capitalize' | 'match';
 
 export interface FormField {
   type: FormFieldType;
@@ -24,6 +25,7 @@ export interface Snippet {
   caseSensitive: boolean;
   enabled: boolean;
   triggerMode: TriggerMode; // How the trigger should match
+  caseTransform?: CaseTransform; // How to transform expansion case
   createdAt: number;
   lastUsed?: number;
   usageCount: number;

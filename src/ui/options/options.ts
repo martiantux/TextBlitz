@@ -1,5 +1,5 @@
 import { StorageManager } from '../../lib/storage';
-import { Snippet, TriggerMode, SnippetType, LLMProvider, CustomFolder } from '../../lib/types';
+import { Snippet, TriggerMode, SnippetType, LLMProvider, CustomFolder, CaseTransform } from '../../lib/types';
 import { llmManager } from '../../lib/llm/manager';
 
 class OptionsPage {
@@ -494,6 +494,7 @@ class OptionsPage {
     const expansionInput = document.getElementById('snippet-expansion') as HTMLTextAreaElement;
     const folderSelect = document.getElementById('snippet-folder') as HTMLSelectElement;
     const triggerModeSelect = document.getElementById('snippet-trigger-mode') as HTMLSelectElement;
+    const caseTransformSelect = document.getElementById('snippet-case-transform') as HTMLSelectElement;
     const enabledCheckbox = document.getElementById('snippet-enabled') as HTMLInputElement;
     const caseSensitiveCheckbox = document.getElementById('snippet-case-sensitive') as HTMLInputElement;
     const typeSelect = document.getElementById('snippet-type') as HTMLSelectElement;
@@ -512,6 +513,7 @@ class OptionsPage {
       expansionInput.value = snippet.expansion;
       folderSelect.value = snippet.folder || '';
       triggerModeSelect.value = snippet.triggerMode;
+      caseTransformSelect.value = snippet.caseTransform || 'none';
       enabledCheckbox.checked = snippet.enabled;
       caseSensitiveCheckbox.checked = snippet.caseSensitive;
       typeSelect.value = snippet.type || 'static';
@@ -531,6 +533,7 @@ class OptionsPage {
       folderSelect.value = defaultFolder;
 
       triggerModeSelect.value = 'word';
+      caseTransformSelect.value = 'none';
       enabledCheckbox.checked = true;
       caseSensitiveCheckbox.checked = false;
       typeSelect.value = 'static';
@@ -555,6 +558,7 @@ class OptionsPage {
     const expansionInput = document.getElementById('snippet-expansion') as HTMLTextAreaElement;
     const folderSelect = document.getElementById('snippet-folder') as HTMLSelectElement;
     const triggerModeSelect = document.getElementById('snippet-trigger-mode') as HTMLSelectElement;
+    const caseTransformSelect = document.getElementById('snippet-case-transform') as HTMLSelectElement;
     const enabledCheckbox = document.getElementById('snippet-enabled') as HTMLInputElement;
     const caseSensitiveCheckbox = document.getElementById('snippet-case-sensitive') as HTMLInputElement;
     const typeSelect = document.getElementById('snippet-type') as HTMLSelectElement;
@@ -610,6 +614,7 @@ class OptionsPage {
       expansion,
       folder: folderSelect.value || undefined,
       triggerMode: triggerModeSelect.value as TriggerMode,
+      caseTransform: caseTransformSelect.value as CaseTransform,
       caseSensitive: caseSensitiveCheckbox.checked,
       enabled: enabledCheckbox.checked,
       type,
