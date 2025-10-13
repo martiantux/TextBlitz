@@ -1,17 +1,24 @@
 // Command parser for {command:options} syntax
 // Supports {date}, {time}, {clipboard}, {cursor}, {enter}, {tab}, {delay}
+// Also supports form commands: {formtext}, {formparagraph}, {formmenu}, {formdate}, {formtoggle}
+
+import type { FormField } from './types';
 
 export interface ParsedCommand {
-  type: 'date' | 'time' | 'clipboard' | 'cursor' | 'enter' | 'tab' | 'delay';
+  type: 'date' | 'time' | 'clipboard' | 'cursor' | 'enter' | 'tab' | 'delay' | 'form';
   options?: string;
   startIndex: number;
   endIndex: number;
   rawMatch: string;
+  formField?: FormField; // For form commands
 }
 
 export class CommandParser {
   // Match {command} or {command:options} or {command options}
   private static readonly COMMAND_REGEX = /\{(date|time|clipboard|cursor|enter|tab|delay)(?:[\s:]([^}]+))?\}/g;
+
+  // Match form commands: {formtext: label=Name}, {formmenu: label=Status; options=Active,Inactive}
+  private static readonly FORM_COMMAND_REGEX = /\{(formtext|formparagraph|formmenu|formdate|formtoggle):([^}]+)\}/g;
 
   // Parse all commands from text
   static parse(text: string): ParsedCommand[] {
@@ -31,6 +38,78 @@ export class CommandParser {
     }
 
     return commands;
+  }
+
+  // Parse form commands from text
+  static parseFormCommands(text: string): ParsedCommand[] {
+    const commands: ParsedCommand[] = [];
+    const regex = new RegExp(this.FORM_COMMAND_REGEX);
+    let match: RegExpExecArray | null;
+
+    while ((match = regex.exec(text)) !== null) {
+      const [rawMatch, formType, optionsString] = match;
+      const formField = this.parseFormField(formType, optionsString);
+
+      if (formField) {
+        commands.push({
+          type: 'form',
+          options: optionsString,
+          startIndex: match.index,
+          endIndex: match.index + rawMatch.length,
+          rawMatch,
+          formField,
+        });
+      }
+    }
+
+    return commands;
+  }
+
+  // Parse form field options from string
+  // Example: "label=Customer Name" or "label=Status; options=Active,Inactive"
+  private static parseFormField(formType: string, optionsString: string): FormField | null {
+    const options = optionsString.split(';').map(s => s.trim());
+    const params: Record<string, string> = {};
+
+    for (const opt of options) {
+      const [key, value] = opt.split('=').map(s => s.trim());
+      if (key && value) {
+        params[key] = value;
+      }
+    }
+
+    const label = params.label || params.name || 'Field';
+    const name = params.name || label.toLowerCase().replace(/\s+/g, '_');
+
+    const field: FormField = {
+      type: formType.replace('form', '') as any,
+      name,
+      label,
+      required: params.required === 'true',
+    };
+
+    // Handle menu options
+    if (formType === 'formmenu' && params.options) {
+      field.options = params.options.split(',').map(s => s.trim());
+    }
+
+    // Handle default values
+    if (params.default) {
+      field.defaultValue = formType === 'formtoggle' ? params.default === 'true' : params.default;
+    }
+
+    return field;
+  }
+
+  // Check if text contains any form commands
+  static hasFormCommands(text: string): boolean {
+    return this.FORM_COMMAND_REGEX.test(text);
+  }
+
+  // Extract all form fields from text
+  static extractFormFields(text: string): FormField[] {
+    const commands = this.parseFormCommands(text);
+    return commands.map(cmd => cmd.formField!).filter(Boolean);
   }
 
   // Get ordinal suffix for day (1st, 2nd, 3rd, 4th, etc.)
@@ -253,5 +332,25 @@ export class CommandParser {
     chunks.push(text.substring(lastIndex));
 
     return { chunks, actions };
+  }
+
+  // Substitute form values into text
+  // Example: "Hello {formtext: label=Name}" with {name: "Brad"} → "Hello Brad"
+  static substituteFormValues(text: string, formData: Record<string, string | boolean>): string {
+    const commands = this.parseFormCommands(text);
+    if (commands.length === 0) return text;
+
+    let result = text;
+    // Process in reverse to preserve indices
+    for (let i = commands.length - 1; i >= 0; i--) {
+      const cmd = commands[i];
+      if (cmd.formField) {
+        const value = formData[cmd.formField.name];
+        const replacement = value !== undefined ? String(value) : '';
+        result = result.slice(0, cmd.startIndex) + replacement + result.slice(cmd.endIndex);
+      }
+    }
+
+    return result;
   }
 }

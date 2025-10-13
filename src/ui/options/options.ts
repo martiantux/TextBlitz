@@ -519,22 +519,34 @@ class OptionsPage {
   private async showLLMSettings() {
     const modal = document.getElementById('llm-settings-modal');
     const groqKeyInput = document.getElementById('llm-groq-key') as HTMLInputElement;
+    const openaiKeyInput = document.getElementById('llm-openai-key') as HTMLInputElement;
     const anthropicKeyInput = document.getElementById('llm-anthropic-key') as HTMLInputElement;
+    const geminiKeyInput = document.getElementById('llm-gemini-key') as HTMLInputElement;
+    const systemPromptInput = document.getElementById('llm-system-prompt') as HTMLTextAreaElement;
 
     // Load current settings
     const settings = await StorageManager.getSettings();
     groqKeyInput.value = settings.llmKeys.groq || '';
+    openaiKeyInput.value = settings.llmKeys.openai || '';
     anthropicKeyInput.value = settings.llmKeys.anthropic || '';
+    geminiKeyInput.value = settings.llmKeys.gemini || '';
+    systemPromptInput.value = settings.llmSystemPrompt || '';
 
     // Save on input
     const saveKeys = async () => {
       settings.llmKeys.groq = groqKeyInput.value.trim() || undefined;
+      settings.llmKeys.openai = openaiKeyInput.value.trim() || undefined;
       settings.llmKeys.anthropic = anthropicKeyInput.value.trim() || undefined;
+      settings.llmKeys.gemini = geminiKeyInput.value.trim() || undefined;
+      settings.llmSystemPrompt = systemPromptInput.value.trim() || undefined;
       await StorageManager.saveSettings(settings);
     };
 
     groqKeyInput.addEventListener('change', saveKeys);
+    openaiKeyInput.addEventListener('change', saveKeys);
     anthropicKeyInput.addEventListener('change', saveKeys);
+    geminiKeyInput.addEventListener('change', saveKeys);
+    systemPromptInput.addEventListener('change', saveKeys);
 
     // Save current values before showing modal
     this.llmSettingsSaveCallback = saveKeys;

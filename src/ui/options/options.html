@@ -89,6 +89,13 @@
             <span>Generate Snippet</span>
           </button>
         </div>
+
+        <div class="sidebar-footer">
+          <a href="https://github.com/sponsors/martiantux" target="_blank" class="sponsor-link">
+            <span>❤️</span>
+            <span>Sponsor on GitHub</span>
+          </a>
+        </div>
       </aside>
 
       <!-- Content Area -->
@@ -187,8 +194,10 @@
           <div class="form-group">
             <label class="form-label" for="snippet-llm-provider">LLM Provider</label>
             <select class="form-select" id="snippet-llm-provider">
-              <option value="groq">Groq (recommended - fastest)</option>
+              <option value="groq">Groq (fastest, free tier)</option>
+              <option value="openai">OpenAI (ChatGPT/GPT-4)</option>
               <option value="anthropic">Anthropic (Claude Sonnet 4.5)</option>
+              <option value="gemini">Google Gemini (Gemini 1.5 Flash)</option>
             </select>
           </div>
 
@@ -268,7 +277,7 @@
         <div class="form-group">
           <label class="form-label" for="llm-groq-key">
             Groq API Key
-            <span class="form-label-optional">(recommended - fastest, free tier)</span>
+            <span class="form-label-optional">(fastest, free tier)</span>
           </label>
           <input
             type="password"
@@ -278,6 +287,21 @@
             autocomplete="off"
           >
           <div class="form-help">Get your key at <a href="https://console.groq.com/" target="_blank" style="color: #6366f1;">console.groq.com</a></div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="llm-openai-key">
+            OpenAI API Key
+            <span class="form-label-optional">(ChatGPT/GPT-4)</span>
+          </label>
+          <input
+            type="password"
+            class="form-input"
+            id="llm-openai-key"
+            placeholder="sk-..."
+            autocomplete="off"
+          >
+          <div class="form-help">Get your key at <a href="https://platform.openai.com/" target="_blank" style="color: #6366f1;">platform.openai.com</a></div>
         </div>
 
         <div class="form-group">
@@ -293,6 +317,37 @@
             autocomplete="off"
           >
           <div class="form-help">Get your key at <a href="https://console.anthropic.com/" target="_blank" style="color: #6366f1;">console.anthropic.com</a></div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="llm-gemini-key">
+            Google Gemini API Key
+            <span class="form-label-optional">(Gemini 1.5 Flash)</span>
+          </label>
+          <input
+            type="password"
+            class="form-input"
+            id="llm-gemini-key"
+            placeholder="AI..."
+            autocomplete="off"
+          >
+          <div class="form-help">Get your key at <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: #6366f1;">aistudio.google.com</a></div>
+        </div>
+
+        <div style="border-top: 1px solid #e5e7eb; margin: 24px 0; padding-top: 24px;">
+          <div class="form-group">
+            <label class="form-label" for="llm-system-prompt">
+              Universal System Prompt
+              <span class="form-label-optional">(optional - applies to all providers)</span>
+            </label>
+            <textarea
+              class="form-textarea"
+              id="llm-system-prompt"
+              placeholder="e.g., Always use a professional tone. Keep responses under 30 words."
+              rows="3"
+            ></textarea>
+            <div class="form-help">Custom instructions that apply to all LLM-generated text</div>
+          </div>
         </div>
 
         <div style="border-top: 1px solid #e5e7eb; margin: 24px 0; padding-top: 24px;">
@@ -338,7 +393,9 @@
           <label class="form-label" for="generate-provider">LLM Provider</label>
           <select class="form-select" id="generate-provider">
             <option value="groq">Groq (fastest)</option>
+            <option value="openai">OpenAI (ChatGPT/GPT-4)</option>
             <option value="anthropic">Anthropic (Claude Sonnet 4.5)</option>
+            <option value="gemini">Google Gemini (Gemini 1.5 Flash)</option>
           </select>
         </div>
 

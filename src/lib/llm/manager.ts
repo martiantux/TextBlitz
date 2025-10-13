@@ -3,6 +3,8 @@
 import { LLMProvider as LLMProviderType, LLMRequest, LLMResponse } from './types';
 import { GroqProvider } from './groq';
 import { AnthropicProvider } from './anthropic';
+import { OpenAIProvider } from './openai';
+import { GeminiProvider } from './gemini';
 import { UsageTracker } from './usage-tracker';
 import { LLMProvider } from './providers';
 
@@ -15,15 +17,23 @@ export class LLMManager {
   }
 
   // Initialize a provider with API key
-  setProvider(providerType: LLMProviderType, apiKey: string, timeout?: number) {
+  setProvider(providerType: LLMProviderType, apiKey: string, timeout?: number, systemPrompt?: string) {
     let provider: LLMProvider;
+
+    const config = { apiKey, timeout, systemPrompt };
 
     switch (providerType) {
       case 'groq':
-        provider = new GroqProvider({ apiKey, timeout });
+        provider = new GroqProvider(config);
         break;
       case 'anthropic':
-        provider = new AnthropicProvider({ apiKey, timeout });
+        provider = new AnthropicProvider(config);
+        break;
+      case 'openai':
+        provider = new OpenAIProvider(config);
+        break;
+      case 'gemini':
+        provider = new GeminiProvider(config);
         break;
       default:
         throw new Error(`Unknown provider: ${providerType}`);

@@ -4,14 +4,18 @@ import { TextReplacer } from '../lib/replacer';
 import { Settings, Snippet } from '../lib/types';
 import { shouldTriggerMatch } from '../lib/word-boundaries';
 import { llmManager } from '../lib/llm/manager';
+import { CommandParser } from '../lib/command-parser';
+import { FormPopup } from '../lib/form-popup';
 
 class TextBlitzExpander {
   private trie: SnippetTrie;
   private settings: Settings | null = null;
   private isExpanding = false;
+  private formPopup: FormPopup;
 
   constructor() {
     this.trie = new SnippetTrie(false);
+    this.formPopup = new FormPopup();
     this.initialize();
   }
 
@@ -147,6 +151,12 @@ class TextBlitzExpander {
       return false;
     }
 
+    // Check if expansion has form commands
+    if (CommandParser.hasFormCommands(snippet.expansion)) {
+      await this.expandWithForm(element, snippet);
+      return true;
+    }
+
     // Handle dynamic vs static snippets
     if (snippet.type === 'dynamic') {
       await this.expandDynamic(element, snippet);
@@ -164,6 +174,59 @@ class TextBlitzExpander {
       }
 
       return success;
+    }
+  }
+
+  private async expandWithForm(element: HTMLElement, snippet: Snippet) {
+    this.isExpanding = true;
+
+    try {
+      // Extract form fields from expansion
+      const fields = CommandParser.extractFormFields(snippet.expansion);
+
+      if (fields.length === 0) {
+        console.warn('TextBlitz: No form fields found in expansion');
+        return;
+      }
+
+      // Show form popup and wait for user input
+      await new Promise<void>((resolve, reject) => {
+        this.formPopup.show(
+          fields,
+          async (formData) => {
+            try {
+              // Substitute form values into expansion
+              let processedExpansion = CommandParser.substituteFormValues(snippet.expansion, formData);
+
+              // Process other commands (date, time, clipboard, etc.)
+              processedExpansion = await CommandParser.processCommands(processedExpansion);
+
+              // Replace trigger with processed expansion
+              const success = await TextReplacer.replace(element, snippet.trigger, processedExpansion);
+
+              if (success) {
+                StorageManager.incrementUsage(snippet.id).catch(err => {
+                  console.error('TextBlitz: Failed to update usage stats', err);
+                });
+              }
+
+              resolve();
+            } catch (error) {
+              console.error('TextBlitz: Form expansion failed:', error);
+              reject(error);
+            }
+          },
+          () => {
+            // User cancelled
+            console.log('TextBlitz: Form cancelled by user');
+            resolve();
+          }
+        );
+      });
+    } catch (error) {
+      console.error('TextBlitz: Form popup error:', error);
+    } finally {
+      this.isExpanding = false;
     }
   }
 

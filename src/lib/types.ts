@@ -1,6 +1,20 @@
 export type TriggerMode = 'word' | 'word-both' | 'anywhere';
 export type SnippetType = 'static' | 'dynamic';
-export type LLMProvider = 'groq' | 'anthropic';
+export type LLMProvider = 'groq' | 'anthropic' | 'openai' | 'gemini';
+export type FormFieldType = 'text' | 'paragraph' | 'menu' | 'date' | 'toggle';
+
+export interface FormField {
+  type: FormFieldType;
+  name: string;
+  label: string;
+  options?: string[]; // For menu type
+  defaultValue?: string | boolean;
+  required?: boolean;
+}
+
+export interface FormData {
+  [key: string]: string | boolean;
+}
 
 export interface Snippet {
   id: string;
@@ -21,27 +35,23 @@ export interface Snippet {
   fallbackText?: string; // Used if LLM fails
 }
 
+export interface ProviderUsageStats {
+  requests: number;
+  tokensInput: number;
+  tokensOutput: number;
+  tokensTotal: number;
+  estimatedCost: number;
+  lastReset: number;
+  requestsThisMinute: number;
+  minuteWindowStart: number;
+}
+
 export interface LLMUsageStats {
-  groq?: {
-    requests: number;
-    tokensInput: number;
-    tokensOutput: number;
-    tokensTotal: number;
-    estimatedCost: number;
-    lastReset: number;
-    requestsThisMinute: number;
-    minuteWindowStart: number;
-  };
-  anthropic?: {
-    requests: number;
-    tokensInput: number;
-    tokensOutput: number;
-    tokensTotal: number;
-    estimatedCost: number;
-    lastReset: number;
-    requestsThisMinute: number;
-    minuteWindowStart: number;
-  };
+  groq?: ProviderUsageStats;
+  anthropic?: ProviderUsageStats;
+  openai?: ProviderUsageStats;
+  gemini?: ProviderUsageStats;
+  monthStart?: number; // Track monthly usage for limits
 }
 
 export interface Settings {
@@ -54,10 +64,15 @@ export interface Settings {
   llmKeys: {
     groq?: string;
     anthropic?: string;
+    openai?: string;
+    gemini?: string;
   };
   llmDefaultProvider: LLMProvider;
   llmTimeout: number;
   llmMaxTokens: number;
+  llmSystemPrompt?: string; // Universal system instructions
+  llmUsageLimit?: number; // Monthly request limit (0 = unlimited)
+  llmUsageAlert?: number; // Alert threshold percentage (e.g., 80 = alert at 80%)
 }
 
 export interface StorageData {

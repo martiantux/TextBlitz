@@ -259,14 +259,6 @@ See [ROADMAP.md](./ROADMAP.md) for detailed feature plans and version milestones
 
 ---
 
-## 🙏 Acknowledgments
-
-- Inspired by classic text expansion tools
-- Built because productivity shouldn't cost money
-- Thanks to everyone who believes in open source
-
----
-
 ## 📞 Support & Feedback
 
 - **Found a bug?** [Report it on GitHub Issues](https://github.com/martiantux/TextBlitz/issues)

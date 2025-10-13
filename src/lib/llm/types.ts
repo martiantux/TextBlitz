@@ -1,6 +1,6 @@
 // LLM provider types and interfaces
 
-export type LLMProvider = 'groq' | 'anthropic';
+export type LLMProvider = 'groq' | 'anthropic' | 'openai' | 'gemini';
 
 export interface LLMRequest {
   prompt: string;
@@ -23,6 +23,7 @@ export interface LLMProviderConfig {
   apiKey: string;
   model?: string;
   timeout?: number;
+  systemPrompt?: string;
 }
 
 export interface UsageStats {
@@ -49,9 +50,15 @@ export const RATE_LIMITS: Record<LLMProvider, RateLimitConfig> = {
   anthropic: {
     requestsPerMinute: 50, // Conservative default
   },
+  openai: {
+    requestsPerMinute: 50, // Conservative default
+  },
+  gemini: {
+    requestsPerMinute: 15, // Free tier limit
+  },
 };
 
-// Pricing per 1M tokens (USD)
+// Pricing per 1M tokens (USD) - approximate as of 2025
 export const PRICING: Record<LLMProvider, { input: number; output: number }> = {
   groq: {
     input: 0.05,
@@ -60,5 +67,13 @@ export const PRICING: Record<LLMProvider, { input: number; output: number }> = {
   anthropic: {
     input: 3.0,
     output: 15.0,
+  },
+  openai: {
+    input: 0.15, // gpt-4o-mini pricing
+    output: 0.60,
+  },
+  gemini: {
+    input: 0.075, // gemini-1.5-flash pricing
+    output: 0.30,
   },
 };
