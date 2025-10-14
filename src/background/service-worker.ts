@@ -56,10 +56,66 @@ chrome.runtime.onInstalled.addListener(async (details) => {
   }
 });
 
-// Keep service worker alive
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  // Handle any messages from content scripts or popup
+// Offscreen document management
+let offscreenCreated = false;
+
+async function createOffscreenDocument() {
+  if (offscreenCreated) return;
+
+  try {
+    await chrome.offscreen.createDocument({
+      url: 'offscreen/offscreen.html',
+      reasons: ['CLIPBOARD' as chrome.offscreen.Reason],
+      justification: 'Process snippet expansions with clipboard and command parsing'
+    });
+    offscreenCreated = true;
+    console.log('TextBlitz: Offscreen document created');
+  } catch (error) {
+    console.error('TextBlitz: Failed to create offscreen document', error);
+  }
+}
+
+async function ensureOffscreenDocument() {
+  // Check if offscreen document exists
+  const existingContexts = await chrome.runtime.getContexts({
+    contextTypes: ['OFFSCREEN_DOCUMENT' as chrome.runtime.ContextType],
+  });
+
+  if (existingContexts.length === 0) {
+    offscreenCreated = false;
+    await createOffscreenDocument();
+  }
+}
+
+// Message types
+interface ProcessSnippetRequest {
+  type: 'PROCESS_SNIPPET';
+  expansion: string;
+  trigger: string;
+  caseTransform?: string;
+  messageId: string;
+}
+
+type MessageRequest = ProcessSnippetRequest;
+
+// Handle messages from content scripts
+chrome.runtime.onMessage.addListener((message: MessageRequest, sender, sendResponse) => {
+  if (message.type === 'PROCESS_SNIPPET') {
+    handleProcessSnippet(message)
+      .then(result => sendResponse({ success: true, ...result }))
+      .catch(error => sendResponse({ success: false, error: error.message }));
+    return true; // Async response
+  }
   return true;
 });
+
+async function handleProcessSnippet(message: ProcessSnippetRequest) {
+  // Ensure offscreen document exists
+  await ensureOffscreenDocument();
+
+  // Forward message to offscreen document
+  const response = await chrome.runtime.sendMessage(message);
+  return response;
+}
 
 export {};

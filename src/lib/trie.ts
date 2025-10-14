@@ -51,26 +51,30 @@ export class SnippetTrie {
     return node.isEndOfWord ? node.snippet : null;
   }
 
-  // Find the longest matching snippet from the end of the buffer
+  // Find the longest matching snippet at the end of the buffer
   findMatch(buffer: string): { snippet: Snippet; matchLength: number } | null {
     if (buffer.length === 0) return null;
 
-    // Try matching from the end of the buffer, working backwards
-    // For buffer "hello brb ", we want to try:
-    // "hello brb " -> "ello brb " -> "llo brb " -> ... -> "brb " -> "rb " -> "b " -> " "
-    // We want to find "brb" at the end (before the space)
+    // Search for triggers that end at the buffer's end position
+    // For buffer "hello brb btw", try suffixes: "btw", "tw", "w", etc.
+    // Return the longest match found
 
-    for (let startIdx = 0; startIdx <= buffer.length; startIdx++) {
-      const substring = buffer.substring(startIdx).trim();
-      if (substring.length === 0) continue;
+    let longestMatch: { snippet: Snippet; matchLength: number } | null = null;
 
-      const snippet = this.search(substring);
+    // Try all possible suffix lengths, from longest to shortest
+    for (let length = buffer.length; length > 0; length--) {
+      const suffix = buffer.substring(buffer.length - length);
+      const snippet = this.search(suffix);
+
       if (snippet) {
-        return { snippet, matchLength: substring.length };
+        // Found a match - if it's longer than previous, keep it
+        if (!longestMatch || length > longestMatch.matchLength) {
+          longestMatch = { snippet, matchLength: length };
+        }
       }
     }
 
-    return null;
+    return longestMatch;
   }
 
   rebuild(snippets: Record<string, Snippet>): void {

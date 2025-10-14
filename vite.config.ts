@@ -10,6 +10,7 @@ export default defineConfig({
       input: {
         'background/service-worker': resolve(__dirname, 'src/background/service-worker.ts'),
         // Content script is built separately with vite.config.content.ts
+        'offscreen/offscreen': resolve(__dirname, 'src/offscreen/offscreen.ts'),
         'ui/options/options': resolve(__dirname, 'src/ui/options/options.ts'),
         'ui/popup/popup': resolve(__dirname, 'src/ui/popup/popup.ts'),
       },
@@ -30,6 +31,16 @@ export default defineConfig({
         copyFileSync(
           resolve(__dirname, 'public/manifest.json'),
           resolve(__dirname, 'dist/manifest.json')
+        );
+
+        // Copy offscreen HTML
+        const offscreenDir = resolve(__dirname, 'dist/offscreen');
+        if (!existsSync(offscreenDir)) {
+          mkdirSync(offscreenDir, { recursive: true });
+        }
+        copyFileSync(
+          resolve(__dirname, 'src/offscreen/offscreen.html'),
+          resolve(__dirname, 'dist/offscreen/offscreen.html')
         );
 
         // Copy HTML and CSS files for options

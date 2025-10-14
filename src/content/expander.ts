@@ -12,6 +12,9 @@ class TextBlitzExpander {
   private settings: Settings | null = null;
   private isExpanding = false;
   private formPopup: FormPopup;
+  private keyboardBuffer = '';
+  private lastKeyTime = 0;
+  private lastExpansionTime = 0;
 
   constructor() {
     this.trie = new SnippetTrie(false);
@@ -20,7 +23,11 @@ class TextBlitzExpander {
   }
 
   private async initialize() {
-    console.log('TextBlitz: Starting initialization...');
+    if (this.settings?.debugMode) {
+      const frameInfo = window === window.top ? 'top frame' : 'iframe';
+      console.log(`TextBlitz: Starting initialization in ${frameInfo}...`);
+    }
+
     try {
       await StorageManager.initialize();
       this.settings = await StorageManager.getSettings();
@@ -70,8 +77,28 @@ class TextBlitzExpander {
   }
 
   private setupListeners() {
+
     // Listen for input events (fires after text is in the field)
-    document.addEventListener('input', this.handleInput.bind(this), { passive: true });
+    document.addEventListener('input', this.handleInput.bind(this), true);
+
+    // CRITICAL: Listen for keyboard events with CAPTURE (catches Google Docs, Gist, etc.)
+    // Capture phase runs BEFORE sites can stop propagation
+    // NOT passive - we need to be able to interact with the event
+    document.addEventListener('keydown', this.handleKeydown.bind(this), true);
+
+    // Google Docs: Also try to hook into any textareas (hidden input proxy)
+    setTimeout(() => {
+      const textareas = document.querySelectorAll('textarea');
+      textareas.forEach(textarea => {
+        if (this.settings?.debugMode) {
+          console.log('TextBlitz: Found textarea, adding listeners:', {
+            id: textarea.id,
+            visible: textarea.offsetParent !== null
+          });
+        }
+        textarea.addEventListener('input', this.handleInput.bind(this), { passive: true });
+      });
+    }, 1000);
 
     // Listen for storage changes to update the trie
     chrome.storage.onChanged.addListener((changes, areaName) => {
@@ -104,42 +131,199 @@ class TextBlitzExpander {
   private handleInput(event: Event) {
     const target = event.target as HTMLElement;
 
-    if (!this.settings?.enabled) return;
-    if (this.isExpanding) return;
-    if (!TextReplacer.isValidInputElement(target)) return;
+    if (this.settings?.debugMode) {
+      console.log('TextBlitz: handleInput fired, event type:', event.type, 'target:', target.tagName);
+    }
+
+    if (!this.settings?.enabled) {
+      if (this.settings?.debugMode) console.log('TextBlitz: Extension disabled');
+      return;
+    }
+    if (this.isExpanding) {
+      if (this.settings?.debugMode) console.log('TextBlitz: Currently expanding, skipping');
+      return;
+    }
+
+    // Don't trigger if keyboard buffer just handled this (prevent double expansion)
+    if (Date.now() - this.lastExpansionTime < 100) {
+      if (this.settings?.debugMode) console.log('TextBlitz: Keyboard buffer just handled expansion, skipping input event');
+      return;
+    }
+
+    if (!TextReplacer.isValidInputElement(target)) {
+      if (this.settings?.debugMode) console.log('TextBlitz: Invalid input element');
+      return;
+    }
 
     this.checkForMatch(target);
   }
 
-  private async checkForMatch(element: HTMLElement): Promise<boolean> {
-    let textBeforeCursor: string;
-    let textAfter: string;
+  // Keyboard buffer handler - catches Google Docs, Gist, etc.
+  private handleKeydown(event: KeyboardEvent) {
+    if (!this.settings?.enabled || this.isExpanding) return;
 
-    // Handle different element types
-    if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
-      // Regular input/textarea
-      const cursorPos = element.selectionStart ?? element.value.length;
-      if (cursorPos === 0) return false;
+    const key = event.key;
+    const now = Date.now();
 
-      textBeforeCursor = element.value.substring(0, cursorPos);
-      textAfter = element.value.substring(cursorPos);
-    } else if (element.isContentEditable) {
-      // Contenteditable element
-      const selection = window.getSelection();
-      if (!selection || selection.rangeCount === 0) return false;
+    // Reset buffer if more than 2 seconds since last key
+    if (now - this.lastKeyTime > 2000) {
+      this.keyboardBuffer = '';
+    }
+    this.lastKeyTime = now;
 
-      const range = selection.getRangeAt(0);
-      const { startContainer, startOffset } = range;
+    // Ignore modifier keys
+    if (event.ctrlKey || event.metaKey || event.altKey) return;
 
-      if (startContainer.nodeType !== Node.TEXT_NODE) return false;
-
-      const textNode = startContainer as Text;
-      const text = textNode.textContent || '';
-
-      textBeforeCursor = text.substring(0, startOffset);
-      textAfter = text.substring(startOffset);
+    // Handle printable characters
+    if (key.length === 1) {
+      this.keyboardBuffer += key;
+    } else if (key === 'Backspace') {
+      this.keyboardBuffer = this.keyboardBuffer.slice(0, -1);
+    } else if (key === ' ') {
+      this.keyboardBuffer += ' ';
     } else {
-      return false;
+      return; // Ignore other keys
+    }
+
+    if (this.settings?.debugMode) {
+      console.log('TextBlitz: Keyboard buffer:', this.keyboardBuffer);
+    }
+
+    // Keep buffer size reasonable
+    if (this.keyboardBuffer.length > 200) {
+      this.keyboardBuffer = this.keyboardBuffer.slice(-200);
+    }
+
+    // Check for trigger match in buffer
+    this.checkBufferForMatch();
+  }
+
+  // Check keyboard buffer for triggers
+  private async checkBufferForMatch() {
+    if (!this.keyboardBuffer) return;
+
+    // Don't check if we just did an expansion via input event
+    if (Date.now() - this.lastExpansionTime < 500) return;
+
+    // Only check last 50 chars to avoid matching old text
+    const recentBuffer = this.keyboardBuffer.slice(-50);
+
+    const match = this.trie.findMatch(recentBuffer);
+    if (!match) return;
+
+    const { snippet } = match;
+    const trigger = this.settings!.caseSensitive ? snippet.trigger : snippet.trigger.toLowerCase();
+    const bufferToCheck = this.settings!.caseSensitive ? recentBuffer : recentBuffer.toLowerCase();
+
+    if (this.settings?.debugMode) {
+      console.log('TextBlitz: Buffer match -', snippet.label, 'trigger:', trigger);
+    }
+
+    if (!bufferToCheck.endsWith(trigger)) return;
+
+    // Check word boundaries
+    const textBefore = recentBuffer.substring(0, recentBuffer.length - trigger.length);
+    const textAfter = '';
+
+    if (!shouldTriggerMatch(textBefore, trigger, textAfter, snippet.triggerMode)) {
+      return;
+    }
+
+    // Get focused element
+    const element = document.activeElement as HTMLElement;
+    if (!element) {
+      if (this.settings?.debugMode) {
+        console.log('TextBlitz: No activeElement found');
+      }
+      return;
+    }
+
+    if (this.settings?.debugMode) {
+      console.log('TextBlitz: Expanding on', element.tagName);
+    }
+
+    // Clear buffer before expansion
+    this.keyboardBuffer = '';
+
+    // Mark that we're about to expand - block input events immediately
+    this.lastExpansionTime = Date.now();
+
+    // Use setTimeout to let browser process the keystroke first
+    // This ensures field value and cursor position are correct
+    setTimeout(async () => {
+      // Double-check we haven't already expanded (race condition protection)
+      if (this.isExpanding) return;
+
+      this.isExpanding = true;
+      const success = await TextReplacer.replace(element, snippet.trigger, snippet.expansion, snippet.caseTransform);
+      this.isExpanding = false;
+
+      if (success) {
+        // Update expansion time on success
+        this.lastExpansionTime = Date.now();
+
+        StorageManager.incrementUsage(snippet.id).catch(err => {
+          console.error('TextBlitz: Failed to update usage stats', err);
+        });
+      }
+    }, 0);
+  }
+
+  // Get text before cursor - simplified and robust
+  private getTextBeforeCursor(element: HTMLElement): string {
+    try {
+      // For regular inputs/textareas - simple
+      if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
+        const cursorPos = element.selectionStart ?? element.value.length;
+        return element.value.substring(0, cursorPos);
+      }
+
+      // For contenteditable - try to get text, but don't fail if we can't
+      if (element.isContentEditable) {
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) {
+          // No selection - just use all text
+          return element.textContent || '';
+        }
+
+        const range = selection.getRangeAt(0);
+        let { startContainer, startOffset } = range;
+
+        // If we're in a text node, easy
+        if (startContainer.nodeType === Node.TEXT_NODE) {
+          const textNode = startContainer as Text;
+          return (textNode.textContent || '').substring(0, startOffset);
+        }
+
+        // If we're in an element, try to find text
+        if (startContainer.childNodes.length > 0) {
+          const childIndex = Math.min(startOffset, startContainer.childNodes.length - 1);
+          const childNode = startContainer.childNodes[childIndex];
+          if (childNode && childNode.nodeType === Node.TEXT_NODE) {
+            return (childNode as Text).textContent || '';
+          }
+        }
+
+        // Fallback: just use all text content
+        return element.textContent || '';
+      }
+
+      return '';
+    } catch (error) {
+      // If anything fails, return empty string - let tiers handle it
+      if (this.settings?.debugMode) {
+        console.log('TextBlitz: Error getting text before cursor, will try expansion anyway:', error);
+      }
+      return '';
+    }
+  }
+
+  private async checkForMatch(element: HTMLElement): Promise<boolean> {
+    // Get text before cursor (simplified - doesn't fail)
+    const textBeforeCursor = this.getTextBeforeCursor(element);
+
+    if (this.settings?.debugMode) {
+      console.log('TextBlitz: Text before cursor:', textBeforeCursor);
     }
 
     if (!textBeforeCursor) return false;
@@ -157,10 +341,15 @@ class TextBlitzExpander {
 
     // Extract context for word boundary checking
     const textBefore = textBeforeCursor.substring(0, textBeforeCursor.length - trigger.length);
+    const textAfter = ''; // We don't know what's after - word boundary check will be lenient
 
     // Check if trigger should match based on mode
     if (!shouldTriggerMatch(textBefore, trigger, textAfter, snippet.triggerMode)) {
       return false;
+    }
+
+    if (this.settings?.debugMode) {
+      console.log('TextBlitz: ✅ Trigger matched:', trigger, 'snippet:', snippet.label);
     }
 
     // Check if expansion has form commands
@@ -174,7 +363,7 @@ class TextBlitzExpander {
       await this.expandDynamic(element, snippet);
       return true;
     } else {
-      // Static expansion (existing behavior)
+      // Static expansion - pass to tiered replacer
       this.isExpanding = true;
       const success = await TextReplacer.replace(element, snippet.trigger, snippet.expansion, snippet.caseTransform);
       this.isExpanding = false;
