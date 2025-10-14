@@ -92,7 +92,7 @@ If we change this privacy policy, we will:
 
 Questions about privacy?
 - Open an issue: https://github.com/martiantux/TextBlitz/issues
-- Email: [Your contact email if you want to provide one]
+- Email: bradley@hammond.im
 
 ## Summary
 

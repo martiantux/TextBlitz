@@ -58,11 +58,11 @@ Built for anyone who types the same things repeatedly.
 - 🔄 **Case transformation** - 6 modes including match trigger case (btw → "by the way", BTW → "BY THE WAY")
 
 ### Current Limitations
-- ⚠️ **Limited contenteditable** - Gmail/Google Docs may have issues (improving in v0.7.0)
+- ⚠️ **Limited contenteditable** - Gmail/Google Docs may have issues (improvements in testing for v0.9.0)
 - ⚠️ **No drag-and-drop yet** - Reordering snippets/folders coming in future version
 
 ### Coming Soon (see ROADMAP.md)
-- 🌐 **Better site compatibility** - Improved Gmail/Docs/Slack support (v0.7.0)
+- 🌐 **Better site compatibility** - Improved Gmail/Docs/Slack support (v0.9.0 beta)
 - ⚙️ **Power features** - Conditionals, formulas (v1.1.0+ post-launch)
 - 🤝 **Snippet packs** - Import/export collections (v1.0)
 
@@ -159,7 +159,7 @@ TextBlitz comes with 3 example snippets pre-installed:
 - **Code snippets**: `arrow` → `() => {}`
 - **URLs**: `gh` → `https://github.com/yourusername`
 
-**Coming next (v0.7.0):**
+**Coming next (v0.9.0):**
 - **Better site compatibility**: Rock-solid Gmail, Google Docs, Slack support
 
 **Coming later (v1.1.0+):**
@@ -247,16 +247,16 @@ See [ROADMAP.md](./ROADMAP.md) for detailed feature plans and version milestones
 - Case transformation system (6 modes including match trigger case)
 - All features stable and ready for real-world testing
 
-**Next Up - v0.7.0: Site Compatibility & Reliability**
+**Next Up - v0.9.0: Beta Testing & Site Compatibility**
 - Better contenteditable support (Gmail, Google Docs, Slack)
-- Cross-site testing on 10+ major platforms
-- Performance optimization (1000+ snippets)
+- Multi-node text handling and execCommand fallback
+- Friend beta testing for real-world validation
+- Performance testing with 100+ snippets
 - Bug fixes and edge cases
 
-**Road to v1.0.0 Chrome Web Store (4-6 weeks):**
-- **v0.7.0**: Site compatibility & reliability (2-3 weeks)
-- **v0.8.0**: Beta testing & polish (1-2 weeks)
-- **v1.0.0**: Chrome Web Store launch 🚀
+**Road to v1.0.0 Chrome Web Store:**
+- **v0.9.0 Beta**: ContentEditable improvements, friend testing, bug fixes
+- **v1.0.0**: Final polish & Chrome Web Store launch 🚀
 
 **Post-Launch Power Features:**
 - **v1.1.0+**: Conditionals, formulas, snippet chaining

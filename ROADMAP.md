@@ -219,16 +219,15 @@ Interactive forms with popup UI + advanced organization features
 
 ---
 
-## 🚀 v0.7.0 - Site Compatibility & Reliability (MERGED INTO v0.9.0)
+## ~~🚀 v0.7.0 & v0.8.0~~ - SKIPPED
 
-**Status:** ⚠️ Being merged directly into v0.9.0 beta
+**Status:** ❌ Cancelled - merged directly into v0.9.0 for faster release
 
-### Why Skipping Separate v0.7.0/v0.8.0
-To streamline the path to Chrome Web Store, we're combining site compatibility testing, beta testing, and polish into a single v0.9.0 beta release. This gets us to v1.0.0 faster.
+To streamline the path to Chrome Web Store, we decided to skip separate v0.7.0 and v0.8.0 releases. All site compatibility testing, ContentEditable improvements, beta testing, and polish are consolidated into v0.9.0 beta.
 
 **New Strategy:**
 - v0.6.0 (current) → v0.9.0 (beta) → v1.0.0 (Chrome Web Store)
-- See v0.9.0 section below for consolidated plan
+- See v0.9.0 section below for the consolidated plan
 
 ---
 
@@ -239,7 +238,7 @@ To streamline the path to Chrome Web Store, we're combining site compatibility t
 ### Goal
 Consolidated beta release combining site compatibility, testing, and polish. Ready for friend beta testing, then Chrome Web Store submission as v1.0.0.
 
-### Phase 1: Core Testing (YOU - This Week)
+### Phase 1: Core Testing
 - [ ] **Better ContentEditable support** (IN PROGRESS):
   - [x] Multi-node text handling with TreeWalker
   - [x] execCommand fallback for Gmail/Docs/Slack
@@ -264,19 +263,19 @@ Consolidated beta release combining site compatibility, testing, and polish. Rea
   - [ ] Import/Export works
   - [ ] Dark mode works
 
-### Phase 2: Bug Fixes (YOU - This Week)
+### Phase 2: Bug Fixes
 - [ ] Fix any critical bugs from testing
 - [ ] Address console errors
 - [ ] Improve error messages
 
-### Phase 3: Beta Testing (FRIEND - 1-2 Weeks)
+### Phase 3: Beta Testing (Friend)
 - [ ] Version bump to v0.9.0
 - [ ] Create beta installation guide
 - [ ] Friend tests in real-world usage
 - [ ] Gather feedback and bug reports
 - [ ] Fix reported issues
 
-### Phase 4: Final Polish (YOU - 1 Week)
+### Phase 4: Final Polish
 - [ ] Address beta feedback
 - [ ] Final bug fixes
 - [ ] Performance optimization if needed
@@ -302,19 +301,19 @@ Consolidated beta release combining site compatibility, testing, and polish. Rea
 Stable, polished, Chrome Web Store ready - **Free, open-source text expansion with LLM support**
 
 ### Features
-- [ ] **User documentation** (4-5 hours):
+- [ ] **User documentation**:
   - Complete user guide
   - Quick start tutorial
   - Example snippet library (10-20 useful snippets)
   - LLM setup walkthrough
-  - Video demo (3-5 minutes)
-- [ ] **Chrome Web Store preparation** (3-4 hours):
+  - Video demo
+- [ ] **Chrome Web Store preparation**:
   - Store listing copy (compelling description)
   - 5 screenshots (showing key features)
   - Promotional images (1400x560, 440x280)
   - Privacy policy (especially LLM/API key handling)
   - Category selection and keywords
-- [ ] **Final QA & launch** (2-3 hours):
+- [ ] **Final QA & launch**:
   - Full regression test
   - Cross-browser testing (Chrome, Edge, Brave)
   - Version bump to 1.0.0
@@ -355,7 +354,7 @@ Add conditional logic for dynamic snippet behavior based on context
   - Date-based conditional content
 
 ### Why After Launch
-- High complexity (8-10 hours)
+- High complexity
 - Current features sufficient for v1.0.0
 - Better to debug with real user feedback
 - Not critical for most workflows
@@ -383,7 +382,7 @@ Add expression evaluation for calculations and text manipulation
   - Date calculations
 
 ### Why After Launch
-- Medium-high complexity (10-12 hours)
+- Medium-high complexity
 - Requires safe expression parser
 - Better to gather user needs first
 - Most use cases covered by existing commands

@@ -30,10 +30,16 @@ class TextBlitzExpander {
 
       // Initialize LLM providers if API keys present
       if (this.settings.llmKeys.groq) {
-        llmManager.setProvider('groq', this.settings.llmKeys.groq, this.settings.llmTimeout);
+        llmManager.setProvider('groq', this.settings.llmKeys.groq, this.settings.llmModels.groq, this.settings.llmTimeout, this.settings.llmSystemPrompt);
       }
       if (this.settings.llmKeys.anthropic) {
-        llmManager.setProvider('anthropic', this.settings.llmKeys.anthropic, this.settings.llmTimeout);
+        llmManager.setProvider('anthropic', this.settings.llmKeys.anthropic, this.settings.llmModels.anthropic, this.settings.llmTimeout, this.settings.llmSystemPrompt);
+      }
+      if (this.settings.llmKeys.openai) {
+        llmManager.setProvider('openai', this.settings.llmKeys.openai, this.settings.llmModels.openai, this.settings.llmTimeout, this.settings.llmSystemPrompt);
+      }
+      if (this.settings.llmKeys.gemini) {
+        llmManager.setProvider('gemini', this.settings.llmKeys.gemini, this.settings.llmModels.gemini, this.settings.llmTimeout, this.settings.llmSystemPrompt);
       }
 
       if (this.settings.debugMode) {
@@ -79,10 +85,16 @@ class TextBlitzExpander {
           TextReplacer.setDebugMode(this.settings.debugMode);
           // Re-initialize LLM providers when keys change
           if (this.settings.llmKeys.groq) {
-            llmManager.setProvider('groq', this.settings.llmKeys.groq, this.settings.llmTimeout);
+            llmManager.setProvider('groq', this.settings.llmKeys.groq, this.settings.llmModels.groq, this.settings.llmTimeout, this.settings.llmSystemPrompt);
           }
           if (this.settings.llmKeys.anthropic) {
-            llmManager.setProvider('anthropic', this.settings.llmKeys.anthropic, this.settings.llmTimeout);
+            llmManager.setProvider('anthropic', this.settings.llmKeys.anthropic, this.settings.llmModels.anthropic, this.settings.llmTimeout, this.settings.llmSystemPrompt);
+          }
+          if (this.settings.llmKeys.openai) {
+            llmManager.setProvider('openai', this.settings.llmKeys.openai, this.settings.llmModels.openai, this.settings.llmTimeout, this.settings.llmSystemPrompt);
+          }
+          if (this.settings.llmKeys.gemini) {
+            llmManager.setProvider('gemini', this.settings.llmKeys.gemini, this.settings.llmModels.gemini, this.settings.llmTimeout, this.settings.llmSystemPrompt);
           }
         }
       }
