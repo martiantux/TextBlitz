@@ -52,12 +52,19 @@ TextBlitz offers optional integration with third-party LLM providers:
 
 ## Clipboard Access
 
-TextBlitz requests clipboard read permission to support the `{clipboard}` command:
+TextBlitz requests clipboard permissions for two purposes:
 
-- Only accessed when you use a snippet with `{clipboard}` command
-- Read-only access (we don't write to clipboard)
+### 1. {clipboard} Command
+- Read clipboard content when you use snippets with the `{clipboard}` command
 - Content is inserted directly into your text - never stored or transmitted
 - You control when this happens by creating snippets that use this feature
+
+### 2. Tier 3 Replacement Fallback
+- On complex sites (React/Vue apps), TextBlitz may temporarily use your clipboard as a paste method
+- Process: saves your original clipboard → writes expansion → pastes → restores original
+- Happens automatically only if simpler methods fail
+- Takes ~50-100ms, your original clipboard is always restored
+- This is an industry-standard technique used by similar tools
 
 ## Open Source
 

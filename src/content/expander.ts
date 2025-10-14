@@ -263,6 +263,21 @@ class TextBlitzExpander {
           return;
         }
 
+        // Check if expansion has form commands
+        if (CommandParser.hasFormCommands(snippet.expansion)) {
+          await this.expandWithForm(element, snippet);
+          this.lastExpansionTime = Date.now();
+          return;
+        }
+
+        // Handle dynamic vs static snippets
+        if (snippet.type === 'dynamic') {
+          await this.expandDynamic(element, snippet);
+          this.lastExpansionTime = Date.now();
+          return;
+        }
+
+        // Static expansion
         this.isExpanding = true;
         const success = await TextReplacer.replace(element, snippet.trigger, snippet.expansion, snippet.caseTransform);
         this.isExpanding = false;

@@ -198,9 +198,9 @@
           <label class="form-label" for="snippet-type">Type</label>
           <select class="form-select" id="snippet-type">
             <option value="static">Static (fixed text)</option>
-            <option value="dynamic">🤖 Dynamic (AI-generated)</option>
+            <option value="dynamic">🤖 Dynamic (LLM-generated)</option>
           </select>
-          <div class="form-help">Static snippets use fixed text. Dynamic snippets use AI to generate variations.</div>
+          <div class="form-help">Static snippets use fixed text. Dynamic snippets use LLMs to generate variations.</div>
         </div>
 
         <div class="form-group" id="static-fields">
@@ -225,14 +225,14 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="snippet-llm-prompt">AI Prompt</label>
+            <label class="form-label" for="snippet-llm-prompt">LLM Prompt</label>
             <textarea
               class="form-textarea"
               id="snippet-llm-prompt"
               placeholder="e.g., Write a friendly professional greeting, under 5 words"
               rows="3"
             ></textarea>
-            <div class="form-help">Describe what text you want the AI to generate. Be specific about length and tone.</div>
+            <div class="form-help">Describe what text you want the LLM to generate. Be specific about length and tone.</div>
           </div>
 
           <div class="form-group">
@@ -243,7 +243,7 @@
               id="snippet-fallback"
               placeholder="e.g., Hello!"
             >
-            <div class="form-help">Used if AI request fails or times out.</div>
+            <div class="form-help">Used if LLM request fails or times out.</div>
           </div>
         </div>
 
@@ -535,7 +535,7 @@
       <div class="modal-body">
         <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 6px; padding: 12px; margin-bottom: 16px;">
           <div style="font-size: 13px; color: #075985;">
-            Describe what you want in plain English. AI will generate a snippet with trigger, label, and expansion for you to review and edit.
+            Describe what you want in plain English. LLM will generate a snippet with trigger, label, and expansion for you to review and edit.
           </div>
         </div>
 

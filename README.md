@@ -22,7 +22,7 @@ Built for anyone who types the same things repeatedly.
 
 ---
 
-## ✨ Current Features (v0.6.0)
+## ✨ Current Features (v0.6.1)
 
 ### What Works Now
 - ⚡ **Text expansion** - Works in all input types (text, email, search, textarea, etc.)
@@ -58,7 +58,7 @@ Built for anyone who types the same things repeatedly.
 - 🔄 **Case transformation** - 6 modes including match trigger case (btw → "by the way", BTW → "BY THE WAY")
 - 📦 **Snippet Packs** - Curated collections for developers, customer service, ADHD productivity, and more
 
-### Current Status (v0.6.0)
+### Current Status (v0.6.1)
 - ✅ **Cross-site compatibility** - Works on Google Docs, ChatGPT, Discord, Gmail, GitHub, Reddit, and all standard inputs
 - ✅ **Reliable expansion** - Clean trigger deletion, no doubling, proper cursor positioning
 - ✅ **Production ready** - Tested on major sites, defensive error handling
@@ -144,11 +144,11 @@ TextBlitz comes with 3 example snippets pre-installed:
 5. Click **Save**
 6. Start typing!
 
-**Dynamic snippet (AI-generated variations):**
+**Dynamic snippet (LLM-generated variations):**
 1. Get a free Groq API key at https://console.groq.com/
 2. Click **"🤖 LLM Settings"** and paste your key
 3. Create a new snippet, set Type to **"Dynamic"**
-4. Enter AI prompt (e.g., `Write a friendly greeting, 5 words or less`)
+4. Enter LLM prompt (e.g., `Write a friendly greeting, 5 words or less`)
 5. Test it - you'll get different greetings each time!
 
 ### Use Snippet Packs
@@ -173,7 +173,7 @@ TextBlitz includes 3 curated starter packs:
 
 ### Common Use Cases
 
-**Current capabilities (v0.6.0):**
+**Current capabilities (v0.6.1):**
 - **Email templates**: `followup` → "Hi [name], just following up on..."
 - **Date stamps**: `td` → `{date}` → "2025-10-13"
 - **Signatures with dates**: `sig` → "Best regards,\n{cursor}\nSent on {date:MMMM D, YYYY}"
@@ -290,10 +290,13 @@ npm run build
 
 See [ROADMAP.md](./ROADMAP.md) for detailed feature plans and version milestones.
 
-**v0.6.0 - Complete! ✅**
+**v0.6.1 - Complete! ✅**
 - UI Polish: Default folder persistence, snippet duplication, keyboard shortcuts
 - Context-aware export (individual folders or all snippets)
 - Case transformation system (6 modes including match trigger case)
+- Fixed dynamic snippet bug (keyboard buffer expansion path)
+- Corrected privacy documentation for clipboard usage
+- Standardized language (LLM vs AI terminology)
 - All features stable and ready for real-world testing
 
 **Next Up - v0.9.0: Beta Testing & Site Compatibility**
