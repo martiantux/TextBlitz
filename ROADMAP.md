@@ -209,13 +209,20 @@ Interactive forms with popup UI + advanced organization features
 - [x] **Folder rename** - Double-click or ✏️ edit button to rename custom folders
 - [x] **Case transformation** - 6 modes including match trigger case (btw/BTW/Btw)
   - none, upper, lower, title, capitalize, match
+- [x] **Snippet Packs** - Curated collections with 3 starter packs
+  - 💬 Essential Communication (5 snippets)
+  - 🧑‍💻 Developer Essentials (9 snippets)
+  - 📧 Customer Service Pro (6 snippets)
+- [x] **Pack Manager** - Import/export, conflict resolution, folder creation
 
 ### Testing Status
 - [x] TypeScript build successful
 - [x] Case transformation implementation complete
+- [x] Snippet pack system implemented
+- [ ] Pack browser UI integration pending
 - [ ] Manual testing pending
 
-**🎯 Milestone Reached**: TextBlitz v0.6.0 is feature-complete with solid UI/UX foundation
+**🎯 Milestone Reached**: TextBlitz v0.6.0 is feature-complete with curated snippet packs for diverse workflows
 
 ---
 
@@ -248,6 +255,14 @@ Consolidated beta release combining site compatibility, testing, and polish. Rea
   - [ ] Test on Slack (if available)
   - [ ] Test on basic sites (GitHub, Twitter, Reddit)
 
+- [ ] **Snippet Pack System**:
+  - [x] Pack type system and storage
+  - [x] 3 curated starter packs
+  - [x] Pack manager (import/export/conflicts)
+  - [ ] Pack browser UI in options page
+  - [ ] Test pack installation workflow
+  - [ ] Test conflict resolution modes
+
 - [ ] **Performance validation**:
   - [ ] Test with 100+ snippets
   - [ ] Check expansion latency (<100ms target)
@@ -261,6 +276,7 @@ Consolidated beta release combining site compatibility, testing, and polish. Rea
   - [ ] Case transformation works
   - [ ] LLM features work (if API keys configured)
   - [ ] Import/Export works
+  - [ ] Snippet packs work
   - [ ] Dark mode works
 
 ### Phase 2: Bug Fixes
@@ -304,18 +320,19 @@ Stable, polished, Chrome Web Store ready - **Free, open-source text expansion wi
 - [ ] **User documentation**:
   - Complete user guide
   - Quick start tutorial
-  - Example snippet library (10-20 useful snippets)
+  - Snippet pack guide (how to use, create, share)
   - LLM setup walkthrough
   - Video demo
 - [ ] **Chrome Web Store preparation**:
-  - Store listing copy (compelling description)
-  - 5 screenshots (showing key features)
+  - Store listing copy (highlighting snippet packs)
+  - 5 screenshots (including pack browser)
   - Promotional images (1400x560, 440x280)
-  - Privacy policy (especially LLM/API key handling)
+  - Privacy policy (LLM/API key handling)
   - Category selection and keywords
 - [ ] **Final QA & launch**:
   - Full regression test
   - Cross-browser testing (Chrome, Edge, Brave)
+  - Test all 3 starter packs
   - Version bump to 1.0.0
   - Submit to Chrome Web Store
   - Create launch announcement
@@ -334,11 +351,23 @@ Stable, polished, Chrome Web Store ready - **Free, open-source text expansion wi
 
 ---
 
-## 🚀 v1.1.0 - Conditional Logic (POST-LAUNCH)
+## 🚀 v1.1.0 - Community Packs & Advanced Features (POST-LAUNCH)
 
 **Status:** 💭 Planned (After v1.0.0 is stable in production)
 
 ### Goal
+Community-driven pack repository and advanced snippet features
+
+### Pack Repository Features
+- [ ] **GitHub-based pack registry** - Central repository for community packs
+- [ ] **Pack submission system** - Pull request workflow for new packs
+- [ ] **Pack discovery** - Search, filter, and browse by tags
+- [ ] **Rating & reviews** - Community feedback on packs
+- [ ] **Pack updates** - Auto-notification when packs have new versions
+- [ ] **Installation from URL** - `textblitz://install/pack-id` links
+- [ ] **Community-driven packs** - Based on user needs and submissions
+
+### Conditional Logic
 Add conditional logic for dynamic snippet behavior based on context
 
 ### Features

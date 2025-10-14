@@ -109,10 +109,34 @@ export interface Settings {
   llmMonthlyBudget?: number; // USD alert threshold
 }
 
+export interface SnippetPack {
+  id: string;
+  name: string;
+  description: string;
+  icon: string; // Emoji
+  author: string;
+  version: string;
+  tags: string[]; // For discovery: ["developer", "customer-service", "parent"]
+  snippets: Snippet[];
+  folders?: CustomFolder[]; // Optional folder structure
+  compatibleWith?: string[]; // Pack IDs that work well together
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface InstalledPack {
+  packId: string;
+  version: string;
+  installedAt: number;
+  enabled: boolean;
+  snippetIds: string[]; // Track which snippets came from this pack
+}
+
 export interface StorageData {
   snippets: Record<string, Snippet>;
   settings: Settings;
   llmUsage?: LLMUsageStats;
+  installedPacks?: Record<string, InstalledPack>; // Pack management
 }
 
 export const DEFAULT_SETTINGS: Settings = {

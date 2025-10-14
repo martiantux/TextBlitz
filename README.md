@@ -56,6 +56,7 @@ Built for anyone who types the same things repeatedly.
 - 🗂️ **Smart folder management** - Remembers last used folder, rename with double-click or edit button
 - 📤 **Context-aware export** - Export all snippets or just current folder
 - 🔄 **Case transformation** - 6 modes including match trigger case (btw → "by the way", BTW → "BY THE WAY")
+- 📦 **Snippet Packs** - Curated collections for developers, customer service, ADHD productivity, and more
 
 ### Current Limitations
 - ⚠️ **Limited contenteditable** - Gmail/Google Docs may have issues (improvements in testing for v0.9.0)
@@ -64,7 +65,6 @@ Built for anyone who types the same things repeatedly.
 ### Coming Soon (see ROADMAP.md)
 - 🌐 **Better site compatibility** - Improved Gmail/Docs/Slack support (v0.9.0 beta)
 - ⚙️ **Power features** - Conditionals, formulas (v1.1.0+ post-launch)
-- 🤝 **Snippet packs** - Import/export collections (v1.0)
 
 ---
 
@@ -145,6 +145,24 @@ TextBlitz comes with 3 example snippets pre-installed:
 4. Enter AI prompt (e.g., `Write a friendly greeting, 5 words or less`)
 5. Test it - you'll get different greetings each time!
 
+### Use Snippet Packs
+
+**Browse starter packs:**
+1. Go to **Options** → **"📦 Snippet Packs"**
+2. Browse 3 starter packs:
+   - 💬 **Essential Communication** - Professional templates
+   - 🧑‍💻 **Developer Essentials** - Git, code snippets, PR templates
+   - 📧 **Customer Service Pro** - Empathy, de-escalation, support
+3. Preview snippets before installing
+4. Choose conflict resolution (skip/rename/replace)
+5. Optionally create a dedicated folder for the pack
+
+**Create your own pack:**
+1. Select snippets you want to include
+2. Click **"Export as Pack"**
+3. Name it, add description, tags, and icon
+4. Share with others or keep as backup
+
 ### Common Use Cases
 
 **Current capabilities (v0.6.0):**
@@ -158,6 +176,8 @@ TextBlitz comes with 3 example snippets pre-installed:
 - **Case matching**: `btw` → "by the way", `BTW` → "BY THE WAY" (with match mode)
 - **Code snippets**: `arrow` → `() => {}`
 - **URLs**: `gh` → `https://github.com/yourusername`
+- **Customer service**: `csempathy` → Empathy-driven support responses (from CS Pro pack)
+- **Developer workflows**: `gitfix` → Properly formatted commit messages (from Developer pack)
 
 **Coming next (v0.9.0):**
 - **Better site compatibility**: Rock-solid Gmail, Google Docs, Slack support
