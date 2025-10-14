@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TextBlitz Options</title>
+  <link rel="stylesheet" href="./options.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-left">
+        <a href="#" class="logo">
+          <span class="logo-icon">⚡</span>
+          <span>TextBlitz</span>
+        </a>
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input
+            type="text"
+            class="search-input"
+            id="search-input"
+            placeholder="Search snippets..."
+            autocomplete="off"
+          >
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-secondary" id="import-btn">
+          <span>📥</span>
+          <span>Import</span>
+        </button>
+        <button class="btn btn-secondary" id="export-btn">
+          <span>📤</span>
+          <span>Export</span>
+        </button>
+        <button class="btn btn-primary" id="add-snippet-btn">
+          <span>+</span>
+          <span>New Snippet</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-section">
+          <div class="sidebar-title">Folders</div>
+          <div class="folder-list" id="folder-list">
+            <div class="folder-item active" data-folder="all">
+              <span class="folder-icon">📁</span>
+              <span>All Snippets</span>
+              <span class="folder-count" id="count-all">0</span>
+            </div>
+            <div class="folder-item" data-folder="work">
+              <span class="folder-icon">💼</span>
+              <span>Work</span>
+              <span class="folder-count" id="count-work">0</span>
+            </div>
+            <div class="folder-item" data-folder="personal">
+              <span class="folder-icon">👤</span>
+              <span>Personal</span>
+              <span class="folder-count" id="count-personal">0</span>
+            </div>
+          </div>
+          <button class="btn-new-folder" id="new-folder-btn">
+            <span>+</span>
+            <span>New Folder</span>
+          </button>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-title">Settings</div>
+          <div class="toggle-group">
+            <label class="toggle-switch">
+              <input type="checkbox" class="toggle-input" id="enabled-toggle" checked>
+              <span class="toggle-slider"></span>
+            </label>
+            <span class="toggle-label">Extension Enabled</span>
+          </div>
+          <div class="theme-selector">
+            <label class="form-label" for="theme-select" style="font-size: 12px; margin-bottom: 4px;">Theme</label>
+            <select class="form-select" id="theme-select" style="padding: 6px 10px; font-size: 13px;">
+              <option value="system">System</option>
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select>
+          </div>
+          <button class="btn-new-folder" id="llm-settings-btn" style="margin-top: 12px;">
+            <span>🤖</span>
+            <span>LLM Settings</span>
+          </button>
+          <button class="btn-new-folder" id="generate-snippet-btn" style="margin-top: 8px;">
+            <span>✨</span>
+            <span>Generate Snippet</span>
+          </button>
+          <button class="btn-new-folder" id="snippet-packs-btn" style="margin-top: 8px;">
+            <span>📦</span>
+            <span>Snippet Packs</span>
+          </button>
+        </div>
+
+        <div class="sidebar-footer">
+          <a href="https://github.com/sponsors/martiantux" target="_blank" class="sponsor-link">
+            <span>❤️</span>
+            <span>Sponsor on GitHub</span>
+          </a>
+        </div>
+      </aside>
+
+      <!-- Content Area -->
+      <main class="content-area">
+        <div class="content-header">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <h1 class="content-title" id="content-title">All Snippets</h1>
+            <a
+              href="https://github.com/sponsors/martiantux"
+              target="_blank"
+              id="snippet-counter"
+              style="font-size: 14px; color: #10b981; font-weight: 500; text-decoration: none; cursor: pointer;"
+              title="∞ for ∞"
+            >
+              0/∞
+            </a>
+          </div>
+          <select class="form-select" id="sort-select" style="width: auto;">
+            <option value="recent">Recently Created</option>
+            <option value="usage">Most Used</option>
+            <option value="alpha">Alphabetical</option>
+          </select>
+        </div>
+
+        <!-- Snippets Grid -->
+        <div class="snippets-grid" id="snippets-grid">
+          <!-- Snippet cards will be inserted here -->
+          <div class="empty-state">
+            <div class="empty-icon">📝</div>
+            <div class="empty-title">No snippets yet</div>
+            <div class="empty-text">Create your first snippet to get started!</div>
+            <button class="btn btn-primary" onclick="document.getElementById('add-snippet-btn').click()">
+              <span>+</span>
+              <span>Create Snippet</span>
+            </button>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Add/Edit Snippet Modal -->
+  <div class="modal" id="snippet-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modal-title">New Snippet</h2>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="snippet-label">
+            Label
+            <span class="form-label-optional">(friendly name)</span>
+          </label>
+          <input
+            type="text"
+            class="form-input"
+            id="snippet-label"
+            placeholder="e.g., Be Right Back"
+            autocomplete="off"
+          >
+          <div class="form-help">A friendly name to identify this snippet</div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="snippet-trigger">Trigger</label>
+            <input
+              type="text"
+              class="form-input"
+              id="snippet-trigger"
+              placeholder="e.g., brb"
+              autocomplete="off"
+            >
+            <div class="form-help">Shortcut to type</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="snippet-folder">Folder</label>
+            <select class="form-select" id="snippet-folder">
+              <option value="">No Folder</option>
+              <option value="work">💼 Work</option>
+              <option value="personal">👤 Personal</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="snippet-type">Type</label>
+          <select class="form-select" id="snippet-type">
+            <option value="static">Static (fixed text)</option>
+            <option value="dynamic">🤖 Dynamic (AI-generated)</option>
+          </select>
+          <div class="form-help">Static snippets use fixed text. Dynamic snippets use AI to generate variations.</div>
+        </div>
+
+        <div class="form-group" id="static-fields">
+          <label class="form-label" for="snippet-expansion">Expansion</label>
+          <textarea
+            class="form-textarea"
+            id="snippet-expansion"
+            placeholder="e.g., be right back"
+          ></textarea>
+          <div class="form-help">Text that will replace the trigger. Use {cursor} to position the cursor.</div>
+        </div>
+
+        <div id="dynamic-fields" style="display: none;">
+          <div class="form-group">
+            <label class="form-label" for="snippet-llm-provider">LLM Provider</label>
+            <select class="form-select" id="snippet-llm-provider">
+              <option value="groq">Groq (fastest, free tier)</option>
+              <option value="openai">OpenAI (ChatGPT/GPT-4)</option>
+              <option value="anthropic">Anthropic (Claude Sonnet 4.5)</option>
+              <option value="gemini">Google Gemini (Gemini 1.5 Flash)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="snippet-llm-prompt">AI Prompt</label>
+            <textarea
+              class="form-textarea"
+              id="snippet-llm-prompt"
+              placeholder="e.g., Write a friendly professional greeting, under 5 words"
+              rows="3"
+            ></textarea>
+            <div class="form-help">Describe what text you want the AI to generate. Be specific about length and tone.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="snippet-fallback">Fallback Text (optional)</label>
+            <input
+              type="text"
+              class="form-input"
+              id="snippet-fallback"
+              placeholder="e.g., Hello!"
+            >
+            <div class="form-help">Used if AI request fails or times out.</div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="snippet-trigger-mode">Trigger Mode</label>
+            <select class="form-select" id="snippet-trigger-mode">
+              <option value="word">Word Break (Start)</option>
+              <option value="word-both">Word Break (Both Ends)</option>
+              <option value="anywhere">Anywhere</option>
+            </select>
+            <div class="form-help">When to trigger expansion</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="snippet-case-transform">Case Transform</label>
+            <select class="form-select" id="snippet-case-transform">
+              <option value="none">None (keep original)</option>
+              <option value="match">Match trigger case</option>
+              <option value="upper">UPPERCASE</option>
+              <option value="lower">lowercase</option>
+              <option value="title">Title Case</option>
+              <option value="capitalize">Capitalize first</option>
+            </select>
+            <div class="form-help">Transform expansion case</div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Options</label>
+            <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" id="snippet-enabled" checked style="width: 16px; height: 16px;">
+                <span style="font-size: 14px;">Enabled</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" id="snippet-case-sensitive" style="width: 16px; height: 16px;">
+                <span style="font-size: 14px;">Case Sensitive</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="cancel-snippet-btn">Cancel</button>
+        <button class="btn btn-primary" id="save-snippet-btn">Save Snippet</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden file input for import -->
+  <input type="file" id="import-file-input" accept=".json" style="display: none;">
+
+  <!-- LLM Settings Modal -->
+  <div class="modal" id="llm-settings-modal">
+    <div class="modal-content" style="max-width: 700px; max-height: 90vh; overflow-y: auto;">
+      <div class="modal-header">
+        <h2 class="modal-title">🤖 LLM Settings</h2>
+      </div>
+      <div class="modal-body">
+        <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 6px; padding: 12px; margin-bottom: 16px;">
+          <div style="font-size: 14px; color: #0c4a6e; font-weight: 500; margin-bottom: 4px;">Privacy & Security</div>
+          <div style="font-size: 13px; color: #075985;">
+            API keys are stored locally in your browser and never sent to TextBlitz. Only your AI prompts are sent to the provider you choose.
+          </div>
+        </div>
+
+        <!-- Default Provider -->
+        <div class="form-group">
+          <label class="form-label" for="llm-default-provider">Default Provider</label>
+          <select class="form-select" id="llm-default-provider">
+            <option value="groq">Groq (fastest, free tier)</option>
+            <option value="openai">OpenAI (ChatGPT/GPT-4)</option>
+            <option value="anthropic">Anthropic (Claude Sonnet 4)</option>
+            <option value="gemini">Google Gemini (2.0 Flash)</option>
+          </select>
+          <div class="form-help">Auto-selected when creating new dynamic snippets</div>
+        </div>
+
+        <!-- Groq Provider -->
+        <div style="border: 1px solid #e5e7eb; border-radius: 6px; padding: 16px; margin-bottom: 16px;">
+          <div style="font-weight: 500; margin-bottom: 12px;">Groq</div>
+          <div class="form-group">
+            <label class="form-label" for="llm-groq-key">API Key</label>
+            <input type="password" class="form-input" id="llm-groq-key" placeholder="gsk_..." autocomplete="off">
+            <div class="form-help">Get your key at <a href="https://console.groq.com/" target="_blank" style="color: #6366f1;">console.groq.com</a></div>
+          </div>
+        </div>
+
+        <!-- OpenAI Provider -->
+        <div style="border: 1px solid #e5e7eb; border-radius: 6px; padding: 16px; margin-bottom: 16px;">
+          <div style="font-weight: 500; margin-bottom: 12px;">OpenAI</div>
+          <div class="form-group">
+            <label class="form-label" for="llm-openai-key">API Key</label>
+            <input type="password" class="form-input" id="llm-openai-key" placeholder="sk-..." autocomplete="off">
+            <div class="form-help">Get your key at <a href="https://platform.openai.com/" target="_blank" style="color: #6366f1;">platform.openai.com</a></div>
+          </div>
+        </div>
+
+        <!-- Anthropic Provider -->
+        <div style="border: 1px solid #e5e7eb; border-radius: 6px; padding: 16px; margin-bottom: 16px;">
+          <div style="font-weight: 500; margin-bottom: 12px;">Anthropic</div>
+          <div class="form-group">
+            <label class="form-label" for="llm-anthropic-key">API Key</label>
+            <input type="password" class="form-input" id="llm-anthropic-key" placeholder="sk-ant-..." autocomplete="off">
+            <div class="form-help">Get your key at <a href="https://console.anthropic.com/" target="_blank" style="color: #6366f1;">console.anthropic.com</a></div>
+          </div>
+        </div>
+
+        <!-- Gemini Provider -->
+        <div style="border: 1px solid #e5e7eb; border-radius: 6px; padding: 16px; margin-bottom: 16px;">
+          <div style="font-weight: 500; margin-bottom: 12px;">Google Gemini</div>
+          <div class="form-group">
+            <label class="form-label" for="llm-gemini-key">API Key</label>
+            <input type="password" class="form-input" id="llm-gemini-key" placeholder="AI..." autocomplete="off">
+            <div class="form-help">Get your key at <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: #6366f1;">aistudio.google.com</a></div>
+          </div>
+        </div>
+
+        <!-- Universal System Prompt -->
+        <div style="border-top: 1px solid #e5e7eb; margin: 24px 0; padding-top: 24px;">
+          <div class="form-group">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <label class="form-label" for="llm-system-prompt" style="margin-bottom: 0;">
+                Universal System Prompt
+                <span class="form-label-optional">(optional - applies to all providers)</span>
+              </label>
+              <button
+                class="btn btn-secondary"
+                id="reset-system-prompt-btn"
+                style="font-size: 12px; padding: 4px 12px;"
+                title="Reset to default"
+              >
+                Reset to Default
+              </button>
+            </div>
+            <textarea
+              class="form-textarea"
+              id="llm-system-prompt"
+              placeholder="Leave empty to use default optimized prompt"
+              rows="4"
+            ></textarea>
+            <div class="form-help">Guides how the LLM generates text. Default optimized for clean, paste-ready output with no formatting or quotes.</div>
+          </div>
+        </div>
+
+        <!-- Advanced Settings (Collapsible) -->
+        <div style="border-top: 1px solid #e5e7eb; margin: 24px 0; padding-top: 24px;">
+          <div style="cursor: pointer; display: flex; align-items: center; gap: 8px; margin-bottom: 16px;" id="advanced-settings-toggle">
+            <span id="advanced-settings-icon" style="font-size: 12px;">▶</span>
+            <span style="font-weight: 500;">Advanced Settings</span>
+          </div>
+          <div id="advanced-settings-content" style="display: none;">
+            <!-- Model & Tier Configuration -->
+            <div style="margin-bottom: 24px;">
+              <div style="font-size: 14px; font-weight: 500; margin-bottom: 12px;">Model & Tier Configuration</div>
+
+              <!-- Groq -->
+              <div style="border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
+                <div style="font-weight: 500; font-size: 13px; margin-bottom: 8px;">Groq</div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label" for="llm-groq-model">Model</label>
+                    <select class="form-select" id="llm-groq-model">
+                      <option value="llama-3.3-70b-versatile">Llama 3.3 70B (recommended)</option>
+                      <option value="llama-3.1-8b-instant">Llama 3.1 8B (fast & cheap)</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="llm-groq-tier">Account Type</label>
+                    <select class="form-select" id="llm-groq-tier">
+                      <option value="free">Free (30 RPM)</option>
+                      <option value="paid">Paid (300 RPM)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <!-- OpenAI -->
+              <div style="border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
+                <div style="font-weight: 500; font-size: 13px; margin-bottom: 8px;">OpenAI</div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label" for="llm-openai-model">Model</label>
+                    <select class="form-select" id="llm-openai-model">
+                      <option value="gpt-4o-mini">GPT-4o Mini (recommended)</option>
+                      <option value="gpt-4o">GPT-4o (most capable)</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="llm-openai-tier">Usage Tier</label>
+                    <select class="form-select" id="llm-openai-tier">
+                      <option value="tier1">Tier 1 (500 RPM)</option>
+                      <option value="tier2">Tier 2 (5000 RPM)</option>
+                      <option value="tier3">Tier 3 (5000 RPM)</option>
+                      <option value="tier4">Tier 4 (10000 RPM)</option>
+                      <option value="tier5">Tier 5 (10000 RPM)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Anthropic -->
+              <div style="border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
+                <div style="font-weight: 500; font-size: 13px; margin-bottom: 8px;">Anthropic</div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label" for="llm-anthropic-model">Model</label>
+                    <select class="form-select" id="llm-anthropic-model">
+                      <option value="claude-sonnet-4-20250514">Claude Sonnet 4 (recommended)</option>
+                      <option value="claude-opus-4-20250514">Claude Opus 4 (most capable)</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="llm-anthropic-tier">Build Tier</label>
+                    <select class="form-select" id="llm-anthropic-tier">
+                      <option value="tier1">Tier 1 (50 RPM)</option>
+                      <option value="tier2">Tier 2 (1000 RPM)</option>
+                      <option value="tier3">Tier 3 (2000 RPM)</option>
+                      <option value="tier4">Tier 4 (4000 RPM)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Gemini -->
+              <div style="border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px; margin-bottom: 12px;">
+                <div style="font-weight: 500; font-size: 13px; margin-bottom: 8px;">Google Gemini</div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label" for="llm-gemini-model">Model</label>
+                    <select class="form-select" id="llm-gemini-model">
+                      <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash (free preview)</option>
+                      <option value="gemini-2.5-pro">Gemini 2.5 Pro (advanced)</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="llm-gemini-tier">Account Type</label>
+                    <select class="form-select" id="llm-gemini-tier">
+                      <option value="free">Free (15 RPM)</option>
+                      <option value="paid">Paid (1500 RPM)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Rate Limits & Budget -->
+            <div style="border-top: 1px solid #e5e7eb; padding-top: 16px;">
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label class="form-label" for="llm-alert-threshold">Rate Limit Alert Threshold (%)</label>
+                <input type="number" class="form-input" id="llm-alert-threshold" min="50" max="100" value="80">
+                <div class="form-help">Show warning when usage reaches this percentage of rate limit</div>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="llm-monthly-budget">Monthly Budget Alert (USD)</label>
+                <input type="number" class="form-input" id="llm-monthly-budget" min="0" step="0.01" placeholder="e.g., 10.00">
+                <div class="form-help">Optional: Get alerted when estimated costs exceed this amount</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Usage Statistics -->
+        <div style="border-top: 1px solid #e5e7eb; margin: 24px 0; padding-top: 24px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div style="font-size: 14px; font-weight: 500;">Usage Statistics</div>
+            <button class="btn btn-secondary" id="reset-all-stats-btn" style="font-size: 12px; padding: 4px 8px;">Reset All</button>
+          </div>
+
+          <div id="llm-usage-stats">
+            <div style="font-size: 13px; color: #6b7280;">No usage data yet. Create a dynamic snippet to get started!</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="close-llm-settings-btn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Generate Snippet Modal -->
+  <div class="modal" id="generate-snippet-modal">
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="modal-header">
+        <h2 class="modal-title">✨ Generate Snippet</h2>
+      </div>
+      <div class="modal-body">
+        <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 6px; padding: 12px; margin-bottom: 16px;">
+          <div style="font-size: 13px; color: #075985;">
+            Describe what you want in plain English. AI will generate a snippet with trigger, label, and expansion for you to review and edit.
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="generate-description">What do you want this snippet to do?</label>
+          <textarea
+            class="form-textarea"
+            id="generate-description"
+            placeholder="e.g., Create an email signature with my name 'John Smith' and today's date"
+            rows="4"
+            autofocus
+          ></textarea>
+          <div class="form-help">Be specific about what text should expand and any dynamic elements.</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="generate-provider">LLM Provider</label>
+          <select class="form-select" id="generate-provider">
+            <option value="groq">Groq (fastest)</option>
+            <option value="openai">OpenAI (ChatGPT/GPT-4)</option>
+            <option value="anthropic">Anthropic (Claude Sonnet 4.5)</option>
+            <option value="gemini">Google Gemini (Gemini 1.5 Flash)</option>
+          </select>
+        </div>
+
+        <div id="generate-status" style="display: none; margin-top: 16px; padding: 12px; border-radius: 6px; font-size: 13px;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="cancel-generate-btn">Cancel</button>
+        <button class="btn btn-primary" id="generate-btn">Generate</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Folder Management Modal -->
+  <div class="modal" id="folder-modal">
+    <div class="modal-content" style="max-width: 400px;">
+      <div class="modal-header">
+        <h2 class="modal-title" id="folder-modal-title">New Folder</h2>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="folder-name">Folder Name</label>
+          <input
+            type="text"
+            class="form-input"
+            id="folder-name"
+            placeholder="e.g., Projects"
+            autocomplete="off"
+            maxlength="30"
+          >
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="folder-icon">Icon (emoji)</label>
+          <input
+            type="text"
+            class="form-input"
+            id="folder-icon"
+            placeholder="e.g., 📂"
+            autocomplete="off"
+            maxlength="2"
+          >
+          <div class="form-help">Choose an emoji to represent this folder</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="cancel-folder-btn">Cancel</button>
+        <button class="btn btn-primary" id="save-folder-btn">Save Folder</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Snippet Packs Modal -->
+  <div class="modal" id="snippet-packs-modal">
+    <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+      <div class="modal-header">
+        <h2 class="modal-title">📦 Snippet Packs</h2>
+      </div>
+      <div class="modal-body">
+        <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 6px; padding: 12px; margin-bottom: 20px;">
+          <div style="font-size: 14px; color: #0c4a6e; font-weight: 500; margin-bottom: 4px;">Curated Snippet Collections</div>
+          <div style="font-size: 13px; color: #075985;">
+            Starter packs are curated collections of snippets for common workflows. Preview and install with one click.
+          </div>
+        </div>
+
+        <div id="packs-list">
+          <!-- Packs will be inserted here dynamically -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="close-packs-btn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pack Preview Modal -->
+  <div class="modal" id="pack-preview-modal">
+    <div class="modal-content" style="max-width: 700px; max-height: 90vh; overflow-y: auto;">
+      <div class="modal-header">
+        <h2 class="modal-title" id="pack-preview-title">Pack Preview</h2>
+      </div>
+      <div class="modal-body">
+        <!-- Pack metadata -->
+        <div id="pack-metadata" style="margin-bottom: 24px;">
+          <!-- Will be populated dynamically -->
+        </div>
+
+        <!-- Snippets preview -->
+        <div style="border-top: 1px solid #e5e7eb; padding-top: 16px;">
+          <div style="font-weight: 500; margin-bottom: 12px;">Snippets in this pack:</div>
+          <div id="pack-snippets-preview" style="display: flex; flex-direction: column; gap: 12px;">
+            <!-- Snippet cards will be inserted here -->
+          </div>
+        </div>
+
+        <!-- Installation options -->
+        <div style="border-top: 1px solid #e5e7eb; margin-top: 24px; padding-top: 16px;">
+          <div style="font-weight: 500; margin-bottom: 12px;">Installation Options</div>
+
+          <div class="form-group">
+            <label class="form-label" for="pack-conflict-mode">If snippet already exists:</label>
+            <select class="form-select" id="pack-conflict-mode">
+              <option value="skip">Skip (keep existing)</option>
+              <option value="rename">Rename new (add " (2)")</option>
+              <option value="replace">Replace (overwrite existing)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="checkbox" id="pack-create-folder" style="width: 16px; height: 16px;">
+              <span style="font-size: 14px;">Create dedicated folder for this pack</span>
+            </label>
+            <div class="form-help" style="margin-left: 24px;">Creates a new folder with the pack name and imports all snippets there</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="cancel-pack-preview-btn">Back</button>
+        <button class="btn btn-primary" id="install-pack-btn">Install Pack</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./options.js"></script>
+</body>
+</html>

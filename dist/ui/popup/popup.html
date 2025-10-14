@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TextBlitz</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 300px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      padding: 16px;
+    }
+
+    .header {
+      margin-bottom: 16px;
+    }
+
+    h1 {
+      font-size: 20px;
+      color: #333;
+      margin-bottom: 4px;
+    }
+
+    .subtitle {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .status {
+      padding: 12px;
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      border-radius: 6px;
+      margin-bottom: 12px;
+    }
+
+    .status.disabled {
+      background: #fef2f2;
+      border-color: #fecaca;
+    }
+
+    .status-text {
+      font-size: 14px;
+      color: #0369a1;
+      font-weight: 500;
+    }
+
+    .status.disabled .status-text {
+      color: #dc2626;
+    }
+
+    .stats {
+      font-size: 12px;
+      color: #666;
+      margin-top: 4px;
+    }
+
+    .quick-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .btn {
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+      text-align: left;
+    }
+
+    .btn-primary {
+      background: #4a90e2;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #357abd;
+    }
+
+    .btn-secondary {
+      background: #f3f4f6;
+      color: #374151;
+    }
+
+    .btn-secondary:hover {
+      background: #e5e7eb;
+    }
+
+    .recent {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .recent-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #666;
+      margin-bottom: 8px;
+    }
+
+    .recent-item {
+      font-size: 12px;
+      padding: 6px;
+      background: #f9fafb;
+      border-radius: 4px;
+      margin-bottom: 4px;
+    }
+
+    .trigger {
+      font-family: 'Monaco', 'Courier New', monospace;
+      color: #4a90e2;
+      font-weight: 600;
+    }
+
+    .expansion {
+      color: #666;
+      margin-left: 8px;
+    }
+
+    .empty {
+      font-size: 12px;
+      color: #999;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>⚡ TextBlitz</h1>
+    <p class="subtitle">Lightning-fast text expansion</p>
+  </div>
+
+  <div class="status" id="status">
+    <div class="status-text" id="status-text">Loading...</div>
+    <div class="stats" id="stats"></div>
+  </div>
+
+  <div class="quick-actions">
+    <button class="btn btn-primary" id="open-options">Manage Snippets</button>
+    <button class="btn btn-secondary" id="toggle-enabled">Toggle On/Off</button>
+  </div>
+
+  <div class="recent">
+    <div class="recent-title">Recent Snippets</div>
+    <div id="recent-list">
+      <div class="empty">No snippets used yet</div>
+    </div>
+  </div>
+
+  <script type="module" src="./popup.js"></script>
+</body>
+</html>
