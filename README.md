@@ -58,12 +58,18 @@ Built for anyone who types the same things repeatedly.
 - 🔄 **Case transformation** - 6 modes including match trigger case (btw → "by the way", BTW → "BY THE WAY")
 - 📦 **Snippet Packs** - Curated collections for developers, customer service, ADHD productivity, and more
 
+### Current Status (v0.6.0)
+- ✅ **Cross-site compatibility** - Works on Google Docs, ChatGPT, Discord, Gmail, GitHub, Reddit, and all standard inputs
+- ✅ **Reliable expansion** - Clean trigger deletion, no doubling, proper cursor positioning
+- ✅ **Production ready** - Tested on major sites, defensive error handling
+
 ### Current Limitations
-- ⚠️ **Limited contenteditable** - Gmail/Google Docs may have issues (improvements in testing for v0.9.0)
 - ⚠️ **No drag-and-drop yet** - Reordering snippets/folders coming in future version
+- ⚠️ **Plain textarea editor** - WYSIWYG editor with syntax highlighting planned for v0.9.0+
 
 ### Coming Soon (see ROADMAP.md)
-- 🌐 **Better site compatibility** - Improved Gmail/Docs/Slack support (v0.9.0 beta)
+- 🎨 **WYSIWYG snippet editor** - Rich text editing with command syntax highlighting (v0.9.0+)
+- 💡 **Inline tooltips** - Contextual help without cluttering UI (v0.9.0+)
 - ⚙️ **Power features** - Conditionals, formulas (v1.1.0+ post-launch)
 
 ---
@@ -322,8 +328,9 @@ See [ROADMAP.md](./ROADMAP.md) for detailed feature plans and version milestones
 
 ## ⚠️ Known Limitations
 
-- Some complex web apps (Google Docs rich text, Notion) may have limited support
 - Password fields are intentionally excluded for security
+- Number/date/time input fields not compatible with text expansion
+- Some custom editors (CodeMirror, Monaco, Lexical) may have limited support
 - Works best with Chromium browsers (Chrome, Edge, Brave)
 
 ---

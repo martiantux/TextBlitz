@@ -251,20 +251,33 @@ class TextBlitzExpander {
     // Use setTimeout to let browser process the keystroke first
     // This ensures field value and cursor position are correct
     setTimeout(async () => {
-      // Double-check we haven't already expanded (race condition protection)
-      if (this.isExpanding) return;
+      try {
+        // Double-check we haven't already expanded (race condition protection)
+        if (this.isExpanding) return;
 
-      this.isExpanding = true;
-      const success = await TextReplacer.replace(element, snippet.trigger, snippet.expansion, snippet.caseTransform);
-      this.isExpanding = false;
+        // Verify element is still valid and in document
+        if (!element || !document.contains(element)) {
+          if (this.settings?.debugMode) {
+            console.log('TextBlitz: Element no longer in document, skipping expansion');
+          }
+          return;
+        }
 
-      if (success) {
-        // Update expansion time on success
-        this.lastExpansionTime = Date.now();
+        this.isExpanding = true;
+        const success = await TextReplacer.replace(element, snippet.trigger, snippet.expansion, snippet.caseTransform);
+        this.isExpanding = false;
 
-        StorageManager.incrementUsage(snippet.id).catch(err => {
-          console.error('TextBlitz: Failed to update usage stats', err);
-        });
+        if (success) {
+          // Update expansion time on success
+          this.lastExpansionTime = Date.now();
+
+          StorageManager.incrementUsage(snippet.id).catch(err => {
+            console.error('TextBlitz: Failed to update usage stats', err);
+          });
+        }
+      } catch (error) {
+        this.isExpanding = false;
+        console.error('TextBlitz: Error in delayed expansion:', error);
       }
     }, 0);
   }

@@ -248,14 +248,21 @@ To streamline the path to Chrome Web Store, we decided to skip separate v0.7.0 a
 Consolidated beta release combining site compatibility, testing, and polish. Ready for friend beta testing, then Chrome Web Store submission as v1.0.0.
 
 ### Phase 1: Core Testing
-- [ ] **Better ContentEditable support** (IN PROGRESS):
-  - [x] Multi-node text handling with TreeWalker
-  - [x] execCommand fallback for Gmail/Docs/Slack
-  - [x] Framework-aware input events
-  - [ ] Test on Gmail compose/reply
-  - [ ] Test on Google Docs
-  - [ ] Test on Slack (if available)
-  - [ ] Test on basic sites (GitHub, Twitter, Reddit)
+- [x] **Cross-origin iframe support** (COMPLETE):
+  - [x] Added `match_origin_as_fallback` and `match_about_blank` manifest flags
+  - [x] Added clipboard permissions matching Text Blaze UX
+  - [x] Implemented setTimeout wrapper for reliable trigger deletion
+  - [x] Triple-strategy trigger detection in Tier 0
+  - [x] Race condition protection between keyboard buffer and input events
+  - [x] Defensive error handling
+  - [x] Test on Google Docs (body + title) ✅ WORKING
+  - [x] Test on ChatGPT ✅ WORKING
+  - [x] Test on Claude.ai ✅ WORKING
+  - [x] Test on Discord ✅ WORKING
+  - [x] Test on Gmail compose/reply ✅ WORKING
+  - [x] Test on GitHub (comments + gists) ✅ WORKING
+  - [x] Test on Reddit (title + body + search) ✅ WORKING
+  - [ ] Complete systematic testing checklist (TESTING_CHECKLIST.md)
 
 - [x] **Snippet Pack System** (COMPLETE):
   - [x] Pack type system and storage
@@ -267,45 +274,68 @@ Consolidated beta release combining site compatibility, testing, and polish. Rea
 
 - [ ] **Performance validation**:
   - [ ] Test with 100+ snippets
-  - [ ] Check expansion latency (<100ms target)
+  - [ ] Check expansion latency (<100ms target for static snippets)
   - [ ] Memory usage check (<100MB target)
   - [ ] No memory leaks after prolonged use
 
-- [ ] **Feature validation**:
-  - [ ] All trigger modes work
-  - [ ] All commands work (date, time, clipboard, cursor, etc.)
-  - [ ] Forms work
-  - [ ] Case transformation works
-  - [ ] LLM features work (if API keys configured)
-  - [ ] Import/Export works
-  - [ ] Snippet packs work
-  - [ ] Dark mode works
+- [x] **Feature validation** (Core features working):
+  - [x] All trigger modes work (word, word-both, anywhere)
+  - [x] All commands work (date, time, clipboard, cursor, enter, tab, delay)
+  - [x] Forms work (formtext, formmenu, formdate, formtoggle, formparagraph)
+  - [x] Case transformation works (6 modes including match)
+  - [x] LLM features work (4 providers, 8 models, usage tracking)
+  - [x] Import/Export works
+  - [x] Snippet packs work (3 starter packs)
+  - [x] Dark mode works
+  - [ ] Complete systematic feature validation on all sites
 
-### Phase 2: Bug Fixes
+### Phase 2: UI Improvements (Nice-to-Have)
+- [ ] **WYSIWYG snippet editor** - Rich text editor like Text Blaze
+  - Syntax highlighting for {commands}
+  - Preview pane showing rendered output
+  - Live cursor position indicator
+  - Libraries to consider: CodeMirror, Monaco Editor
+- [ ] **Inline tooltips** - Contextual help without clutter
+  - Trigger mode explanations (hover ⓘ icon)
+  - Command syntax examples
+  - LLM provider comparison
+- [ ] **Snippet preview** - Show how expansion will render
+  - Render {date} → actual date
+  - Show {cursor} position visually
+  - Preview case transformation
+
+### Phase 3: Bug Fixes
+- [ ] Complete systematic testing checklist
 - [ ] Fix any critical bugs from testing
 - [ ] Address console errors
 - [ ] Improve error messages
 
-### Phase 3: Beta Testing (Friend)
+### Phase 4: Beta Testing (Friend)
 - [ ] Version bump to v0.9.0
 - [ ] Create beta installation guide
 - [ ] Friend tests in real-world usage
 - [ ] Gather feedback and bug reports
 - [ ] Fix reported issues
 
-### Phase 4: Final Polish
+### Phase 5: Final Polish
 - [ ] Address beta feedback
 - [ ] Final bug fixes
 - [ ] Performance optimization if needed
 - [ ] Documentation updates
 
 ### Success Criteria
-- ✅ Works on Gmail, Docs, Slack (priority sites)
-- ✅ Works on basic sites (GitHub, Twitter, Reddit)
-- ✅ No critical bugs from beta tester
-- ✅ Performance feels instant
-- ✅ Friend can use for daily workflow
-- ✅ Ready to version bump to v1.0.0
+- [x] Works on Google Docs (body + title) ✅
+- [x] Works on Gmail ✅
+- [x] Works on ChatGPT ✅
+- [x] Works on Discord ✅
+- [x] Works on GitHub (comments + gists) ✅
+- [x] Works on Reddit ✅
+- [x] Clean expansion (no partial deletion or doubling) ✅
+- [ ] Complete systematic testing checklist
+- [ ] No critical bugs from beta tester
+- [ ] Performance feels instant (<100ms expansion)
+- [ ] Friend can use for daily workflow
+- [ ] Ready to version bump to v1.0.0
 
 **🎯 See BETA_CHECKLIST.md for detailed testing plan**
 
