@@ -96,6 +96,10 @@
             <span>✨</span>
             <span>Generate Snippet</span>
           </button>
+          <button class="btn-new-folder" id="snippet-packs-btn" style="margin-top: 8px;">
+            <span>📦</span>
+            <span>Snippet Packs</span>
+          </button>
         </div>
 
         <div class="sidebar-footer">
@@ -600,6 +604,79 @@
       <div class="modal-footer">
         <button class="btn btn-secondary" id="cancel-folder-btn">Cancel</button>
         <button class="btn btn-primary" id="save-folder-btn">Save Folder</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Snippet Packs Modal -->
+  <div class="modal" id="snippet-packs-modal">
+    <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+      <div class="modal-header">
+        <h2 class="modal-title">📦 Snippet Packs</h2>
+      </div>
+      <div class="modal-body">
+        <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 6px; padding: 12px; margin-bottom: 20px;">
+          <div style="font-size: 14px; color: #0c4a6e; font-weight: 500; margin-bottom: 4px;">Curated Snippet Collections</div>
+          <div style="font-size: 13px; color: #075985;">
+            Starter packs are curated collections of snippets for common workflows. Preview and install with one click.
+          </div>
+        </div>
+
+        <div id="packs-list">
+          <!-- Packs will be inserted here dynamically -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="close-packs-btn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pack Preview Modal -->
+  <div class="modal" id="pack-preview-modal">
+    <div class="modal-content" style="max-width: 700px; max-height: 90vh; overflow-y: auto;">
+      <div class="modal-header">
+        <h2 class="modal-title" id="pack-preview-title">Pack Preview</h2>
+      </div>
+      <div class="modal-body">
+        <!-- Pack metadata -->
+        <div id="pack-metadata" style="margin-bottom: 24px;">
+          <!-- Will be populated dynamically -->
+        </div>
+
+        <!-- Snippets preview -->
+        <div style="border-top: 1px solid #e5e7eb; padding-top: 16px;">
+          <div style="font-weight: 500; margin-bottom: 12px;">Snippets in this pack:</div>
+          <div id="pack-snippets-preview" style="display: flex; flex-direction: column; gap: 12px;">
+            <!-- Snippet cards will be inserted here -->
+          </div>
+        </div>
+
+        <!-- Installation options -->
+        <div style="border-top: 1px solid #e5e7eb; margin-top: 24px; padding-top: 16px;">
+          <div style="font-weight: 500; margin-bottom: 12px;">Installation Options</div>
+
+          <div class="form-group">
+            <label class="form-label" for="pack-conflict-mode">If snippet already exists:</label>
+            <select class="form-select" id="pack-conflict-mode">
+              <option value="skip">Skip (keep existing)</option>
+              <option value="rename">Rename new (add " (2)")</option>
+              <option value="replace">Replace (overwrite existing)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="checkbox" id="pack-create-folder" style="width: 16px; height: 16px;">
+              <span style="font-size: 14px;">Create dedicated folder for this pack</span>
+            </label>
+            <div class="form-help" style="margin-left: 24px;">Creates a new folder with the pack name and imports all snippets there</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="cancel-pack-preview-btn">Back</button>
+        <button class="btn btn-primary" id="install-pack-btn">Install Pack</button>
       </div>
     </div>
   </div>

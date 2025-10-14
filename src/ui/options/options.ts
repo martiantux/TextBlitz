@@ -1,6 +1,8 @@
 import { StorageManager } from '../../lib/storage';
-import { Snippet, TriggerMode, SnippetType, LLMProvider, CustomFolder, CaseTransform } from '../../lib/types';
+import { Snippet, TriggerMode, SnippetType, LLMProvider, CustomFolder, CaseTransform, SnippetPack } from '../../lib/types';
 import { llmManager } from '../../lib/llm/manager';
+import { STARTER_PACKS } from '../../lib/starter-packs';
+import { PackManager } from '../../lib/pack-manager';
 
 class OptionsPage {
   private currentEditId: string | null = null;
@@ -9,6 +11,7 @@ class OptionsPage {
   private searchQuery: string = '';
   private sortBy: 'recent' | 'usage' | 'alpha' = 'recent';
   private llmSettingsSaveCallback: (() => Promise<void>) | null = null;
+  private currentPack: SnippetPack | null = null;
 
   constructor() {
     this.initialize();
@@ -317,6 +320,36 @@ class OptionsPage {
     document.getElementById('generate-snippet-modal')?.addEventListener('click', (e) => {
       if (e.target === e.currentTarget) {
         this.hideGenerateSnippet();
+      }
+    });
+
+    // Snippet Packs
+    document.getElementById('snippet-packs-btn')?.addEventListener('click', () => {
+      this.showSnippetPacks();
+    });
+
+    document.getElementById('close-packs-btn')?.addEventListener('click', () => {
+      this.hideSnippetPacks();
+    });
+
+    document.getElementById('snippet-packs-modal')?.addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) {
+        this.hideSnippetPacks();
+      }
+    });
+
+    document.getElementById('cancel-pack-preview-btn')?.addEventListener('click', () => {
+      this.hidePackPreview();
+      this.showSnippetPacks();
+    });
+
+    document.getElementById('install-pack-btn')?.addEventListener('click', () => {
+      this.installPack();
+    });
+
+    document.getElementById('pack-preview-modal')?.addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) {
+        this.hidePackPreview();
       }
     });
 
@@ -1267,6 +1300,149 @@ Return ONLY the JSON, no explanation.`;
       statsContainer.innerHTML = html;
     } catch (error) {
       console.error('Failed to load usage stats:', error);
+    }
+  }
+
+  private async showSnippetPacks() {
+    const modal = document.getElementById('snippet-packs-modal');
+    const packsListDiv = document.getElementById('packs-list');
+
+    if (!packsListDiv) return;
+
+    // Render starter packs
+    let html = '';
+    for (const pack of STARTER_PACKS) {
+      html += `
+        <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin-bottom: 16px; cursor: pointer; transition: all 0.2s;"
+             class="pack-card"
+             data-pack-id="${this.escapeHtml(pack.name)}">
+          <div style="display: flex; align-items: start; gap: 16px;">
+            <div style="font-size: 36px;">${pack.icon}</div>
+            <div style="flex: 1;">
+              <div style="font-weight: 500; font-size: 16px; margin-bottom: 4px;">${this.escapeHtml(pack.name)}</div>
+              <div style="font-size: 13px; color: #6b7280; margin-bottom: 8px;">${this.escapeHtml(pack.description)}</div>
+              <div style="display: flex; align-items: center; gap: 12px; font-size: 12px; color: #6b7280;">
+                <span>📝 ${pack.snippets.length} snippets</span>
+                ${pack.author ? `<span>👤 ${this.escapeHtml(pack.author)}</span>` : ''}
+                ${pack.tags ? `<span>🏷️ ${pack.tags.join(', ')}</span>` : ''}
+              </div>
+            </div>
+            <button class="btn btn-primary" style="padding: 8px 16px;">
+              Preview & Install
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    packsListDiv.innerHTML = html;
+
+    // Add click listeners to pack cards
+    document.querySelectorAll('.pack-card').forEach(card => {
+      card.addEventListener('click', (e) => {
+        const packName = (e.currentTarget as HTMLElement).getAttribute('data-pack-id');
+        const pack = STARTER_PACKS.find(p => p.name === packName);
+        if (pack) this.showPackPreview(pack);
+      });
+    });
+
+    modal?.classList.add('active');
+  }
+
+  private hideSnippetPacks() {
+    document.getElementById('snippet-packs-modal')?.classList.remove('active');
+  }
+
+  private async showPackPreview(pack: SnippetPack) {
+    this.currentPack = pack;
+    const modal = document.getElementById('pack-preview-modal');
+    const titleEl = document.getElementById('pack-preview-title');
+    const metadataDiv = document.getElementById('pack-metadata');
+    const snippetsPreviewDiv = document.getElementById('pack-snippets-preview');
+
+    if (titleEl) titleEl.textContent = `${pack.icon} ${pack.name}`;
+
+    // Render metadata
+    if (metadataDiv) {
+      metadataDiv.innerHTML = `
+        <div style="font-size: 14px; color: #6b7280; margin-bottom: 8px;">
+          ${this.escapeHtml(pack.description)}
+        </div>
+        <div style="display: flex; align-items: center; gap: 16px; font-size: 13px; color: #6b7280;">
+          <span>📝 ${pack.snippets.length} snippets</span>
+          ${pack.author ? `<span>👤 ${this.escapeHtml(pack.author)}</span>` : ''}
+          ${pack.version ? `<span>📌 v${pack.version}</span>` : ''}
+        </div>
+        ${pack.tags && pack.tags.length > 0 ? `
+          <div style="display: flex; gap: 6px; margin-top: 8px;">
+            ${pack.tags.map(tag => `
+              <span style="background: #f3f4f6; color: #374151; padding: 2px 8px; border-radius: 4px; font-size: 12px;">
+                ${this.escapeHtml(tag)}
+              </span>
+            `).join('')}
+          </div>
+        ` : ''}
+      `;
+    }
+
+    // Render snippet previews
+    if (snippetsPreviewDiv) {
+      snippetsPreviewDiv.innerHTML = pack.snippets.map(snippet => `
+        <div style="border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px; background: #f9fafb;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+            <span style="font-weight: 500; font-size: 14px;">${this.escapeHtml(snippet.label)}</span>
+            <span style="background: #e0e7ff; color: #4338ca; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-family: monospace;">
+              ${this.escapeHtml(snippet.trigger)}
+            </span>
+          </div>
+          <div style="font-size: 13px; color: #6b7280; font-family: monospace; white-space: pre-wrap; background: white; padding: 8px; border-radius: 4px; border: 1px solid #e5e7eb; max-height: 100px; overflow-y: auto;">
+            ${this.escapeHtml(snippet.expansion)}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Hide packs list modal, show preview modal
+    this.hideSnippetPacks();
+    modal?.classList.add('active');
+  }
+
+  private hidePackPreview() {
+    document.getElementById('pack-preview-modal')?.classList.remove('active');
+    this.currentPack = null;
+  }
+
+  private async installPack() {
+    if (!this.currentPack) return;
+
+    const conflictMode = (document.getElementById('pack-conflict-mode') as HTMLSelectElement).value as 'skip' | 'rename' | 'replace';
+    const createFolder = (document.getElementById('pack-create-folder') as HTMLInputElement).checked;
+
+    try {
+      const packManager = new PackManager();
+      const result = await packManager.importPack(this.currentPack, {
+        onConflict: conflictMode,
+        createFolder: createFolder ? this.currentPack.name : undefined,
+      });
+
+      // Show success message
+      const message = `Successfully installed "${this.currentPack.name}"!\n\n` +
+        `Imported: ${result.imported} snippets\n` +
+        (result.skipped > 0 ? `Skipped: ${result.skipped} (already exists)\n` : '') +
+        (result.renamed > 0 ? `Renamed: ${result.renamed} (duplicates)\n` : '') +
+        (result.replaced > 0 ? `Replaced: ${result.replaced} (overwrote existing)\n` : '');
+
+      alert(message);
+
+      // Reload snippets and close modals
+      this.hidePackPreview();
+      await this.loadSnippets();
+      await this.renderFolders();
+      await this.updateFolderCounts();
+
+    } catch (error) {
+      console.error('Pack installation failed:', error);
+      alert(`Failed to install pack: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 }

@@ -147,21 +147,23 @@ TextBlitz comes with 3 example snippets pre-installed:
 
 ### Use Snippet Packs
 
-**Browse starter packs:**
-1. Go to **Options** → **"📦 Snippet Packs"**
-2. Browse 3 starter packs:
-   - 💬 **Essential Communication** - Professional templates
-   - 🧑‍💻 **Developer Essentials** - Git, code snippets, PR templates
-   - 📧 **Customer Service Pro** - Empathy, de-escalation, support
-3. Preview snippets before installing
-4. Choose conflict resolution (skip/rename/replace)
+TextBlitz includes 3 curated starter packs:
+- 💬 **Essential Communication** - Professional templates
+- 🧑‍💻 **Developer Essentials** - Git, code snippets, PR templates
+- 📧 **Customer Service Pro** - Empathy, de-escalation, support
+
+**To install a starter pack:**
+1. Go to **Options** → **📦 Snippet Packs**
+2. Browse available packs and click **"Preview & Install"**
+3. Review the snippets in the pack
+4. Choose conflict resolution (skip/rename/replace duplicates)
 5. Optionally create a dedicated folder for the pack
+6. Click **Install Pack**
 
 **Create your own pack:**
-1. Select snippets you want to include
-2. Click **"Export as Pack"**
-3. Name it, add description, tags, and icon
-4. Share with others or keep as backup
+1. Export your snippets as JSON
+2. Share with others or keep as backup
+3. Pack format includes metadata (name, description, author, icon)
 
 ### Common Use Cases
 
@@ -193,32 +195,53 @@ TextBlitz comes with 3 example snippets pre-installed:
 TextBlitz/
 ├── src/
 │   ├── content/
-│   │   └── expander.ts           # Main content script - text detection & expansion
+│   │   └── expander.ts             # Main content script - text detection & expansion
 │   ├── background/
-│   │   └── service-worker.ts     # Background worker - lifecycle management
+│   │   └── service-worker.ts       # Background worker - lifecycle management
 │   ├── lib/
-│   │   ├── types.ts              # TypeScript type definitions
-│   │   ├── storage.ts            # Chrome storage abstraction with caching
-│   │   ├── trie.ts               # Trie data structure for fast matching
-│   │   └── replacer.ts           # Text replacement engine
+│   │   ├── types.ts                # TypeScript type definitions & defaults
+│   │   ├── storage.ts              # Chrome storage abstraction with caching
+│   │   ├── trie.ts                 # Trie data structure for fast matching
+│   │   ├── replacer.ts             # Text replacement engine (multi-node, execCommand)
+│   │   ├── command-parser.ts       # Parse {date}, {clipboard}, {cursor}, etc.
+│   │   ├── form-popup.ts           # Interactive form popup UI
+│   │   ├── case-transform.ts       # Case transformation (upper, lower, match, etc.)
+│   │   ├── word-boundaries.ts      # Word boundary detection utilities
+│   │   ├── pack-manager.ts         # Snippet pack import/export/conflict resolution
+│   │   ├── starter-packs.ts        # Curated starter pack definitions
+│   │   └── llm/                    # LLM integration
+│   │       ├── types.ts            # LLM types and configs
+│   │       ├── providers.ts        # Base LLM provider class
+│   │       ├── manager.ts          # LLM provider manager
+│   │       ├── usage-tracker.ts    # Token usage and cost tracking
+│   │       ├── groq.ts             # Groq provider
+│   │       ├── openai.ts           # OpenAI provider
+│   │       ├── anthropic.ts        # Anthropic provider
+│   │       └── gemini.ts           # Google Gemini provider
 │   └── ui/
-│       └── options/              # Options page for snippet management
-│           ├── options.html
-│           └── options.ts
+│       ├── options/                # Options page for snippet management
+│       │   ├── options.html
+│       │   └── options.ts
+│       └── popup/                  # Extension popup UI
+│           ├── popup.html
+│           └── popup.ts
 ├── public/
-│   ├── manifest.json             # Chrome extension manifest (V3)
+│   ├── manifest.json               # Chrome extension manifest (V3)
 │   └── icons/
-└── vite.config.ts                # Build configuration
+└── vite.config.ts                  # Build configuration
 ```
 
 ### How It Works
 
-1. **Content Script** loads on every page
-2. **Event listeners** detect typing in input fields
+1. **Content Script** (expander.ts) loads on every page
+2. **Event listeners** detect typing in input fields (regular inputs + contenteditable)
 3. **Buffer** tracks last 50 characters typed
 4. **Trie search** finds matching snippets in O(m) time
-5. **Replacement engine** swaps trigger text with expansion
-6. **Cursor management** maintains proper text position
+5. **Command parser** processes {date}, {cursor}, {clipboard}, {formtext}, etc.
+6. **Replacement engine** handles text insertion (multi-node support, execCommand fallback)
+7. **LLM manager** generates dynamic content via configured providers
+8. **Form popup** displays interactive forms for variable input
+9. **Pack manager** handles importing/exporting snippet collections
 
 ---
 
