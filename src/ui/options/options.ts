@@ -1019,6 +1019,14 @@ class OptionsPage {
     alertThresholdInput.addEventListener('change', saveSettings);
     monthlyBudgetInput.addEventListener('change', saveSettings);
 
+    // Reset system prompt button
+    const resetSystemPromptBtn = document.getElementById('reset-system-prompt-btn');
+    resetSystemPromptBtn?.addEventListener('click', async () => {
+      const { DEFAULT_LLM_SYSTEM_PROMPT } = await import('../../lib/types');
+      systemPromptInput.value = DEFAULT_LLM_SYSTEM_PROMPT;
+      await saveSettings();
+    });
+
     // Advanced settings toggle
     const advancedToggle = document.getElementById('advanced-settings-toggle');
     const advancedContent = document.getElementById('advanced-settings-content');

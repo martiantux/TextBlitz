@@ -139,6 +139,9 @@ export interface StorageData {
   installedPacks?: Record<string, InstalledPack>; // Pack management
 }
 
+// Default LLM system prompt - optimized for clean, paste-ready output
+export const DEFAULT_LLM_SYSTEM_PROMPT = 'You are a text completion assistant. Output clean, paste-ready text with no quotes, markdown formatting, or explanations. Generate natural variations of the requested content. Keep responses under 50 words unless explicitly asked for more. Never ask questions back or include placeholders like [brackets]. Output only the exact text the user needs.';
+
 export const DEFAULT_SETTINGS: Settings = {
   enabled: true,
   delimiter: ' ',
@@ -151,6 +154,7 @@ export const DEFAULT_SETTINGS: Settings = {
   llmDefaultProvider: 'groq',
   llmTimeout: 5000,
   llmMaxTokens: 100,
+  llmSystemPrompt: DEFAULT_LLM_SYSTEM_PROMPT,
   llmUsageAlert: 80,
   llmModels: {
     groq: 'llama-3.3-70b-versatile',

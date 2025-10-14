@@ -15,7 +15,7 @@ export class OpenAIProvider extends LLMProvider {
 
     try {
       const systemPrompt = this.config.systemPrompt ||
-        'You are a text completion assistant. Generate brief, natural variations of common phrases. Keep responses under 50 words unless specified. Do not ask questions or include placeholders. Output only the requested text, no explanations.';
+        'You are a text completion assistant. Output clean, paste-ready text with no quotes, markdown formatting, or explanations. Generate natural variations of the requested content. Keep responses under 50 words unless explicitly asked for more. Never ask questions back or include placeholders like [brackets]. Output only the exact text the user needs.';
 
       const response = await fetch(`${this.baseURL}/chat/completions`, {
         method: 'POST',

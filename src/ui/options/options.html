@@ -363,17 +363,27 @@
         <!-- Universal System Prompt -->
         <div style="border-top: 1px solid #e5e7eb; margin: 24px 0; padding-top: 24px;">
           <div class="form-group">
-            <label class="form-label" for="llm-system-prompt">
-              Universal System Prompt
-              <span class="form-label-optional">(optional - applies to all providers)</span>
-            </label>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <label class="form-label" for="llm-system-prompt" style="margin-bottom: 0;">
+                Universal System Prompt
+                <span class="form-label-optional">(optional - applies to all providers)</span>
+              </label>
+              <button
+                class="btn btn-secondary"
+                id="reset-system-prompt-btn"
+                style="font-size: 12px; padding: 4px 12px;"
+                title="Reset to default"
+              >
+                Reset to Default
+              </button>
+            </div>
             <textarea
               class="form-textarea"
               id="llm-system-prompt"
-              placeholder="e.g., Always use a professional tone. Keep responses under 30 words."
-              rows="3"
+              placeholder="Leave empty to use default optimized prompt"
+              rows="4"
             ></textarea>
-            <div class="form-help">Custom instructions that apply to all LLM-generated text</div>
+            <div class="form-help">Guides how the LLM generates text. Default optimized for clean, paste-ready output with no formatting or quotes.</div>
           </div>
         </div>
 
