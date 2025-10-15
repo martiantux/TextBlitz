@@ -14,6 +14,7 @@ class OptionsPage {
   private llmSettingsSaveCallback: (() => Promise<void>) | null = null;
   private currentPack: SnippetPack | null = null;
   private wysiwygEditor: WysiwygEditor | null = null;
+  private modalMouseDownOnBackground = false;
 
   constructor() {
     this.initialize();
@@ -214,9 +215,9 @@ class OptionsPage {
       await this.applyTheme();
     });
 
-    // Add snippet button
+    // Add snippet button - navigate to snippet editor page
     document.getElementById('add-snippet-btn')?.addEventListener('click', () => {
-      this.showModal();
+      window.location.href = '../snippet-editor/snippet-editor.html';
     });
 
     // Modal actions
@@ -228,11 +229,16 @@ class OptionsPage {
       this.saveSnippet();
     });
 
-    // Close modal on outside click
-    document.getElementById('snippet-modal')?.addEventListener('click', (e) => {
-      if (e.target === e.currentTarget) {
+    // Close modal on outside click (with drag protection)
+    const snippetModal = document.getElementById('snippet-modal');
+    snippetModal?.addEventListener('mousedown', (e) => {
+      this.modalMouseDownOnBackground = (e.target === e.currentTarget);
+    });
+    snippetModal?.addEventListener('click', (e) => {
+      if (e.target === e.currentTarget && this.modalMouseDownOnBackground) {
         this.hideModal();
       }
+      this.modalMouseDownOnBackground = false;
     });
 
     // Search
@@ -285,10 +291,15 @@ class OptionsPage {
       this.saveFolder();
     });
 
-    document.getElementById('folder-modal')?.addEventListener('click', (e) => {
-      if (e.target === e.currentTarget) {
+    const folderModal = document.getElementById('folder-modal');
+    folderModal?.addEventListener('mousedown', (e) => {
+      this.modalMouseDownOnBackground = (e.target === e.currentTarget);
+    });
+    folderModal?.addEventListener('click', (e) => {
+      if (e.target === e.currentTarget && this.modalMouseDownOnBackground) {
         this.hideFolderModal();
       }
+      this.modalMouseDownOnBackground = false;
     });
 
     // LLM Settings
@@ -300,10 +311,15 @@ class OptionsPage {
       this.hideLLMSettings();
     });
 
-    document.getElementById('llm-settings-modal')?.addEventListener('click', (e) => {
-      if (e.target === e.currentTarget) {
+    const llmSettingsModal = document.getElementById('llm-settings-modal');
+    llmSettingsModal?.addEventListener('mousedown', (e) => {
+      this.modalMouseDownOnBackground = (e.target === e.currentTarget);
+    });
+    llmSettingsModal?.addEventListener('click', (e) => {
+      if (e.target === e.currentTarget && this.modalMouseDownOnBackground) {
         this.hideLLMSettings();
       }
+      this.modalMouseDownOnBackground = false;
     });
 
     // Generate Snippet
@@ -319,10 +335,15 @@ class OptionsPage {
       this.generateSnippet();
     });
 
-    document.getElementById('generate-snippet-modal')?.addEventListener('click', (e) => {
-      if (e.target === e.currentTarget) {
+    const generateSnippetModal = document.getElementById('generate-snippet-modal');
+    generateSnippetModal?.addEventListener('mousedown', (e) => {
+      this.modalMouseDownOnBackground = (e.target === e.currentTarget);
+    });
+    generateSnippetModal?.addEventListener('click', (e) => {
+      if (e.target === e.currentTarget && this.modalMouseDownOnBackground) {
         this.hideGenerateSnippet();
       }
+      this.modalMouseDownOnBackground = false;
     });
 
     // Snippet Packs
@@ -334,10 +355,15 @@ class OptionsPage {
       this.hideSnippetPacks();
     });
 
-    document.getElementById('snippet-packs-modal')?.addEventListener('click', (e) => {
-      if (e.target === e.currentTarget) {
+    const snippetPacksModal = document.getElementById('snippet-packs-modal');
+    snippetPacksModal?.addEventListener('mousedown', (e) => {
+      this.modalMouseDownOnBackground = (e.target === e.currentTarget);
+    });
+    snippetPacksModal?.addEventListener('click', (e) => {
+      if (e.target === e.currentTarget && this.modalMouseDownOnBackground) {
         this.hideSnippetPacks();
       }
+      this.modalMouseDownOnBackground = false;
     });
 
     document.getElementById('cancel-pack-preview-btn')?.addEventListener('click', () => {
@@ -349,10 +375,15 @@ class OptionsPage {
       this.installPack();
     });
 
-    document.getElementById('pack-preview-modal')?.addEventListener('click', (e) => {
-      if (e.target === e.currentTarget) {
+    const packPreviewModal = document.getElementById('pack-preview-modal');
+    packPreviewModal?.addEventListener('mousedown', (e) => {
+      this.modalMouseDownOnBackground = (e.target === e.currentTarget);
+    });
+    packPreviewModal?.addEventListener('click', (e) => {
+      if (e.target === e.currentTarget && this.modalMouseDownOnBackground) {
         this.hidePackPreview();
       }
+      this.modalMouseDownOnBackground = false;
     });
 
     // Snippet type toggle
@@ -361,7 +392,10 @@ class OptionsPage {
       this.toggleSnippetTypeFields();
     });
 
-    // Test Area
+    // Test Area - DISABLED (doesn't work on chrome-extension:// URLs)
+    // The test area won't trigger expansions because options page runs on chrome-extension:// URL
+    // where content scripts don't inject. Users should test on real web pages instead.
+    /*
     document.getElementById('test-area-btn')?.addEventListener('click', () => {
       this.showTestArea();
     });
@@ -375,21 +409,29 @@ class OptionsPage {
       if (testInput) testInput.value = '';
     });
 
-    document.getElementById('test-area-modal')?.addEventListener('click', (e) => {
-      if (e.target === e.currentTarget) {
+    const testAreaModal = document.getElementById('test-area-modal');
+    testAreaModal?.addEventListener('mousedown', (e) => {
+      this.modalMouseDownOnBackground = (e.target === e.currentTarget);
+    });
+    testAreaModal?.addEventListener('click', (e) => {
+      if (e.target === e.currentTarget && this.modalMouseDownOnBackground) {
         this.hideTestArea();
       }
+      this.modalMouseDownOnBackground = false;
     });
+    */
 
     // Keyboard shortcut: Ctrl+Shift+S to quick add snippet
     document.addEventListener('keydown', (e) => {
       if (e.ctrlKey && e.shiftKey && e.key === 'S') {
         e.preventDefault();
-        this.showModal();
+        window.location.href = '../snippet-editor/snippet-editor.html';
       }
     });
   }
 
+  // Test area methods disabled - see comment in setupEventListeners()
+  /*
   private showTestArea() {
     const modal = document.getElementById('test-area-modal');
     modal?.classList.add('active');
@@ -398,6 +440,7 @@ class OptionsPage {
   private hideTestArea() {
     document.getElementById('test-area-modal')?.classList.remove('active');
   }
+  */
 
   private switchFolder(folder: string) {
     this.currentFolder = folder;
@@ -724,10 +767,8 @@ class OptionsPage {
   }
 
   private async editSnippet(id: string) {
-    const snippet = await StorageManager.getSnippet(id);
-    if (snippet) {
-      this.showModal(snippet);
-    }
+    // Navigate to snippet editor page with snippet ID
+    window.location.href = `../snippet-editor/snippet-editor.html?id=${id}`;
   }
 
   private async duplicateSnippet(id: string) {

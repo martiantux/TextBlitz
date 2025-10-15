@@ -215,8 +215,9 @@ class TextBlitzExpander {
     if (!match) return;
 
     const { snippet } = match;
-    const trigger = this.settings!.caseSensitive ? snippet.trigger : snippet.trigger.toLowerCase();
-    const bufferToCheck = this.settings!.caseSensitive ? recentBuffer : recentBuffer.toLowerCase();
+    // Use per-snippet case sensitivity setting, not global setting
+    const trigger = snippet.caseSensitive ? snippet.trigger : snippet.trigger.toLowerCase();
+    const bufferToCheck = snippet.caseSensitive ? recentBuffer : recentBuffer.toLowerCase();
 
     if (this.settings?.debugMode) {
       console.log('TextBlitz: Buffer match -', snippet.label, 'trigger:', trigger);
@@ -249,8 +250,9 @@ class TextBlitzExpander {
     this.keyboardBuffer = '';
 
     // Create unique expansion key to prevent double expansion
-    const expandKey = `${snippet.trigger}-${recentBuffer}`;
-    if (this.lastExpandedTrigger === expandKey && Date.now() - this.lastExpandedTime < 1000) {
+    // Use just trigger + element, NOT text context (prevents buffer vs input mismatch)
+    const expandKey = `${snippet.trigger}-${element.tagName}`;
+    if (this.lastExpandedTrigger === expandKey && Date.now() - this.lastExpandedTime < 500) {
       if (this.settings?.debugMode) {
         console.log('TextBlitz: Skipping duplicate expansion for same trigger');
       }
@@ -381,8 +383,9 @@ class TextBlitzExpander {
     if (!match) return false;
 
     const { snippet } = match;
-    const trigger = this.settings!.caseSensitive ? snippet.trigger : snippet.trigger.toLowerCase();
-    const textToCheck = this.settings!.caseSensitive ? textBeforeCursor : textBeforeCursor.toLowerCase();
+    // Use per-snippet case sensitivity setting, not global setting
+    const trigger = snippet.caseSensitive ? snippet.trigger : snippet.trigger.toLowerCase();
+    const textToCheck = snippet.caseSensitive ? textBeforeCursor : textBeforeCursor.toLowerCase();
 
     // Verify trigger is at the end
     if (!textToCheck.endsWith(trigger)) return false;
@@ -397,8 +400,9 @@ class TextBlitzExpander {
     }
 
     // Create unique expansion key to prevent double expansion
-    const expandKey = `${snippet.trigger}-${textBeforeCursor}`;
-    if (this.lastExpandedTrigger === expandKey && Date.now() - this.lastExpandedTime < 1000) {
+    // Use just trigger + element, NOT text context (prevents buffer vs input mismatch)
+    const expandKey = `${snippet.trigger}-${element.tagName}`;
+    if (this.lastExpandedTrigger === expandKey && Date.now() - this.lastExpandedTime < 500) {
       if (this.settings?.debugMode) {
         console.log('TextBlitz: Skipping duplicate expansion for same trigger');
       }

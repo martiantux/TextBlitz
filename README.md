@@ -22,7 +22,7 @@ Built for anyone who types the same things repeatedly.
 
 ---
 
-## ✨ Current Features (v0.7.0)
+## ✨ Current Features (v0.8.0)
 
 ### What Works Now
 - ⚡ **Text expansion** - Works in all input types (text, email, search, textarea, etc.)
@@ -40,6 +40,7 @@ Built for anyone who types the same things repeatedly.
 - 💰 **Usage & cost tracking** - Monitor API usage, tokens, and estimated costs per provider
 - 🚦 **Rate limiting** - Tier-aware protection with visual alerts (green/orange/red)
 - 🎨 **Modern UI** - Clean two-panel layout with sidebar navigation
+- ✏️ **WYSIWYG snippet editor** - Full-page rich text editor with formatting toolbar and drag-and-drop command pills
 - 📁 **Custom folders** - Create/delete/organize with emoji icons
 - 🌙 **Dark mode** - Light/dark/system theme support
 - 🔍 **Search & filter** - Real-time search by label, trigger, or expansion
@@ -58,17 +59,13 @@ Built for anyone who types the same things repeatedly.
 - 🔄 **Case transformation** - 6 modes including match trigger case (btw → "by the way", BTW → "BY THE WAY")
 - 📦 **Snippet Packs** - Curated collections for developers, customer service, ADHD productivity, and more
 
-### Current Status (v0.7.0)
+### Current Status (v0.8.0)
 - ✅ **Cross-site compatibility** - Works on Google Docs, ChatGPT, Discord, Gmail, GitHub, Reddit, and all standard inputs
 - ✅ **Reliable expansion** - Clean trigger deletion, no doubling, proper cursor positioning
+- ✅ **Professional editor** - Full-page WYSIWYG editor with drag-and-drop command pills
 - ✅ **Production ready** - Tested on major sites, defensive error handling
 
-### Current Limitations
-- ⚠️ **No drag-and-drop yet** - Reordering snippets/folders coming in future version
-- ⚠️ **Plain textarea editor** - WYSIWYG editor with syntax highlighting planned for v0.9.0+
-
 ### Coming Soon (see ROADMAP.md)
-- 🎨 **WYSIWYG snippet editor** - Rich text editing with command syntax highlighting (v0.9.0+)
 - 💡 **Inline tooltips** - Contextual help without cluttering UI (v0.9.0+)
 - ⚙️ **Power features** - Conditionals, formulas (v1.1.0+ post-launch)
 
@@ -227,7 +224,12 @@ TextBlitz/
 │   └── ui/
 │       ├── options/                # Options page for snippet management
 │       │   ├── options.html
-│       │   └── options.ts
+│       │   ├── options.ts
+│       │   └── options.css
+│       ├── snippet-editor/         # Full-page WYSIWYG snippet editor
+│       │   ├── snippet-editor.html
+│       │   ├── snippet-editor.ts
+│       │   └── snippet-editor.css
 │       └── popup/                  # Extension popup UI
 │           ├── popup.html
 │           └── popup.ts
@@ -290,13 +292,14 @@ npm run build
 
 See [ROADMAP.md](./ROADMAP.md) for detailed feature plans and version milestones.
 
-**v0.7.0 - Complete! ✅ Beta-Ready**
-- **Reliability improvements:** Auto-retry logic (1 retry after 200ms if expansion fails)
-- **Structured logging:** Session tracking, error context, debugging capabilities
-- **Error reporting:** Run `getTextBlitzDebugReport()` in console to generate GitHub issue reports
-- **Edge case handling:** Element validity checks, cursor movement detection, focus tracking
-- **All previous features:** UI polish, case transformation, dynamic snippets, snippet packs
-- **Production-ready:** Comprehensive error handling for beta testing
+**v0.8.0 - Complete! ✅ WYSIWYG Editor**
+- **Full-page snippet editor:** Dedicated editing page with rich formatting tools
+- **WYSIWYG toolbar:** Bold, italic, underline, strikethrough, font sizes
+- **Drag-and-drop command pills:** Reorder commands by dragging within editor
+- **Command insertion dropdown:** Organized categories (Basic, Keyboard, Forms)
+- **Professional UI:** Consistent design system matching options page theme
+- **Dark mode support:** Editor inherits theme preference automatically
+- **All previous features:** Reliability improvements, structured logging, error reporting
 
 **Next Up - v0.9.0: Beta Testing & Site Compatibility**
 - Better contenteditable support (Gmail, Google Docs, Slack)

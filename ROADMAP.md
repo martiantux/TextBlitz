@@ -228,15 +228,41 @@ Interactive forms with popup UI + advanced organization features
 
 ---
 
-## ~~🚀 v0.7.0 & v0.8.0~~ - SKIPPED
+## 🚀 v0.7.0 - Reliability & Error Handling
 
-**Status:** ❌ Cancelled - merged directly into v0.9.0 for faster release
+**Status:** ✅ Complete (2025-10-14)
 
-To streamline the path to Chrome Web Store, we decided to skip separate v0.7.0 and v0.8.0 releases. All site compatibility testing, ContentEditable improvements, beta testing, and polish are consolidated into v0.9.0 beta.
+### Features Completed
+- [x] **Auto-retry logic** - 1 retry after 200ms if expansion fails
+- [x] **Structured logging** - Session tracking, error context, debugging capabilities
+- [x] **Error reporting** - Run `getTextBlitzDebugReport()` in console to generate GitHub issue reports
+- [x] **Edge case handling** - Element validity checks, cursor movement detection, focus tracking
+- [x] **Production-ready** - Comprehensive error handling for beta testing
 
-**New Strategy:**
-- v0.6.0 (current) → v0.9.0 (beta) → v1.0.0 (Chrome Web Store)
-- See v0.9.0 section below for the consolidated plan
+---
+
+## 🚀 v0.8.0 - WYSIWYG Snippet Editor
+
+**Status:** ✅ Complete (2025-10-16)
+
+### Features Completed
+- [x] **Full-page snippet editor** - Dedicated editing page replacing cramped modal
+- [x] **Rich text toolbar** - Bold, italic, underline, strikethrough, font sizes (10-36px)
+- [x] **Command insertion dropdown** - Organized categories (Basic, Keyboard, Forms)
+- [x] **Drag-and-drop command pills** - Reorder commands by dragging within editor
+- [x] **Professional UI** - Consistent design system using CSS variables matching options page
+- [x] **Dark mode support** - Editor automatically inherits theme preference
+- [x] **2-column layout** - Left: form fields, Right: WYSIWYG editor
+- [x] **URL-based navigation** - Create new (`snippet-editor.html`) or edit (`?id=snippet-123`)
+- [x] **Command pill serialization** - Converts HTML to plain text with `{command}` syntax
+
+### Technical Implementation
+- Created dedicated snippet-editor page with full-page layout
+- Implemented ContentEditable WYSIWYG with `document.execCommand` for formatting
+- HTML5 Drag & Drop API for command pill reordering
+- CSS variables for consistent theming (`--color-primary`, `--bg-card`, `--text-primary`)
+- Command pills display as styled elements with `contenteditable="false"`
+- Vite config updated to build and copy editor files
 
 ---
 
@@ -290,11 +316,11 @@ Consolidated beta release combining site compatibility, testing, and polish. Rea
   - [ ] Complete systematic feature validation on all sites
 
 ### Phase 2: UI Improvements (Nice-to-Have)
-- [ ] **WYSIWYG snippet editor** - Rich text editor like Text Blaze
-  - Syntax highlighting for {commands}
-  - Preview pane showing rendered output
-  - Live cursor position indicator
-  - Libraries to consider: CodeMirror, Monaco Editor
+- [x] **WYSIWYG snippet editor** - ✅ COMPLETE (v0.8.0)
+  - Full-page dedicated editor with rich text toolbar
+  - Drag-and-drop command pills for reordering
+  - Command insertion dropdown with categories
+  - Professional UI matching options page theme
 - [ ] **Inline tooltips** - Contextual help without clutter
   - Trigger mode explanations (hover ⓘ icon)
   - Command syntax examples

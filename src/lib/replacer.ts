@@ -460,7 +460,20 @@ export class TextReplacer {
 
       logger.debug('expansion', `Final expansion: "${finalExpansion}"`, context);
 
-      // Check for CKEditor FIRST (before other methods)
+      // Check for Google Docs FIRST (special handling required)
+      const isGoogleDocs = this.isGoogleDocsEditor(element);
+      if (isGoogleDocs) {
+        logger.info('expansion', 'Google Docs detected, using specialized handler', context);
+        const success = await this.googleDocsReplace(element, trigger, finalExpansion);
+        if (success) {
+          logger.info('tier', 'GoogleDocs tier succeeded', { ...context, tier: 'GoogleDocs' });
+          return true;
+        } else {
+          logger.warn('tier', 'GoogleDocs tier failed, falling back to standard tiers', { ...context, tier: 'GoogleDocs' });
+        }
+      }
+
+      // Check for CKEditor
       const isCKEditor = CKEditorHandler.detect(element);
       if (isCKEditor) {
         logger.info('expansion', 'CKEditor detected, using specialized handler', context);
@@ -548,6 +561,56 @@ export class TextReplacer {
       };
       logger.error('fail', 'Fatal error in replace method', errorContext);
       console.error('TextBlitz: Fatal error in replace:', error);
+      return false;
+    }
+  }
+
+  // Google Docs detection
+  private static isGoogleDocsEditor(element: HTMLElement): boolean {
+    // Check if we're in Google Docs by hostname
+    if (window.location.hostname.includes('docs.google.com')) {
+      return true;
+    }
+
+    // Check for Google Docs-specific class names
+    if (element.classList.contains('kix-cursor') ||
+        element.closest('.kix-appview-editor') ||
+        document.querySelector('.kix-appview-editor')) {
+      return true;
+    }
+
+    return false;
+  }
+
+  // Google Docs-specific replacement handler
+  private static async googleDocsReplace(
+    element: HTMLElement,
+    trigger: string,
+    expansion: string
+  ): Promise<boolean> {
+    try {
+      this.log('TextBlitz: Trying Google Docs handler');
+
+      // Focus the editor
+      element.focus();
+
+      // Delete trigger using backspace simulation
+      for (let i = 0; i < trigger.length; i++) {
+        document.execCommand('delete', false);
+      }
+
+      // Insert expansion text using insertText
+      const inserted = document.execCommand('insertText', false, expansion);
+
+      if (!inserted) {
+        this.log('TextBlitz: Google Docs insertText failed');
+        return false;
+      }
+
+      this.log('TextBlitz: ✅ Google Docs handler succeeded');
+      return true;
+    } catch (error) {
+      this.log('TextBlitz: Google Docs handler failed:', error);
       return false;
     }
   }

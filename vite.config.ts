@@ -12,6 +12,7 @@ export default defineConfig({
         // Content script is built separately with vite.config.content.ts
         'offscreen/offscreen': resolve(__dirname, 'src/offscreen/offscreen.ts'),
         'ui/options/options': resolve(__dirname, 'src/ui/options/options.ts'),
+        'ui/snippet-editor/snippet-editor': resolve(__dirname, 'src/ui/snippet-editor/snippet-editor.ts'),
         'ui/popup/popup': resolve(__dirname, 'src/ui/popup/popup.ts'),
       },
       output: {
@@ -55,6 +56,20 @@ export default defineConfig({
         copyFileSync(
           resolve(__dirname, 'src/ui/options/options.css'),
           resolve(__dirname, 'dist/ui/options/options.css')
+        );
+
+        // Copy HTML and CSS files for snippet editor
+        const snippetEditorDir = resolve(__dirname, 'dist/ui/snippet-editor');
+        if (!existsSync(snippetEditorDir)) {
+          mkdirSync(snippetEditorDir, { recursive: true });
+        }
+        copyFileSync(
+          resolve(__dirname, 'src/ui/snippet-editor/snippet-editor.html'),
+          resolve(__dirname, 'dist/ui/snippet-editor/snippet-editor.html')
+        );
+        copyFileSync(
+          resolve(__dirname, 'src/ui/snippet-editor/snippet-editor.css'),
+          resolve(__dirname, 'dist/ui/snippet-editor/snippet-editor.css')
         );
 
         const popupDir = resolve(__dirname, 'dist/ui/popup');

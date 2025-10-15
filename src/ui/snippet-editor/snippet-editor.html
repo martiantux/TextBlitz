@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snippet Editor - TextBlitz</title>
+  <link rel="stylesheet" href="./snippet-editor.css">
+</head>
+<body>
+  <div class="editor-container">
+    <!-- Header -->
+    <header class="editor-header">
+      <div class="header-left">
+        <button class="btn-back" id="back-btn" title="Back to snippets">
+          <span>←</span>
+        </button>
+        <h1 class="editor-title" id="editor-title">New Snippet</h1>
+      </div>
+      <div class="header-right">
+        <button class="btn btn-secondary" id="cancel-btn">Cancel</button>
+        <button class="btn btn-primary" id="save-btn">Save Snippet</button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="editor-main">
+      <!-- Left Column: Form Fields -->
+      <aside class="editor-sidebar">
+        <div class="form-section">
+          <h2 class="section-title">Snippet Details</h2>
+
+          <div class="form-group">
+            <label class="form-label" for="snippet-label">
+              Label
+              <span class="form-label-optional">(friendly name)</span>
+            </label>
+            <input
+              type="text"
+              class="form-input"
+              id="snippet-label"
+              placeholder="e.g., Be Right Back"
+              autocomplete="off"
+            >
+            <div class="form-help">A friendly name to identify this snippet</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="snippet-trigger">Trigger</label>
+            <input
+              type="text"
+              class="form-input"
+              id="snippet-trigger"
+              placeholder="e.g., brb"
+              autocomplete="off"
+            >
+            <div class="form-help">Shortcut to type</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="snippet-folder">Folder</label>
+            <select class="form-select" id="snippet-folder">
+              <option value="">No Folder</option>
+              <option value="work">💼 Work</option>
+              <option value="personal">👤 Personal</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="snippet-type">Type</label>
+            <select class="form-select" id="snippet-type">
+              <option value="static">Static (fixed text)</option>
+              <option value="dynamic">🤖 Dynamic (LLM-generated)</option>
+            </select>
+            <div class="form-help">Static snippets use fixed text. Dynamic snippets use LLMs to generate variations.</div>
+          </div>
+        </div>
+
+        <!-- Dynamic Fields (hidden by default) -->
+        <div class="form-section" id="dynamic-fields" style="display: none;">
+          <h2 class="section-title">Dynamic Settings</h2>
+
+          <div class="form-group">
+            <label class="form-label" for="snippet-llm-provider">LLM Provider</label>
+            <select class="form-select" id="snippet-llm-provider">
+              <option value="groq">Groq (fastest, free tier)</option>
+              <option value="openai">OpenAI (ChatGPT/GPT-4)</option>
+              <option value="anthropic">Anthropic (Claude Sonnet 4.5)</option>
+              <option value="gemini">Google Gemini (Gemini 1.5 Flash)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="snippet-llm-prompt">LLM Prompt</label>
+            <textarea
+              class="form-textarea"
+              id="snippet-llm-prompt"
+              placeholder="e.g., Write a friendly professional greeting, under 5 words"
+              rows="3"
+            ></textarea>
+            <div class="form-help">Describe what text you want the LLM to generate. Be specific about length and tone.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="snippet-fallback">Fallback Text (optional)</label>
+            <input
+              type="text"
+              class="form-input"
+              id="snippet-fallback"
+              placeholder="e.g., Hello!"
+            >
+            <div class="form-help">Used if LLM request fails or times out.</div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h2 class="section-title">Behavior</h2>
+
+          <div class="form-group">
+            <label class="form-label" for="snippet-trigger-mode">Trigger Mode</label>
+            <select class="form-select" id="snippet-trigger-mode">
+              <option value="word">Word Break (Start)</option>
+              <option value="word-both">Word Break (Both Ends)</option>
+              <option value="anywhere">Anywhere</option>
+            </select>
+            <div class="form-help">When to trigger expansion</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="snippet-case-transform">Case Transform</label>
+            <select class="form-select" id="snippet-case-transform">
+              <option value="none">None (keep original)</option>
+              <option value="match">Match trigger case</option>
+              <option value="upper">UPPERCASE</option>
+              <option value="lower">lowercase</option>
+              <option value="title">Title Case</option>
+              <option value="capitalize">Capitalize first</option>
+            </select>
+            <div class="form-help">Transform expansion case</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Options</label>
+            <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" id="snippet-enabled" checked style="width: 16px; height: 16px;">
+                <span style="font-size: 14px;">Enabled</span>
+              </label>
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" id="snippet-case-sensitive" style="width: 16px; height: 16px;">
+                <span style="font-size: 14px;">Case Sensitive</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Right Column: WYSIWYG Editor -->
+      <section class="editor-content">
+        <div class="editor-section">
+          <div class="section-header">
+            <h2 class="section-title">Expansion Content</h2>
+            <div class="section-help">Use the toolbar to format text and insert dynamic commands</div>
+          </div>
+
+          <!-- WYSIWYG Toolbar -->
+          <div id="wysiwyg-toolbar" class="wysiwyg-toolbar">
+            <!-- Format buttons -->
+            <div class="format-group">
+              <button type="button" class="wysiwyg-btn" data-command="bold" title="Bold (Ctrl+B)" style="font-weight: bold;">B</button>
+              <button type="button" class="wysiwyg-btn" data-command="italic" title="Italic (Ctrl+I)" style="font-style: italic;">I</button>
+              <button type="button" class="wysiwyg-btn" data-command="underline" title="Underline (Ctrl+U)" style="text-decoration: underline;">U</button>
+              <button type="button" class="wysiwyg-btn" data-command="strikeThrough" title="Strikethrough" style="text-decoration: line-through;">S</button>
+            </div>
+
+            <!-- Font size -->
+            <select class="wysiwyg-btn" id="font-size" title="Font Size">
+              <option value="">Size</option>
+              <option value="1">10px</option>
+              <option value="2">13px</option>
+              <option value="3">16px</option>
+              <option value="4">18px</option>
+              <option value="5">24px</option>
+              <option value="6">32px</option>
+              <option value="7">36px</option>
+            </select>
+
+            <div class="toolbar-divider"></div>
+
+            <!-- Insert command -->
+            <div class="insert-command-wrapper">
+              <button type="button" class="insert-command-btn" id="insert-command-btn">
+                <span>+</span>
+                <span>Insert Command</span>
+              </button>
+
+              <div class="command-dropdown-menu" id="command-menu">
+                <div class="command-category">
+                  <div class="command-category-title">Basic Commands</div>
+                  <button type="button" class="command-menu-item" data-cmd="{date}">
+                    <span class="cmd-icon">📅</span>
+                    <div>
+                      <div class="cmd-name">Date/Time</div>
+                      <div class="cmd-desc">Insert current date</div>
+                    </div>
+                  </button>
+                  <button type="button" class="command-menu-item" data-cmd="{clipboard}">
+                    <span class="cmd-icon">📋</span>
+                    <div>
+                      <div class="cmd-name">Clipboard</div>
+                      <div class="cmd-desc">Paste clipboard content</div>
+                    </div>
+                  </button>
+                  <button type="button" class="command-menu-item" data-cmd="{cursor}">
+                    <span class="cmd-icon">📍</span>
+                    <div>
+                      <div class="cmd-name">Cursor Position</div>
+                      <div class="cmd-desc">Set final cursor position</div>
+                    </div>
+                  </button>
+                </div>
+
+                <div class="command-category">
+                  <div class="command-category-title">Keyboard</div>
+                  <button type="button" class="command-menu-item" data-cmd="{key: enter}">
+                    <span class="cmd-icon">⏎</span>
+                    <div>
+                      <div class="cmd-name">Enter</div>
+                      <div class="cmd-desc">Simulate Enter key</div>
+                    </div>
+                  </button>
+                  <button type="button" class="command-menu-item" data-cmd="{key: tab}">
+                    <span class="cmd-icon">⭾</span>
+                    <div>
+                      <div class="cmd-name">Tab</div>
+                      <div class="cmd-desc">Simulate Tab key</div>
+                    </div>
+                  </button>
+                </div>
+
+                <div class="command-category">
+                  <div class="command-category-title">Forms</div>
+                  <button type="button" class="command-menu-item" data-cmd="{formtext}">
+                    <span class="cmd-icon">📝</span>
+                    <div>
+                      <div class="cmd-name">Text Input</div>
+                      <div class="cmd-desc">Prompt for text input</div>
+                    </div>
+                  </button>
+                  <button type="button" class="command-menu-item" data-cmd="{formmenu}">
+                    <span class="cmd-icon">📜</span>
+                    <div>
+                      <div class="cmd-name">Menu</div>
+                      <div class="cmd-desc">Choose from dropdown</div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- WYSIWYG Editor -->
+          <div id="wysiwyg-editor" class="wysiwyg-editor" contenteditable="true"></div>
+
+          <!-- Hidden textarea for form submission -->
+          <textarea id="snippet-expansion" style="display: none;"></textarea>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="./snippet-editor.js"></script>
+</body>
+</html>
