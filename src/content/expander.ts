@@ -6,6 +6,7 @@ import { shouldTriggerMatch } from '../lib/word-boundaries';
 import { llmManager } from '../lib/llm/manager';
 import { CommandParser } from '../lib/command-parser';
 import { FormPopup } from '../lib/form-popup';
+import { logger } from '../lib/logger';
 
 class TextBlitzExpander {
   private trie: SnippetTrie;
@@ -514,10 +515,26 @@ class TextBlitzExpander {
   }
 }
 
-// Initialize the expander when the content script loads
+// Initialize the expander when the content script loaded
+logger.info('init', 'Content script loaded', logger.getSiteContext());
 console.log('TextBlitz: Content script loaded!');
+
+// Expose logger globally for debugging
+(window as any).TextBlitzLogger = logger;
+(window as any).getTextBlitzDebugReport = () => {
+  const report = logger.formatForGitHub();
+  console.log(report);
+  console.log('\n📋 Debug report generated! Copy the text above and paste into GitHub issue.');
+  return report;
+};
+
+console.log('💡 Debug help: Run getTextBlitzDebugReport() to generate error report for GitHub');
+
 try {
   new TextBlitzExpander();
 } catch (error) {
+  logger.error('init', 'Failed to create expander', {
+    error: error instanceof Error ? error.message : String(error)
+  });
   console.error('TextBlitz: Failed to create expander', error);
 }

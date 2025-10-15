@@ -22,7 +22,7 @@ Built for anyone who types the same things repeatedly.
 
 ---
 
-## ✨ Current Features (v0.6.1)
+## ✨ Current Features (v0.7.0)
 
 ### What Works Now
 - ⚡ **Text expansion** - Works in all input types (text, email, search, textarea, etc.)
@@ -58,7 +58,7 @@ Built for anyone who types the same things repeatedly.
 - 🔄 **Case transformation** - 6 modes including match trigger case (btw → "by the way", BTW → "BY THE WAY")
 - 📦 **Snippet Packs** - Curated collections for developers, customer service, ADHD productivity, and more
 
-### Current Status (v0.6.1)
+### Current Status (v0.7.0)
 - ✅ **Cross-site compatibility** - Works on Google Docs, ChatGPT, Discord, Gmail, GitHub, Reddit, and all standard inputs
 - ✅ **Reliable expansion** - Clean trigger deletion, no doubling, proper cursor positioning
 - ✅ **Production ready** - Tested on major sites, defensive error handling
@@ -173,7 +173,7 @@ TextBlitz includes 3 curated starter packs:
 
 ### Common Use Cases
 
-**Current capabilities (v0.6.1):**
+**Current capabilities (v0.7.0):**
 - **Email templates**: `followup` → "Hi [name], just following up on..."
 - **Date stamps**: `td` → `{date}` → "2025-10-13"
 - **Signatures with dates**: `sig` → "Best regards,\n{cursor}\nSent on {date:MMMM D, YYYY}"
@@ -290,14 +290,13 @@ npm run build
 
 See [ROADMAP.md](./ROADMAP.md) for detailed feature plans and version milestones.
 
-**v0.6.1 - Complete! ✅**
-- UI Polish: Default folder persistence, snippet duplication, keyboard shortcuts
-- Context-aware export (individual folders or all snippets)
-- Case transformation system (6 modes including match trigger case)
-- Fixed dynamic snippet bug (keyboard buffer expansion path)
-- Corrected privacy documentation for clipboard usage
-- Standardized language (LLM vs AI terminology)
-- All features stable and ready for real-world testing
+**v0.7.0 - Complete! ✅ Beta-Ready**
+- **Reliability improvements:** Auto-retry logic (1 retry after 200ms if expansion fails)
+- **Structured logging:** Session tracking, error context, debugging capabilities
+- **Error reporting:** Run `getTextBlitzDebugReport()` in console to generate GitHub issue reports
+- **Edge case handling:** Element validity checks, cursor movement detection, focus tracking
+- **All previous features:** UI polish, case transformation, dynamic snippets, snippet packs
+- **Production-ready:** Comprehensive error handling for beta testing
 
 **Next Up - v0.9.0: Beta Testing & Site Compatibility**
 - Better contenteditable support (Gmail, Google Docs, Slack)

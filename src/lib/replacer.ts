@@ -1,12 +1,14 @@
 import { Snippet, CaseTransform } from './types';
 import { CommandParser } from './command-parser';
 import { CaseTransformer } from './case-transform';
+import { logger } from './logger';
 
 export class TextReplacer {
   private static debugMode = false;
 
   static setDebugMode(enabled: boolean) {
     this.debugMode = enabled;
+    logger.setDebugMode(enabled);
   }
 
   private static log(...args: any[]) {
@@ -407,16 +409,35 @@ export class TextReplacer {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  // MAIN REPLACE METHOD - Try all tiers
+  // MAIN REPLACE METHOD - Try all tiers with retry logic
   static async replace(
     element: HTMLElement,
     trigger: string,
     expansion: string,
-    caseTransform?: CaseTransform
+    caseTransform?: CaseTransform,
+    retryCount: number = 0
   ): Promise<boolean> {
+    const context = {
+      element: logger.getElementContext(element),
+      site: logger.getSiteContext(),
+      snippet: { trigger }
+    };
+
     try {
-      this.log('TextBlitz: === Starting Replacement ===');
-      this.log('TextBlitz: Element:', element.tagName, element.className);
+      logger.info('expansion', 'Starting replacement', context);
+
+      // Validate element still exists and is in document
+      if (!document.contains(element)) {
+        logger.warn('expansion', 'Element no longer in document', context);
+        return false;
+      }
+
+      // Check if element is still focused (helps detect cursor movement)
+      const isFocused = document.activeElement === element;
+      if (!isFocused) {
+        logger.warn('expansion', 'Element lost focus, may have cursor movement', context);
+        // Continue anyway - might still work
+      }
 
       // Process commands
       let processedExpansion = await CommandParser.processCommands(expansion);
@@ -436,22 +457,26 @@ export class TextReplacer {
       const { chunks } = CommandParser.splitTextByKeyboardActions(processedExpansion);
       const finalExpansion = chunks.join('');
 
-      this.log('TextBlitz: Final expansion:', finalExpansion);
+      logger.debug('expansion', `Final expansion: "${finalExpansion}"`, context);
 
       // Detect framework
       const framework = this.detectFramework(element);
-      this.log('TextBlitz: Detected framework:', framework);
+      logger.debug('expansion', `Detected framework: ${framework}`, { ...context, tier: framework });
 
       // Try tiers in order
       const tiers = [
-        { name: 'DirectManipulation', fn: () => this.tier0DirectManipulation(element, trigger, finalExpansion) },
-        { name: 'ExecCommand', fn: () => this.tier1ExecCommand(element, trigger, finalExpansion) },
-        { name: 'AggressiveEvents', fn: () => this.tier2AggressiveEvents(element, trigger, finalExpansion, framework) },
-        { name: 'Clipboard', fn: () => this.tier3Clipboard(element, trigger, finalExpansion) },
-        { name: 'Keyboard', fn: () => this.tier4Keyboard(element, trigger, finalExpansion) }
+        { name: 'Tier0-DirectManipulation', fn: () => this.tier0DirectManipulation(element, trigger, finalExpansion) },
+        { name: 'Tier1-ExecCommand', fn: () => this.tier1ExecCommand(element, trigger, finalExpansion) },
+        { name: 'Tier2-AggressiveEvents', fn: () => this.tier2AggressiveEvents(element, trigger, finalExpansion, framework) },
+        { name: 'Tier3-Clipboard', fn: () => this.tier3Clipboard(element, trigger, finalExpansion) },
+        { name: 'Tier4-Keyboard', fn: () => this.tier4Keyboard(element, trigger, finalExpansion) }
       ];
 
+      const failedTiers: string[] = [];
+
       for (const tier of tiers) {
+        logger.debug('tier', `Trying ${tier.name}`, { ...context, tier: tier.name });
+
         const success = await tier.fn();
 
         if (success) {
@@ -460,17 +485,54 @@ export class TextReplacer {
           const verified = this.verifyInsertion(element, finalExpansion);
 
           if (verified) {
-            this.log(`TextBlitz: ✅ ${tier.name} succeeded`);
+            logger.info('tier', `${tier.name} succeeded`, { ...context, tier: tier.name });
             return true;
           } else {
-            this.log(`TextBlitz: ⚠️ ${tier.name} reported success but verification failed, trying next tier...`);
+            logger.warn('tier', `${tier.name} reported success but verification failed`, { ...context, tier: tier.name });
+            failedTiers.push(`${tier.name} (verification failed)`);
           }
+        } else {
+          failedTiers.push(tier.name);
         }
       }
 
-      console.error('TextBlitz: ❌ All replacement tiers failed');
+      // All tiers failed - log detailed error
+      const errorContext = {
+        ...context,
+        error: `All ${failedTiers.length} tiers failed: ${failedTiers.join(', ')}`,
+        retryCount
+      };
+
+      logger.error('fail', 'All replacement tiers failed', errorContext);
+
+      // Retry logic - wait 200ms and try once more
+      if (retryCount === 0) {
+        logger.info('retry', 'Waiting 200ms before retry attempt', errorContext);
+        await this.delay(200);
+
+        // Verify element is still valid before retry
+        if (!document.contains(element)) {
+          logger.error('retry', 'Element removed from document before retry', errorContext);
+          return false;
+        }
+
+        logger.info('retry', 'Attempting retry (1/1)', errorContext);
+        return await this.replace(element, trigger, expansion, caseTransform, 1);
+      }
+
+      // Final failure after retry
+      logger.error('fail', 'Final failure after retry', errorContext);
+      console.error('TextBlitz: ❌ All replacement tiers failed after retry');
+      console.error('Copy debug info with: logger.formatForGitHub() in console');
+
       return false;
     } catch (error) {
+      const errorContext = {
+        ...context,
+        error: error instanceof Error ? error.message : String(error),
+        retryCount
+      };
+      logger.error('fail', 'Fatal error in replace method', errorContext);
       console.error('TextBlitz: Fatal error in replace:', error);
       return false;
     }
