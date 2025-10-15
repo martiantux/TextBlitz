@@ -1,12 +1,13 @@
 {
   "manifest_version": 3,
   "name": "TextBlitz",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Lightning-fast text expansion. No paywalls, no BS. Just free, open-source productivity.",
   "permissions": [
     "storage",
     "clipboardRead",
-    "clipboardWrite"
+    "clipboardWrite",
+    "scripting"
   ],
   "host_permissions": [
     "<all_urls>"

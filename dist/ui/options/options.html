@@ -88,7 +88,11 @@
               <option value="dark">Dark</option>
             </select>
           </div>
-          <button class="btn-new-folder" id="llm-settings-btn" style="margin-top: 12px;">
+          <button class="btn-new-folder" id="test-area-btn" style="margin-top: 12px;">
+            <span>🧪</span>
+            <span>Test Snippets</span>
+          </button>
+          <button class="btn-new-folder" id="llm-settings-btn" style="margin-top: 8px;">
             <span>🤖</span>
             <span>LLM Settings</span>
           </button>
@@ -205,12 +209,14 @@
 
         <div class="form-group" id="static-fields">
           <label class="form-label" for="snippet-expansion">Expansion</label>
+          <div id="wysiwyg-container" class="wysiwyg-container"></div>
           <textarea
             class="form-textarea"
             id="snippet-expansion"
             placeholder="e.g., be right back"
+            style="display: none;"
           ></textarea>
-          <div class="form-help">Text that will replace the trigger. Use {cursor} to position the cursor.</div>
+          <div class="form-help">Text that will replace the trigger. Use command buttons to insert special actions.</div>
         </div>
 
         <div id="dynamic-fields" style="display: none;">
@@ -677,6 +683,42 @@
       <div class="modal-footer">
         <button class="btn btn-secondary" id="cancel-pack-preview-btn">Back</button>
         <button class="btn btn-primary" id="install-pack-btn">Install Pack</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Test Area Modal -->
+  <div class="modal" id="test-area-modal">
+    <div class="modal-content" style="max-width: 600px;">
+      <div class="modal-header">
+        <h2 class="modal-title">🧪 Test Snippets</h2>
+      </div>
+      <div class="modal-body">
+        <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 6px; padding: 12px; margin-bottom: 16px;">
+          <div style="font-size: 13px; color: #075985;">
+            Try typing your snippet triggers here. This area has TextBlitz enabled so you can test your snippets without leaving the options page.
+          </div>
+        </div>
+
+        <div class="test-area-container">
+          <div class="test-area-header">
+            <div class="test-area-title">Test your snippets below:</div>
+            <button class="btn btn-secondary" id="clear-test-area-btn" style="font-size: 12px; padding: 4px 12px;">Clear</button>
+          </div>
+          <div class="test-area-editor">
+            <textarea
+              id="test-area-input"
+              placeholder="Start typing a trigger (e.g., btw)..."
+              rows="6"
+            ></textarea>
+          </div>
+          <div class="test-area-help">
+            💡 All your active snippets will work here, including form fields and dynamic snippets.
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="close-test-area-btn">Close</button>
       </div>
     </div>
   </div>

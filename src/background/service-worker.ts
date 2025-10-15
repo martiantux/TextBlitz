@@ -99,13 +99,21 @@ interface ProcessSnippetRequest {
 type MessageRequest = ProcessSnippetRequest;
 
 // Handle messages from content scripts
-chrome.runtime.onMessage.addListener((message: MessageRequest, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message: any, sender, sendResponse) => {
   if (message.type === 'PROCESS_SNIPPET') {
     handleProcessSnippet(message)
       .then(result => sendResponse({ success: true, ...result }))
       .catch(error => sendResponse({ success: false, error: error.message }));
     return true; // Async response
   }
+
+  if (message.type === 'INJECT_CKEDITOR_SCRIPT') {
+    handleCKEditorInjection(message, sender)
+      .then(result => sendResponse(result))
+      .catch(error => sendResponse({ success: false, error: error.message }));
+    return true; // Async response
+  }
+
   return true;
 });
 
@@ -116,6 +124,101 @@ async function handleProcessSnippet(message: ProcessSnippetRequest) {
   // Forward message to offscreen document
   const response = await chrome.runtime.sendMessage(message);
   return response;
+}
+
+// Handle CKEditor script injection into MAIN world
+async function handleCKEditorInjection(message: any, sender: chrome.runtime.MessageSender) {
+  try {
+    if (!sender.tab?.id) {
+      throw new Error('No tab ID available');
+    }
+
+    const { targetId, trigger, expansion } = message;
+
+    // Inject script into MAIN world to access CKEditor instance
+    const results = await chrome.scripting.executeScript({
+      target: { tabId: sender.tab.id },
+      world: 'MAIN',
+      args: [targetId, trigger, expansion],
+      func: (targetId: string, trigger: string, expansion: string) => {
+        try {
+          // Find element by data attribute
+          const element = document.querySelector(`[data-textblitz-target="${targetId}"]`) as any;
+          if (!element) {
+            return { success: false, error: 'Element not found' };
+          }
+
+          // Find CKEditor instance
+          let editorInstance = element.ckeditorInstance;
+          if (!editorInstance) {
+            // Try parent elements
+            let parent = element.parentElement;
+            while (parent && !editorInstance) {
+              editorInstance = (parent as any).ckeditorInstance;
+              parent = parent.parentElement;
+            }
+          }
+
+          if (!editorInstance) {
+            return { success: false, error: 'CKEditor instance not found' };
+          }
+
+          // Use CKEditor model API
+          const model = editorInstance.model;
+          const selection = model.document.selection;
+
+          model.change((writer: any) => {
+            const position = selection.getFirstPosition();
+
+            // Get text before cursor
+            const range = model.createRange(
+              model.createPositionAt(position.root, 0),
+              position
+            );
+
+            let textBefore = '';
+            for (const item of range.getItems()) {
+              if (item.is('$textProxy')) {
+                textBefore += item.data;
+              }
+            }
+
+            // Check if trigger is at the end
+            if (!textBefore.endsWith(trigger)) {
+              throw new Error('Trigger not found at cursor');
+            }
+
+            // Delete trigger and insert expansion
+            const triggerLength = trigger.length;
+            const deletePosition = model.createPositionAt(
+              position.root,
+              position.offset - triggerLength
+            );
+
+            const deleteRange = model.createRange(deletePosition, position);
+            writer.remove(deleteRange);
+            writer.insertText(expansion, deletePosition);
+
+            // Move cursor
+            const newPosition = model.createPositionAt(
+              position.root,
+              deletePosition.offset + expansion.length
+            );
+            writer.setSelection(newPosition);
+          });
+
+          return { success: true };
+        } catch (error: any) {
+          return { success: false, error: error.message };
+        }
+      }
+    });
+
+    return results[0]?.result || { success: false, error: 'No result' };
+  } catch (error: any) {
+    console.error('TextBlitz: CKEditor injection error:', error);
+    return { success: false, error: error.message };
+  }
 }
 
 export {};

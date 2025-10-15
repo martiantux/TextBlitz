@@ -16,6 +16,8 @@ class TextBlitzExpander {
   private keyboardBuffer = '';
   private lastKeyTime = 0;
   private lastExpansionTime = 0;
+  private lastExpandedTrigger = '';
+  private lastExpandedTime = 0;
 
   constructor() {
     this.trie = new SnippetTrie(false);
@@ -246,6 +248,17 @@ class TextBlitzExpander {
     // Clear buffer before expansion
     this.keyboardBuffer = '';
 
+    // Create unique expansion key to prevent double expansion
+    const expandKey = `${snippet.trigger}-${recentBuffer}`;
+    if (this.lastExpandedTrigger === expandKey && Date.now() - this.lastExpandedTime < 1000) {
+      if (this.settings?.debugMode) {
+        console.log('TextBlitz: Skipping duplicate expansion for same trigger');
+      }
+      return;
+    }
+    this.lastExpandedTrigger = expandKey;
+    this.lastExpandedTime = Date.now();
+
     // Mark that we're about to expand - block input events immediately
     this.lastExpansionTime = Date.now();
 
@@ -256,17 +269,23 @@ class TextBlitzExpander {
         // Double-check we haven't already expanded (race condition protection)
         if (this.isExpanding) return;
 
+        // Set flag IMMEDIATELY to block any other expansion attempts
+        // CRITICAL: Prevents doubling in Google Docs and other async editors
+        this.isExpanding = true;
+
         // Verify element is still valid and in document
         if (!element || !document.contains(element)) {
           if (this.settings?.debugMode) {
             console.log('TextBlitz: Element no longer in document, skipping expansion');
           }
+          this.isExpanding = false;
           return;
         }
 
         // Check if expansion has form commands
         if (CommandParser.hasFormCommands(snippet.expansion)) {
           await this.expandWithForm(element, snippet);
+          this.isExpanding = false;
           this.lastExpansionTime = Date.now();
           return;
         }
@@ -274,12 +293,12 @@ class TextBlitzExpander {
         // Handle dynamic vs static snippets
         if (snippet.type === 'dynamic') {
           await this.expandDynamic(element, snippet);
+          this.isExpanding = false;
           this.lastExpansionTime = Date.now();
           return;
         }
 
         // Static expansion
-        this.isExpanding = true;
         const success = await TextReplacer.replace(element, snippet.trigger, snippet.expansion, snippet.caseTransform);
         this.isExpanding = false;
 
@@ -376,6 +395,17 @@ class TextBlitzExpander {
     if (!shouldTriggerMatch(textBefore, trigger, textAfter, snippet.triggerMode)) {
       return false;
     }
+
+    // Create unique expansion key to prevent double expansion
+    const expandKey = `${snippet.trigger}-${textBeforeCursor}`;
+    if (this.lastExpandedTrigger === expandKey && Date.now() - this.lastExpandedTime < 1000) {
+      if (this.settings?.debugMode) {
+        console.log('TextBlitz: Skipping duplicate expansion for same trigger');
+      }
+      return false;
+    }
+    this.lastExpandedTrigger = expandKey;
+    this.lastExpandedTime = Date.now();
 
     if (this.settings?.debugMode) {
       console.log('TextBlitz: ✅ Trigger matched:', trigger, 'snippet:', snippet.label);

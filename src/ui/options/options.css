@@ -1,5 +1,8 @@
 /* TextBlitz Options - Modern, Clean Design */
 
+/* Import WYSIWYG Editor Styles */
+@import url('../components/WysiwygEditor.css');
+
 * {
   margin: 0;
   padding: 0;

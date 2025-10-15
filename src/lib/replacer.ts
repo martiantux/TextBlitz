@@ -2,6 +2,7 @@ import { Snippet, CaseTransform } from './types';
 import { CommandParser } from './command-parser';
 import { CaseTransformer } from './case-transform';
 import { logger } from './logger';
+import { CKEditorHandler } from './editors/ckeditor';
 
 export class TextReplacer {
   private static debugMode = false;
@@ -458,6 +459,19 @@ export class TextReplacer {
       const finalExpansion = chunks.join('');
 
       logger.debug('expansion', `Final expansion: "${finalExpansion}"`, context);
+
+      // Check for CKEditor FIRST (before other methods)
+      const isCKEditor = CKEditorHandler.detect(element);
+      if (isCKEditor) {
+        logger.info('expansion', 'CKEditor detected, using specialized handler', context);
+        const success = await CKEditorHandler.replace(element, trigger, finalExpansion);
+        if (success) {
+          logger.info('tier', 'Tier5-CKEditor succeeded', { ...context, tier: 'CKEditor' });
+          return true;
+        } else {
+          logger.warn('tier', 'Tier5-CKEditor failed, falling back to standard tiers', { ...context, tier: 'CKEditor' });
+        }
+      }
 
       // Detect framework
       const framework = this.detectFramework(element);

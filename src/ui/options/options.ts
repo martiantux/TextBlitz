@@ -3,6 +3,7 @@ import { Snippet, TriggerMode, SnippetType, LLMProvider, CustomFolder, CaseTrans
 import { llmManager } from '../../lib/llm/manager';
 import { STARTER_PACKS } from '../../lib/starter-packs';
 import { PackManager } from '../../lib/pack-manager';
+import { WysiwygEditor } from '../components/WysiwygEditor';
 
 class OptionsPage {
   private currentEditId: string | null = null;
@@ -12,6 +13,7 @@ class OptionsPage {
   private sortBy: 'recent' | 'usage' | 'alpha' = 'recent';
   private llmSettingsSaveCallback: (() => Promise<void>) | null = null;
   private currentPack: SnippetPack | null = null;
+  private wysiwygEditor: WysiwygEditor | null = null;
 
   constructor() {
     this.initialize();
@@ -359,6 +361,26 @@ class OptionsPage {
       this.toggleSnippetTypeFields();
     });
 
+    // Test Area
+    document.getElementById('test-area-btn')?.addEventListener('click', () => {
+      this.showTestArea();
+    });
+
+    document.getElementById('close-test-area-btn')?.addEventListener('click', () => {
+      this.hideTestArea();
+    });
+
+    document.getElementById('clear-test-area-btn')?.addEventListener('click', () => {
+      const testInput = document.getElementById('test-area-input') as HTMLTextAreaElement;
+      if (testInput) testInput.value = '';
+    });
+
+    document.getElementById('test-area-modal')?.addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) {
+        this.hideTestArea();
+      }
+    });
+
     // Keyboard shortcut: Ctrl+Shift+S to quick add snippet
     document.addEventListener('keydown', (e) => {
       if (e.ctrlKey && e.shiftKey && e.key === 'S') {
@@ -366,6 +388,15 @@ class OptionsPage {
         this.showModal();
       }
     });
+  }
+
+  private showTestArea() {
+    const modal = document.getElementById('test-area-modal');
+    modal?.classList.add('active');
+  }
+
+  private hideTestArea() {
+    document.getElementById('test-area-modal')?.classList.remove('active');
   }
 
   private switchFolder(folder: string) {
@@ -538,12 +569,28 @@ class OptionsPage {
     // Update folder dropdown with custom folders
     await this.updateFolderDropdown();
 
+    // Initialize WYSIWYG editor if not already created
+    if (!this.wysiwygEditor) {
+      try {
+        this.wysiwygEditor = new WysiwygEditor('wysiwyg-container', '');
+        // Sync changes to hidden textarea
+        this.wysiwygEditor.onChange((content) => {
+          expansionInput.value = content;
+        });
+      } catch (error) {
+        console.error('Failed to initialize WYSIWYG editor:', error);
+      }
+    }
+
     if (snippet) {
       this.currentEditId = snippet.id;
       if (title) title.textContent = 'Edit Snippet';
       labelInput.value = snippet.label;
       triggerInput.value = snippet.trigger;
       expansionInput.value = snippet.expansion;
+      if (this.wysiwygEditor) {
+        this.wysiwygEditor.setContent(snippet.expansion);
+      }
       folderSelect.value = snippet.folder || '';
       triggerModeSelect.value = snippet.triggerMode;
       caseTransformSelect.value = snippet.caseTransform || 'none';
@@ -559,6 +606,9 @@ class OptionsPage {
       labelInput.value = '';
       triggerInput.value = '';
       expansionInput.value = '';
+      if (this.wysiwygEditor) {
+        this.wysiwygEditor.setContent('');
+      }
 
       // Use lastUsedFolder if available, otherwise current folder
       const settings = await StorageManager.getSettings();
