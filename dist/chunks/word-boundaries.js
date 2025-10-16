@@ -1,0 +1,2 @@
+const s=new Set([" ","	",`
+`,"\r",".",",",";",":","!","?","-","_","(",")","[","]","{","}",'"',"'","/","\\","|","<",">"]);function r(n){return!n||n.length===0?!0:s.has(n)}function a(n,c,e,t){const o=n.length>0?n[n.length-1]:void 0,u=e.length>0?e[0]:void 0;switch(t){case"anywhere":return!0;case"word":return r(o);case"word-both":return r(o)&&r(u);default:return console.warn("Unknown trigger mode:",t),!1}}export{r as isWordBoundary,a as shouldTriggerMatch};

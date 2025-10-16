@@ -392,10 +392,7 @@ class OptionsPage {
       this.toggleSnippetTypeFields();
     });
 
-    // Test Area - DISABLED (doesn't work on chrome-extension:// URLs)
-    // The test area won't trigger expansions because options page runs on chrome-extension:// URL
-    // where content scripts don't inject. Users should test on real web pages instead.
-    /*
+    // Test Area
     document.getElementById('test-area-btn')?.addEventListener('click', () => {
       this.showTestArea();
     });
@@ -419,7 +416,6 @@ class OptionsPage {
       }
       this.modalMouseDownOnBackground = false;
     });
-    */
 
     // Keyboard shortcut: Ctrl+Shift+S to quick add snippet
     document.addEventListener('keydown', (e) => {
@@ -430,17 +426,82 @@ class OptionsPage {
     });
   }
 
-  // Test area methods disabled - see comment in setupEventListeners()
-  /*
   private showTestArea() {
     const modal = document.getElementById('test-area-modal');
     modal?.classList.add('active');
+
+    // Initialize expander for test area textarea
+    const testInput = document.getElementById('test-area-input');
+    if (testInput) {
+      this.setupTestAreaExpander(testInput as HTMLTextAreaElement);
+    }
   }
 
   private hideTestArea() {
     document.getElementById('test-area-modal')?.classList.remove('active');
   }
-  */
+
+  private async setupTestAreaExpander(textarea: HTMLTextAreaElement) {
+    // Dynamically import expander components
+    const { SnippetTrie } = await import('../../lib/trie');
+    const { TextReplacer } = await import('../../lib/replacer');
+    const { shouldTriggerMatch } = await import('../../lib/word-boundaries');
+
+    const snippets = await StorageManager.getSnippets();
+    const trie = new SnippetTrie(false);
+    trie.rebuild(snippets);
+
+    let checkTimeout: number | null = null;
+
+    const checkForMatch = async () => {
+      const cursorPos = textarea.selectionStart ?? textarea.value.length;
+      const textBeforeCursor = textarea.value.substring(0, cursorPos);
+
+      if (!textBeforeCursor) return;
+
+      const match = trie.findMatch(textBeforeCursor);
+      if (!match) return;
+
+      const { snippet } = match;
+      const trigger = snippet.caseSensitive ? snippet.trigger : snippet.trigger.toLowerCase();
+      const textToCheck = snippet.caseSensitive ? textBeforeCursor : textBeforeCursor.toLowerCase();
+
+      if (!textToCheck.endsWith(trigger)) return;
+
+      const actualTypedTrigger = textBeforeCursor.substring(textBeforeCursor.length - trigger.length);
+      const textBefore = textBeforeCursor.substring(0, textBeforeCursor.length - trigger.length);
+
+      if (!shouldTriggerMatch(textBefore, trigger, '', snippet.triggerMode)) {
+        return;
+      }
+
+      // Perform replacement
+      const success = await TextReplacer.replace(
+        textarea,
+        snippet.trigger,
+        snippet.expansion,
+        snippet.caseTransform,
+        actualTypedTrigger
+      );
+
+      if (success) {
+        StorageManager.incrementUsage(snippet.id).catch(err => {
+          console.error('TextBlitz: Failed to update usage stats', err);
+        });
+      }
+    };
+
+    const handleInput = () => {
+      if (checkTimeout) {
+        clearTimeout(checkTimeout);
+      }
+      checkTimeout = window.setTimeout(() => {
+        checkForMatch();
+      }, 10);
+    };
+
+    textarea.addEventListener('input', handleInput);
+  }
 
   private switchFolder(folder: string) {
     this.currentFolder = folder;
