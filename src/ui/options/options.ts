@@ -1479,14 +1479,14 @@ Return ONLY the JSON, no explanation.`;
     // Render snippet previews
     if (snippetsPreviewDiv) {
       snippetsPreviewDiv.innerHTML = pack.snippets.map(snippet => `
-        <div style="border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px; background: #f9fafb;">
+        <div style="border: 1px solid var(--border-color); border-radius: 6px; padding: 12px; background: var(--bg-card);">
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-            <span style="font-weight: 500; font-size: 14px;">${this.escapeHtml(snippet.label)}</span>
-            <span style="background: #e0e7ff; color: #4338ca; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-family: monospace;">
+            <span style="font-weight: 500; font-size: 14px; color: var(--text-primary);">${this.escapeHtml(snippet.label)}</span>
+            <span style="background: rgba(99, 102, 241, 0.1); color: var(--color-primary); padding: 2px 8px; border-radius: 4px; font-size: 12px; font-family: monospace;">
               ${this.escapeHtml(snippet.trigger)}
             </span>
           </div>
-          <div style="font-size: 13px; color: #6b7280; font-family: monospace; white-space: pre-wrap; background: white; padding: 8px; border-radius: 4px; border: 1px solid #e5e7eb; max-height: 100px; overflow-y: auto;">
+          <div style="font-size: 13px; color: var(--text-secondary); font-family: monospace; white-space: pre-wrap; background: var(--bg-input); padding: 8px; border-radius: 4px; border: 1px solid var(--border-color); max-height: 100px; overflow-y: auto;">
             ${this.escapeHtml(snippet.expansion)}
           </div>
         </div>
@@ -1510,18 +1510,16 @@ Return ONLY the JSON, no explanation.`;
     const createFolder = (document.getElementById('pack-create-folder') as HTMLInputElement).checked;
 
     try {
-      const packManager = new PackManager();
-      const result = await packManager.importPack(this.currentPack, {
-        onConflict: conflictMode,
-        createFolder: createFolder ? this.currentPack.name : undefined,
+      const result = await PackManager.installPack(this.currentPack, {
+        mode: 'all',
+        conflictResolution: conflictMode,
+        createFolder: createFolder,
       });
 
       // Show success message
       const message = `Successfully installed "${this.currentPack.name}"!\n\n` +
-        `Imported: ${result.imported} snippets\n` +
-        (result.skipped > 0 ? `Skipped: ${result.skipped} (already exists)\n` : '') +
-        (result.renamed > 0 ? `Renamed: ${result.renamed} (duplicates)\n` : '') +
-        (result.replaced > 0 ? `Replaced: ${result.replaced} (overwrote existing)\n` : '');
+        `Imported: ${result.installedCount} snippets\n` +
+        (result.skippedCount > 0 ? `Skipped: ${result.skippedCount} (already exists)\n` : '');
 
       alert(message);
 

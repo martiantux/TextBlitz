@@ -1,4 +1,4 @@
-import { BaseHandler } from './base-handler';
+import { BaseHandler, KeyboardAction } from './base-handler';
 
 // Handler for contenteditable elements (rich text editors)
 export class ContentEditableHandler extends BaseHandler {
@@ -9,7 +9,14 @@ export class ContentEditableHandler extends BaseHandler {
     return element.isContentEditable;
   }
 
-  async replace(element: HTMLElement, trigger: string, expansion: string): Promise<boolean> {
+  async replace(
+    element: HTMLElement,
+    trigger: string,
+    expansion: string,
+    cursorOffset?: number,
+    chunks?: string[],
+    actions?: KeyboardAction[]
+  ): Promise<boolean> {
     this.log('Starting contenteditable replacement');
 
     const selection = window.getSelection();
@@ -64,11 +71,21 @@ export class ContentEditableHandler extends BaseHandler {
       return false;
     }
 
+    // Handle chunked insertion with keyboard actions
+    if (chunks && chunks.length > 0 && actions && actions.length > 0) {
+      return await this.replaceWithChunks(element, chunks, actions, trigger, expansion);
+    }
+
     // Insert expansion
     const inserted = document.execCommand('insertText', false, expansion);
     if (!inserted) {
       this.log('InsertText command failed');
       return false;
+    }
+
+    // Set cursor position if cursorOffset provided
+    if (cursorOffset !== undefined && cursorOffset < expansion.length) {
+      await this.setCursorPosition(element, cursorOffset, expansion);
     }
 
     // Dispatch event
@@ -77,5 +94,66 @@ export class ContentEditableHandler extends BaseHandler {
     // Verify
     await this.delay(10);
     return this.verify(element, expansion, trigger);
+  }
+
+  // Insert text in chunks with keyboard actions between
+  private async replaceWithChunks(
+    element: HTMLElement,
+    chunks: string[],
+    actions: KeyboardAction[],
+    trigger: string,
+    expansion: string
+  ): Promise<boolean> {
+    this.log(`Replacing with ${chunks.length} chunks and ${actions.length} actions`);
+
+    // Insert chunks with actions
+    for (let i = 0; i < chunks.length; i++) {
+      const inserted = document.execCommand('insertText', false, chunks[i]);
+      if (!inserted) {
+        this.log(`Failed to insert chunk ${i}`);
+        return false;
+      }
+
+      element.dispatchEvent(new Event('input', { bubbles: true }));
+
+      // Execute keyboard action after this chunk (if exists)
+      if (i < actions.length) {
+        await this.executeKeyboardAction(element, actions[i]);
+      }
+    }
+
+    // Verify
+    await this.delay(10);
+    return this.verify(element, expansion, trigger);
+  }
+
+  // Set cursor position in contenteditable
+  private async setCursorPosition(element: HTMLElement, offset: number, expansion: string): Promise<void> {
+    this.log(`Setting cursor position to offset ${offset}`);
+
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+
+    try {
+      const range = selection.getRangeAt(0);
+      const { startContainer } = range;
+
+      // Find the text node containing the expansion
+      if (startContainer.nodeType === Node.TEXT_NODE) {
+        const textNode = startContainer as Text;
+        const text = textNode.textContent || '';
+
+        // Move cursor back from end
+        const newOffset = text.length - (expansion.length - offset);
+        if (newOffset >= 0 && newOffset <= text.length) {
+          range.setStart(textNode, newOffset);
+          range.setEnd(textNode, newOffset);
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+      }
+    } catch (error) {
+      this.log('Failed to set cursor position:', error);
+    }
   }
 }

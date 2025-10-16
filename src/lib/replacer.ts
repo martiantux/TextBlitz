@@ -71,16 +71,26 @@ export class TextReplacer {
         processedExpansion = CaseTransformer.transform(processedExpansion, caseTransform, trigger);
       }
 
-      // Remove {cursor} marker (for now)
-      if (processedExpansion.includes('{cursor}')) {
-        processedExpansion = processedExpansion.replace('{cursor}', '');
+      // Parse cursor position
+      const cursorMarker = '{cursor}';
+      const cursorIndex = processedExpansion.indexOf(cursorMarker);
+      let cursorOffset: number | undefined = undefined;
+
+      if (cursorIndex !== -1) {
+        // Remove cursor marker and track its position
+        processedExpansion = processedExpansion.slice(0, cursorIndex) + processedExpansion.slice(cursorIndex + cursorMarker.length);
+        cursorOffset = cursorIndex;
+        this.log(`Cursor position: ${cursorOffset}`);
       }
 
-      // Remove keyboard actions (for now)
-      const { chunks } = CommandParser.splitTextByKeyboardActions(processedExpansion);
+      // Extract keyboard actions and chunks
+      const { chunks, actions } = CommandParser.splitTextByKeyboardActions(processedExpansion);
       const finalExpansion = chunks.join('');
 
       this.log('Final expansion:', finalExpansion);
+      if (chunks.length > 1) {
+        this.log(`Split into ${chunks.length} chunks with ${actions.length} actions`);
+      }
 
       // Get handler for this element
       const handler = this.registry.getHandler(element);
@@ -94,8 +104,18 @@ export class TextReplacer {
       // Save content before replacement (for rollback)
       const contentBefore = this.getElementText(element);
 
+      // Determine what to pass to handlers
+      const hasKeyboardActions = chunks.length > 1 && actions.length > 0;
+
       // Try replacement
-      const success = await handler.replace(element, triggerToRemove, finalExpansion);
+      const success = await handler.replace(
+        element,
+        triggerToRemove,
+        finalExpansion,
+        cursorOffset,
+        hasKeyboardActions ? chunks : undefined,
+        hasKeyboardActions ? actions : undefined
+      );
 
       if (success) {
         logger.info('success', `${handler.name} handler succeeded`, context);
@@ -111,7 +131,14 @@ export class TextReplacer {
 
         logger.info('fallback', `Trying fallback: ${fallbackHandler.name}`, context);
 
-        const fallbackSuccess = await fallbackHandler.replace(element, triggerToRemove, finalExpansion);
+        const fallbackSuccess = await fallbackHandler.replace(
+          element,
+          triggerToRemove,
+          finalExpansion,
+          cursorOffset,
+          hasKeyboardActions ? chunks : undefined,
+          hasKeyboardActions ? actions : undefined
+        );
 
         if (fallbackSuccess) {
           logger.info('success', `Fallback ${fallbackHandler.name} succeeded`, context);

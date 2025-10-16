@@ -1,9 +1,22 @@
+// Keyboard action types
+export interface KeyboardAction {
+  type: 'enter' | 'tab' | 'delay';
+  options?: string;
+}
+
 // Base interface for all site-specific handlers
 export interface ReplacementHandler {
   name: string;
   priority: number; // Higher = try first
   canHandle(element: HTMLElement): boolean;
-  replace(element: HTMLElement, trigger: string, expansion: string): Promise<boolean>;
+  replace(
+    element: HTMLElement,
+    trigger: string,
+    expansion: string,
+    cursorOffset?: number,
+    chunks?: string[],
+    actions?: KeyboardAction[]
+  ): Promise<boolean>;
 }
 
 export abstract class BaseHandler implements ReplacementHandler {
@@ -12,7 +25,14 @@ export abstract class BaseHandler implements ReplacementHandler {
   protected debugMode = false;
 
   abstract canHandle(element: HTMLElement): boolean;
-  abstract replace(element: HTMLElement, trigger: string, expansion: string): Promise<boolean>;
+  abstract replace(
+    element: HTMLElement,
+    trigger: string,
+    expansion: string,
+    cursorOffset?: number,
+    chunks?: string[],
+    actions?: KeyboardAction[]
+  ): Promise<boolean>;
 
   setDebugMode(enabled: boolean): void {
     this.debugMode = enabled;
@@ -76,5 +96,84 @@ export abstract class BaseHandler implements ReplacementHandler {
     }
 
     return true;
+  }
+
+  // Execute keyboard action
+  protected async executeKeyboardAction(element: HTMLElement, action: KeyboardAction): Promise<void> {
+    switch (action.type) {
+      case 'enter':
+        await this.executeEnter(element);
+        break;
+      case 'tab':
+        await this.executeTab(element);
+        break;
+      case 'delay':
+        await this.executeDelay(action.options);
+        break;
+    }
+  }
+
+  // Execute {enter} command
+  private async executeEnter(element: HTMLElement): Promise<void> {
+    this.log('Executing {enter}');
+
+    // For textareas and contenteditable, insert newline
+    if (element instanceof HTMLTextAreaElement || element.isContentEditable) {
+      const newlineEvent = new KeyboardEvent('keydown', {
+        key: 'Enter',
+        code: 'Enter',
+        keyCode: 13,
+        bubbles: true,
+        cancelable: true
+      });
+      element.dispatchEvent(newlineEvent);
+    }
+    // For other inputs, blur to submit form or move focus
+    else if (element instanceof HTMLInputElement) {
+      const form = element.form;
+      if (form) {
+        // Try to submit form
+        form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+      } else {
+        element.blur();
+      }
+    }
+  }
+
+  // Execute {tab} command
+  private async executeTab(element: HTMLElement): Promise<void> {
+    this.log('Executing {tab}');
+
+    // Try to focus next focusable element
+    const focusableElements = Array.from(
+      document.querySelectorAll<HTMLElement>(
+        'input:not([disabled]):not([type="hidden"]), textarea:not([disabled]), select:not([disabled]), button:not([disabled]), [contenteditable="true"], [tabindex]:not([tabindex="-1"])'
+      )
+    );
+
+    const currentIndex = focusableElements.indexOf(element);
+    if (currentIndex !== -1 && currentIndex < focusableElements.length - 1) {
+      const nextElement = focusableElements[currentIndex + 1];
+      nextElement.focus();
+    }
+  }
+
+  // Execute {delay} command
+  private async executeDelay(options?: string): Promise<void> {
+    const defaultDelay = 1000; // 1 second default
+    let delayMs = defaultDelay;
+
+    if (options) {
+      // Parse delay format: "+1s", "+300ms", "1s", "300ms"
+      const match = options.match(/\+?(\d+(?:\.\d+)?)(s|ms)?/);
+      if (match) {
+        const value = parseFloat(match[1]);
+        const unit = match[2] || 's';
+        delayMs = unit === 'ms' ? value : value * 1000;
+      }
+    }
+
+    this.log(`Executing {delay} for ${delayMs}ms`);
+    await this.delay(delayMs);
   }
 }

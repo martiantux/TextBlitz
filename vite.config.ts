@@ -81,6 +81,16 @@ export default defineConfig({
           resolve(__dirname, 'dist/ui/popup/popup.html')
         );
 
+        // Copy WysiwygEditor.css for options page
+        const componentsDir = resolve(__dirname, 'dist/ui/components');
+        if (!existsSync(componentsDir)) {
+          mkdirSync(componentsDir, { recursive: true });
+        }
+        copyFileSync(
+          resolve(__dirname, 'src/ui/components/WysiwygEditor.css'),
+          resolve(__dirname, 'dist/ui/components/WysiwygEditor.css')
+        );
+
         // Copy icons
         const iconsDir = resolve(__dirname, 'dist/icons');
         if (!existsSync(iconsDir)) {

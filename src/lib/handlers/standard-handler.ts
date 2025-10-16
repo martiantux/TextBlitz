@@ -1,4 +1,4 @@
-import { BaseHandler } from './base-handler';
+import { BaseHandler, KeyboardAction } from './base-handler';
 
 // Standard handler for regular input/textarea elements
 export class StandardHandler extends BaseHandler {
@@ -9,7 +9,14 @@ export class StandardHandler extends BaseHandler {
     return element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement;
   }
 
-  async replace(element: HTMLElement, trigger: string, expansion: string): Promise<boolean> {
+  async replace(
+    element: HTMLElement,
+    trigger: string,
+    expansion: string,
+    cursorOffset?: number,
+    chunks?: string[],
+    actions?: KeyboardAction[]
+  ): Promise<boolean> {
     if (!(element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement)) {
       return false;
     }
@@ -26,24 +33,72 @@ export class StandardHandler extends BaseHandler {
       return false;
     }
 
-    // Build new value
     const beforeTrigger = value.substring(0, triggerPos.start);
     const afterCursor = value.substring(cursorPos);
-    const newValue = beforeTrigger + expansion + afterCursor;
 
-    // Set value
+    // Handle chunked insertion with keyboard actions
+    if (chunks && chunks.length > 0 && actions && actions.length > 0) {
+      return await this.replaceWithChunks(element, beforeTrigger, afterCursor, chunks, actions, trigger, expansion);
+    }
+
+    // Standard replacement without chunks
+    const newValue = beforeTrigger + expansion + afterCursor;
     element.value = newValue;
 
-    // Set cursor position
-    const newCursorPos = beforeTrigger.length + expansion.length;
+    // Set cursor position (use cursorOffset if provided, otherwise end of expansion)
+    const finalCursorPos = beforeTrigger.length + (cursorOffset ?? expansion.length);
     try {
-      element.setSelectionRange(newCursorPos, newCursorPos);
+      element.setSelectionRange(finalCursorPos, finalCursorPos);
     } catch (e) {
       // Some input types don't support selection
     }
 
     // Dispatch events
     element.dispatchEvent(new Event('input', { bubbles: true }));
+    element.dispatchEvent(new Event('change', { bubbles: true }));
+
+    // Verify
+    await this.delay(10);
+    return this.verify(element, expansion, trigger);
+  }
+
+  // Insert text in chunks with keyboard actions between
+  private async replaceWithChunks(
+    element: HTMLInputElement | HTMLTextAreaElement,
+    beforeTrigger: string,
+    afterCursor: string,
+    chunks: string[],
+    actions: KeyboardAction[],
+    trigger: string,
+    expansion: string
+  ): Promise<boolean> {
+    this.log(`Replacing with ${chunks.length} chunks and ${actions.length} actions`);
+
+    let currentValue = beforeTrigger;
+
+    // Insert chunks with actions
+    for (let i = 0; i < chunks.length; i++) {
+      currentValue += chunks[i];
+
+      // Set value
+      element.value = currentValue + afterCursor;
+      element.dispatchEvent(new Event('input', { bubbles: true }));
+
+      // Set cursor at end of current chunk
+      const cursorPos = currentValue.length;
+      try {
+        element.setSelectionRange(cursorPos, cursorPos);
+      } catch (e) {
+        // Ignore
+      }
+
+      // Execute keyboard action after this chunk (if exists)
+      if (i < actions.length) {
+        await this.executeKeyboardAction(element, actions[i]);
+      }
+    }
+
+    // Final event
     element.dispatchEvent(new Event('change', { bubbles: true }));
 
     // Verify
