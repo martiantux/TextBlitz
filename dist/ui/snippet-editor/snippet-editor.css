@@ -466,6 +466,7 @@ select.wysiwyg-btn {
   align-items: center;
   gap: var(--spacing-xs);
   padding: 3px 8px;
+  padding-right: 6px;
   background: rgba(99, 102, 241, 0.1);
   color: var(--color-primary);
   border-radius: var(--border-radius-sm);
@@ -477,16 +478,48 @@ select.wysiwyg-btn {
   white-space: nowrap;
   transition: all var(--transition);
   font-weight: 500;
+  position: relative;
 }
 
 .command-pill:hover {
   background: rgba(99, 102, 241, 0.15);
   border-color: var(--color-primary);
+  padding-right: 24px;
 }
 
 .command-pill.dragging {
   opacity: 0.5;
   cursor: grabbing;
+}
+
+.command-pill .delete-btn {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-danger);
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 10px;
+  line-height: 1;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition);
+  padding: 0;
+}
+
+.command-pill:hover .delete-btn {
+  display: flex;
+}
+
+.command-pill .delete-btn:hover {
+  background: var(--color-danger-hover);
+  transform: translateY(-50%) scale(1.1);
 }
 
 /* Responsive */

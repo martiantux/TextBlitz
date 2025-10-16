@@ -199,8 +199,15 @@
                   <button type="button" class="command-menu-item" data-cmd="{date}">
                     <span class="cmd-icon">📅</span>
                     <div>
-                      <div class="cmd-name">Date/Time</div>
-                      <div class="cmd-desc">Insert current date</div>
+                      <div class="cmd-name">Date</div>
+                      <div class="cmd-desc">Current date (YYYY-MM-DD, MM/DD/YYYY, shift +3M)</div>
+                    </div>
+                  </button>
+                  <button type="button" class="command-menu-item" data-cmd="{time}">
+                    <span class="cmd-icon">⏰</span>
+                    <div>
+                      <div class="cmd-name">Time</div>
+                      <div class="cmd-desc">Current time (12h, 24h, HH:mm)</div>
                     </div>
                   </button>
                   <button type="button" class="command-menu-item" data-cmd="{clipboard}">
@@ -214,25 +221,32 @@
                     <span class="cmd-icon">📍</span>
                     <div>
                       <div class="cmd-name">Cursor Position</div>
-                      <div class="cmd-desc">Set final cursor position</div>
+                      <div class="cmd-desc">Set final cursor position (use once)</div>
                     </div>
                   </button>
                 </div>
 
                 <div class="command-category">
                   <div class="command-category-title">Keyboard</div>
-                  <button type="button" class="command-menu-item" data-cmd="{key: enter}">
+                  <button type="button" class="command-menu-item" data-cmd="{enter}">
                     <span class="cmd-icon">⏎</span>
                     <div>
                       <div class="cmd-name">Enter</div>
                       <div class="cmd-desc">Simulate Enter key</div>
                     </div>
                   </button>
-                  <button type="button" class="command-menu-item" data-cmd="{key: tab}">
+                  <button type="button" class="command-menu-item" data-cmd="{tab}">
                     <span class="cmd-icon">⭾</span>
                     <div>
                       <div class="cmd-name">Tab</div>
                       <div class="cmd-desc">Simulate Tab key</div>
+                    </div>
+                  </button>
+                  <button type="button" class="command-menu-item" data-cmd="{delay +1s}">
+                    <span class="cmd-icon">⏱️</span>
+                    <div>
+                      <div class="cmd-name">Delay</div>
+                      <div class="cmd-desc">Pause (e.g., +1s, +300ms)</div>
                     </div>
                   </button>
                 </div>

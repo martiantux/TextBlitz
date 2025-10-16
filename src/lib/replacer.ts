@@ -71,16 +71,20 @@ export class TextReplacer {
         processedExpansion = CaseTransformer.transform(processedExpansion, caseTransform, trigger);
       }
 
-      // Parse cursor position
+      // Parse cursor position (use LAST occurrence if multiple)
       const cursorMarker = '{cursor}';
-      const cursorIndex = processedExpansion.indexOf(cursorMarker);
       let cursorOffset: number | undefined = undefined;
 
-      if (cursorIndex !== -1) {
-        // Remove cursor marker and track its position
-        processedExpansion = processedExpansion.slice(0, cursorIndex) + processedExpansion.slice(cursorIndex + cursorMarker.length);
-        cursorOffset = cursorIndex;
-        this.log(`Cursor position: ${cursorOffset}`);
+      // Find last cursor position
+      const lastCursorIndex = processedExpansion.lastIndexOf(cursorMarker);
+      if (lastCursorIndex !== -1) {
+        // Count how many chars to remove (all {cursor} occurrences)
+        const cursorCount = (processedExpansion.match(/\{cursor\}/g) || []).length;
+        // Remove ALL cursor markers
+        processedExpansion = processedExpansion.replace(/\{cursor\}/g, '');
+        // Cursor offset is the last position minus all the markers before it
+        cursorOffset = lastCursorIndex - (cursorMarker.length * (cursorCount - 1));
+        this.log(`Cursor position: ${cursorOffset} (removed ${cursorCount} markers)`);
       }
 
       // Extract keyboard actions and chunks

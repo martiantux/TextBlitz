@@ -202,6 +202,18 @@ class SnippetEditorPage {
     // Drag and drop
     this.setupDragAndDrop();
 
+    // Paste and copy handlers
+    this.setupCopyPaste();
+
+    // Auto-convert typed commands to pills
+    this.setupAutoConvertCommands();
+
+    // Double-click to edit pills
+    this.setupPillEdit();
+
+    // Event delegation for delete buttons
+    this.setupDeleteButtons();
+
     // Focus editor on load
     this.editor.focus();
   }
@@ -224,12 +236,37 @@ class SnippetEditorPage {
   private insertCommandPill(commandText: string) {
     if (!this.editor) return;
 
+    // Check if trying to insert {cursor} when one already exists
+    if (commandText === '{cursor}') {
+      const existingCursor = this.editor.querySelector('.command-pill[data-command="{cursor}"]');
+      if (existingCursor) {
+        const replace = confirm('Only one {cursor} command is allowed per snippet.\n\nDo you want to replace the existing {cursor}?');
+        if (!replace) return;
+        // Remove existing cursor pill
+        existingCursor.remove();
+      }
+    }
+
     const pill = document.createElement('span');
     pill.className = 'command-pill';
     pill.contentEditable = 'false';
     pill.draggable = true;
-    pill.textContent = commandText;
     pill.setAttribute('data-command', commandText);
+
+    // Add command text
+    const textNode = document.createTextNode(commandText);
+    pill.appendChild(textNode);
+
+    // Add delete button
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'delete-btn';
+    deleteBtn.textContent = '✕';
+    deleteBtn.setAttribute('aria-label', 'Delete command');
+    deleteBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      pill.remove();
+    });
+    pill.appendChild(deleteBtn);
 
     const selection = window.getSelection();
     if (selection && selection.rangeCount > 0) {
@@ -308,6 +345,336 @@ class SnippetEditorPage {
       this.draggedElement = null;
 
       this.editor?.focus();
+    });
+  }
+
+  private setupCopyPaste() {
+    if (!this.editor) return;
+
+    // Paste handler: convert {command} text to pills
+    this.editor.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const text = e.clipboardData?.getData('text/plain');
+      if (!text) return;
+
+      // Check if pasted text contains command syntax
+      const commandPattern = /\{[^}]+\}/g;
+      if (commandPattern.test(text)) {
+        // Convert to HTML with pills
+        const htmlContent = this.contentToHTML(text);
+
+        // Insert at cursor position
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          range.deleteContents();
+
+          // Create temporary container to parse HTML
+          const temp = document.createElement('div');
+          temp.innerHTML = htmlContent;
+
+          // Insert all nodes from temp
+          const frag = document.createDocumentFragment();
+          while (temp.firstChild) {
+            frag.appendChild(temp.firstChild);
+          }
+          range.insertNode(frag);
+
+          // Move cursor to end of inserted content
+          range.collapse(false);
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+      } else {
+        // Plain text, use default paste
+        document.execCommand('insertText', false, text);
+      }
+    });
+
+    // Copy handler: convert pills to {command} syntax
+    this.editor.addEventListener('copy', (e) => {
+      const selection = window.getSelection();
+      if (!selection || selection.rangeCount === 0) return;
+
+      const range = selection.getRangeAt(0);
+      const fragment = range.cloneContents();
+
+      // Create temp container with the selection
+      const temp = document.createElement('div');
+      temp.appendChild(fragment);
+
+      // Convert pills to plain text
+      const plainText = this.htmlToContent(temp.innerHTML);
+
+      // Set clipboard data
+      e.clipboardData?.setData('text/plain', plainText);
+      e.preventDefault();
+    });
+
+    // Cut handler: copy then delete
+    this.editor.addEventListener('cut', (e) => {
+      const selection = window.getSelection();
+      if (!selection || selection.rangeCount === 0) return;
+
+      const range = selection.getRangeAt(0);
+      const fragment = range.cloneContents();
+
+      // Create temp container with the selection
+      const temp = document.createElement('div');
+      temp.appendChild(fragment);
+
+      // Convert pills to plain text
+      const plainText = this.htmlToContent(temp.innerHTML);
+
+      // Set clipboard data
+      e.clipboardData?.setData('text/plain', plainText);
+
+      // Delete selection
+      range.deleteContents();
+
+      e.preventDefault();
+    });
+  }
+
+  private setupAutoConvertCommands() {
+    if (!this.editor) return;
+
+    // Listen for input to detect when user types }
+    this.editor.addEventListener('input', (e) => {
+      const inputEvent = e as InputEvent;
+
+      // Only process if user typed a character (not paste, cut, etc.)
+      if (inputEvent.inputType !== 'insertText') return;
+      if (inputEvent.data !== '}') return;
+
+      // Get current selection
+      const selection = window.getSelection();
+      if (!selection || selection.rangeCount === 0) return;
+
+      const range = selection.getRangeAt(0);
+      const container = range.startContainer;
+
+      // Get text before cursor
+      let textBefore = '';
+      if (container.nodeType === Node.TEXT_NODE) {
+        textBefore = container.textContent?.substring(0, range.startOffset) || '';
+      }
+
+      // Find the last { before cursor
+      const lastBraceIndex = textBefore.lastIndexOf('{');
+      if (lastBraceIndex === -1) return;
+
+      // Extract potential command (including the })
+      const potentialCommand = textBefore.substring(lastBraceIndex) + '}';
+
+      // Validate command
+      if (!this.isValidCommand(potentialCommand)) return;
+
+      // Check if trying to add {cursor} when one already exists
+      if (potentialCommand === '{cursor}') {
+        const existingCursor = this.editor?.querySelector('.command-pill[data-command="{cursor}"]');
+        if (existingCursor) {
+          const replace = confirm('Only one {cursor} command is allowed per snippet.\n\nDo you want to replace the existing {cursor}?');
+          if (!replace) return;
+          // Remove existing cursor pill
+          existingCursor.remove();
+        }
+      }
+
+      // Replace text with pill
+      // Calculate positions
+      const commandLength = potentialCommand.length;
+      const startOffset = range.startOffset - commandLength + 1; // +1 because we just typed }
+
+      // Create new range for selection
+      const replaceRange = document.createRange();
+      replaceRange.setStart(container, startOffset);
+      replaceRange.setEnd(container, range.startOffset);
+
+      // Delete the typed command text
+      replaceRange.deleteContents();
+
+      // Insert pill at that position
+      const pill = document.createElement('span');
+      pill.className = 'command-pill';
+      pill.contentEditable = 'false';
+      pill.draggable = true;
+      pill.setAttribute('data-command', potentialCommand);
+
+      // Add command text
+      const textNode = document.createTextNode(potentialCommand);
+      pill.appendChild(textNode);
+
+      // Add delete button
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'delete-btn';
+      deleteBtn.textContent = '✕';
+      deleteBtn.setAttribute('aria-label', 'Delete command');
+      deleteBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        pill.remove();
+      });
+      pill.appendChild(deleteBtn);
+
+      replaceRange.insertNode(pill);
+
+      // Add space after pill and position cursor
+      const space = document.createTextNode('\u00A0');
+      replaceRange.collapse(false);
+      replaceRange.insertNode(space);
+      replaceRange.setStartAfter(space);
+      replaceRange.setEndAfter(space);
+      selection.removeAllRanges();
+      selection.addRange(replaceRange);
+    });
+  }
+
+  private isValidCommand(command: string): boolean {
+    // List of valid command patterns
+    const validCommands = [
+      /^\{date(?::.+)?\}$/,           // {date} or {date:YYYY-MM-DD} or {date shift +3M}
+      /^\{time(?::.+)?\}$/,           // {time} or {time:12h}
+      /^\{clipboard\}$/,              // {clipboard}
+      /^\{cursor\}$/,                 // {cursor}
+      /^\{enter\}$/,                  // {enter}
+      /^\{tab\}$/,                    // {tab}
+      /^\{delay(?:\s+\+?\d+(?:\.\d+)?(?:s|ms))?\}$/, // {delay} or {delay +1s} or {delay +300ms}
+      /^\{key:\s*.+\}$/,              // {key: enter} or {key: tab}
+      /^\{formtext(?::.+)?\}$/,       // {formtext} or {formtext: label=Name}
+      /^\{formparagraph(?::.+)?\}$/,  // {formparagraph: label=Notes}
+      /^\{formmenu(?::.+)?\}$/,       // {formmenu: label=Status; options=Active,Inactive}
+      /^\{formdate(?::.+)?\}$/,       // {formdate: label=Date}
+      /^\{formtoggle(?::.+)?\}$/,     // {formtoggle: label=Toggle}
+    ];
+
+    return validCommands.some(pattern => pattern.test(command));
+  }
+
+  private setupPillEdit() {
+    if (!this.editor) return;
+
+    // Double-click pill to edit
+    this.editor.addEventListener('dblclick', (e) => {
+      const target = e.target as HTMLElement;
+      if (!target.classList.contains('command-pill')) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      this.editPill(target);
+    });
+  }
+
+  private setupDeleteButtons() {
+    if (!this.editor) return;
+
+    // Event delegation for delete buttons (handles dynamically created buttons)
+    this.editor.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement;
+      if (!target.classList.contains('delete-btn')) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      // Find parent pill and remove it
+      const pill = target.closest('.command-pill');
+      if (pill) {
+        pill.remove();
+      }
+    });
+  }
+
+  private editPill(pill: HTMLElement) {
+    const currentCommand = pill.getAttribute('data-command') || pill.textContent || '';
+
+    // Create inline input
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = currentCommand;
+    input.style.cssText = `
+      font-family: monospace;
+      font-size: 13px;
+      padding: 2px 6px;
+      border: 2px solid #2196F3;
+      border-radius: 4px;
+      background: white;
+      outline: none;
+      min-width: 150px;
+    `;
+
+    // Replace pill with input temporarily
+    pill.style.display = 'none';
+    pill.parentNode?.insertBefore(input, pill);
+    input.focus();
+    input.select();
+
+    const saveEdit = () => {
+      const newCommand = input.value.trim();
+
+      // Validate new command
+      if (newCommand && this.isValidCommand(newCommand)) {
+        // Check if changing to {cursor} and one already exists (not this one)
+        if (newCommand === '{cursor}' && currentCommand !== '{cursor}') {
+          const existingCursor = this.editor?.querySelector('.command-pill[data-command="{cursor}"]');
+          if (existingCursor && existingCursor !== pill) {
+            const replace = confirm('Only one {cursor} command is allowed per snippet.\n\nDo you want to replace the existing {cursor}?');
+            if (replace) {
+              existingCursor.remove();
+            } else {
+              cancelEdit();
+              return;
+            }
+          }
+        }
+
+        // Update pill - clear and rebuild with new command
+        pill.innerHTML = '';
+        pill.setAttribute('data-command', newCommand);
+
+        // Add command text
+        const textNode = document.createTextNode(newCommand);
+        pill.appendChild(textNode);
+
+        // Re-add delete button
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'delete-btn';
+        deleteBtn.textContent = '✕';
+        deleteBtn.setAttribute('aria-label', 'Delete command');
+        deleteBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          pill.remove();
+        });
+        pill.appendChild(deleteBtn);
+
+        pill.style.display = '';
+        input.remove();
+      } else {
+        // Invalid command
+        alert('Invalid command syntax. Please check your command and try again.');
+        input.focus();
+      }
+    };
+
+    const cancelEdit = () => {
+      pill.style.display = '';
+      input.remove();
+    };
+
+    // Save on Enter
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        saveEdit();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        cancelEdit();
+      }
+    });
+
+    // Save on blur (click outside)
+    input.addEventListener('blur', () => {
+      // Use setTimeout to allow click events to process first
+      setTimeout(() => saveEdit(), 100);
     });
   }
 
@@ -447,7 +814,8 @@ class SnippetEditorPage {
     // Find command patterns like {date}, {clipboard}, etc.
     const commandPattern = /\{[^}]+\}/g;
     html = html.replace(commandPattern, (match) => {
-      return `<span class="command-pill" contenteditable="false" draggable="true" data-command="${this.escapeHtml(match)}">${this.escapeHtml(match)}</span>`;
+      const escapedMatch = this.escapeHtml(match);
+      return `<span class="command-pill" contenteditable="false" draggable="true" data-command="${escapedMatch}">${escapedMatch}<button class="delete-btn" aria-label="Delete command">✕</button></span>`;
     });
 
     return html;
