@@ -1,423 +1,53 @@
-import { Snippet, CaseTransform } from './types';
+import { CaseTransform } from './types';
 import { CommandParser } from './command-parser';
 import { CaseTransformer } from './case-transform';
 import { logger } from './logger';
-import { CKEditorHandler } from './editors/ckeditor';
+import { HandlerRegistry } from './handlers/handler-registry';
 
+/**
+ * NEW TextReplacer - Uses modular handler system
+ *
+ * Key improvements:
+ * - Modular handlers for different sites
+ * - Easy to add new site support
+ * - Fallback chain if handler fails
+ * - Comprehensive logging
+ * - Content verification
+ */
 export class TextReplacer {
   private static debugMode = false;
+  private static registry = new HandlerRegistry();
 
-  static setDebugMode(enabled: boolean) {
+  static setDebugMode(enabled: boolean): void {
     this.debugMode = enabled;
+    this.registry.setDebugMode(enabled);
     logger.setDebugMode(enabled);
   }
 
-  private static log(...args: any[]) {
+  private static log(...args: any[]): void {
     if (this.debugMode) {
-      console.log(...args);
+      console.log('TextBlitz [Replacer]:', ...args);
     }
   }
 
-  // Get text from element (universal)
-  private static getElementText(element: HTMLElement): string {
-    if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
-      return element.value;
-    } else if (element.isContentEditable) {
-      return element.textContent || '';
-    }
-    return '';
-  }
-
-  // Verify that insertion actually happened
-  private static verifyInsertion(element: HTMLElement, expectedText: string): boolean {
-    const actual = this.getElementText(element);
-    // Check if expansion is present (check first 10 chars to be safe)
-    const checkText = expectedText.substring(0, Math.min(10, expectedText.length));
-    return actual.includes(checkText);
-  }
-
-  // Detect framework type
-  private static detectFramework(element: HTMLElement): string {
-    // Check for React
-    const reactKeys = Object.keys(element).find(key =>
-      key.startsWith('__react') || key.startsWith('_react')
-    );
-    if (reactKeys) return 'react';
-
-    // Check for Vue
-    if ('__vue__' in element || '__vueParentComponent' in element) return 'vue';
-
-    // Check for Shadow DOM
-    if (element.shadowRoot) return 'shadow';
-
-    // Check for complex contenteditable (CodeMirror, Monaco, etc.)
-    if (element.classList.contains('CodeMirror') ||
-        element.classList.contains('monaco-editor') ||
-        element.getAttribute('data-lexical-editor') !== null) {
-      return 'custom-editor';
-    }
-
-    return 'standard';
-  }
-
-  // TIER 0: Direct Simple Manipulation (for basic inputs/textareas)
-  private static async tier0DirectManipulation(
-    element: HTMLElement,
-    trigger: string,
-    expansion: string
-  ): Promise<boolean> {
-    try {
-      this.log('TextBlitz: Trying Tier 0 - Direct Manipulation');
-
-      // Only for textarea and input
-      if (element instanceof HTMLTextAreaElement || element instanceof HTMLInputElement) {
-        const value = element.value;
-        const cursorPos = element.selectionStart ?? value.length;
-
-        // Strategy 1: Find trigger at end of value (most common case)
-        if (value.endsWith(trigger)) {
-          const beforeTrigger = value.substring(0, value.length - trigger.length);
-          const newValue = beforeTrigger + expansion;
-
-          element.value = newValue;
-          const newCursorPos = newValue.length;
-          element.setSelectionRange(newCursorPos, newCursorPos);
-
-          element.dispatchEvent(new InputEvent('input', {
-            bubbles: true,
-            cancelable: true,
-            inputType: 'insertText',
-            data: expansion
-          }));
-
-          this.log('TextBlitz: ✅ Tier 0 succeeded (end of value)');
-          return true;
-        }
-
-        // Strategy 2: Find trigger before cursor
-        const textBefore = value.substring(0, cursorPos);
-        if (textBefore.endsWith(trigger)) {
-          const beforeTrigger = value.substring(0, cursorPos - trigger.length);
-          const afterCursor = value.substring(cursorPos);
-          const newValue = beforeTrigger + expansion + afterCursor;
-
-          element.value = newValue;
-          const newCursorPos = beforeTrigger.length + expansion.length;
-          element.setSelectionRange(newCursorPos, newCursorPos);
-
-          element.dispatchEvent(new InputEvent('input', {
-            bubbles: true,
-            cancelable: true,
-            inputType: 'insertText',
-            data: expansion
-          }));
-
-          this.log('TextBlitz: ✅ Tier 0 succeeded (before cursor)');
-          return true;
-        }
-
-        // Strategy 3: Search for trigger anywhere in value (last occurrence)
-        const triggerIndex = value.lastIndexOf(trigger);
-        if (triggerIndex !== -1) {
-          const beforeTrigger = value.substring(0, triggerIndex);
-          const afterTrigger = value.substring(triggerIndex + trigger.length);
-          const newValue = beforeTrigger + expansion + afterTrigger;
-
-          element.value = newValue;
-          const newCursorPos = beforeTrigger.length + expansion.length;
-          element.setSelectionRange(newCursorPos, newCursorPos);
-
-          element.dispatchEvent(new InputEvent('input', {
-            bubbles: true,
-            cancelable: true,
-            inputType: 'insertText',
-            data: expansion
-          }));
-
-          this.log('TextBlitz: ✅ Tier 0 succeeded (found in value)');
-          return true;
-        }
-
-        this.log('TextBlitz: Tier 0 - trigger not found in value');
-        return false;
-      }
-
-      return false;
-    } catch (error) {
-      this.log('TextBlitz: Tier 0 failed:', error);
-      return false;
-    }
-  }
-
-  // TIER 1: ExecCommand (works on most contenteditables)
-  private static async tier1ExecCommand(
-    element: HTMLElement,
-    trigger: string,
-    expansion: string
-  ): Promise<boolean> {
-    try {
-      this.log('TextBlitz: Trying Tier 1 - execCommand');
-
-      const selection = window.getSelection();
-      if (!selection || selection.rangeCount === 0) return false;
-
-      const range = selection.getRangeAt(0);
-      let { startContainer, startOffset } = range;
-
-      // Find text node if we're in an element
-      if (startContainer.nodeType !== Node.TEXT_NODE) {
-        if (startContainer.childNodes.length > 0) {
-          const childIndex = Math.min(startOffset, startContainer.childNodes.length - 1);
-          const childNode = startContainer.childNodes[childIndex];
-          if (childNode && childNode.nodeType === Node.TEXT_NODE) {
-            startContainer = childNode;
-            startOffset = (childNode as Text).textContent?.length || 0;
-          } else {
-            return false;
-          }
-        } else {
-          return false;
-        }
-      }
-
-      const textNode = startContainer as Text;
-      const text = textNode.textContent || '';
-      const beforeCursor = text.substring(0, startOffset);
-
-      if (!beforeCursor.endsWith(trigger)) return false;
-
-      // Select trigger
-      const newRange = document.createRange();
-      const triggerStart = startOffset - trigger.length;
-      newRange.setStart(textNode, triggerStart);
-      newRange.setEnd(textNode, startOffset);
-      selection.removeAllRanges();
-      selection.addRange(newRange);
-
-      // Delete and insert
-      const deleted = document.execCommand('delete', false);
-      if (!deleted) return false;
-
-      const inserted = document.execCommand('insertText', false, expansion);
-      if (!inserted) return false;
-
-      // Dispatch events
-      element.dispatchEvent(new InputEvent('input', {
-        bubbles: true,
-        cancelable: false,
-        inputType: 'insertText',
-        data: expansion
-      }));
-
-      this.log('TextBlitz: ✅ Tier 1 succeeded');
-      return true;
-    } catch (error) {
-      this.log('TextBlitz: Tier 1 failed:', error);
-      return false;
-    }
-  }
-
-  // TIER 2: Aggressive Event Dispatching (React/Vue)
-  private static async tier2AggressiveEvents(
-    element: HTMLElement,
-    trigger: string,
-    expansion: string,
-    framework: string
-  ): Promise<boolean> {
-    try {
-      this.log('TextBlitz: Trying Tier 2 - Aggressive Events (framework:', framework, ')');
-
-      if (!(element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement)) {
-        return false; // Tier 2 only for inputs
-      }
-
-      const cursorPos = element.selectionStart ?? element.value.length;
-      const value = element.value;
-      const textBefore = value.substring(0, cursorPos - trigger.length);
-      const textAfter = value.substring(cursorPos);
-
-      // Set value via native descriptor (React detection)
-      const nativeValueSetter = Object.getOwnPropertyDescriptor(
-        window.HTMLInputElement.prototype,
-        'value'
-      )?.set;
-
-      const newValue = textBefore + expansion + textAfter;
-
-      if (nativeValueSetter) {
-        nativeValueSetter.call(element, newValue);
-      } else {
-        element.value = newValue;
-      }
-
-      // React-specific: trigger _valueTracker
-      const tracker = (element as any)._valueTracker;
-      if (tracker) {
-        tracker.setValue(''); // Force React to notice change
-      }
-
-      // Dispatch comprehensive events
-      const events = [
-        new InputEvent('input', { bubbles: true, cancelable: true, inputType: 'insertText', data: expansion }),
-        new Event('change', { bubbles: true }),
-        new InputEvent('textInput', { bubbles: true, data: expansion }),
-        new Event('keyup', { bubbles: true }),
-      ];
-
-      for (const event of events) {
-        element.dispatchEvent(event);
-      }
-
-      // Set cursor
-      const newCursorPos = textBefore.length + expansion.length;
-      try {
-        element.setSelectionRange(newCursorPos, newCursorPos);
-      } catch (e) {
-        // Ignore
-      }
-
-      this.log('TextBlitz: ✅ Tier 2 succeeded');
-      return true;
-    } catch (error) {
-      this.log('TextBlitz: Tier 2 failed:', error);
-      return false;
-    }
-  }
-
-  // TIER 3: Clipboard Injection
-  private static async tier3Clipboard(
-    element: HTMLElement,
-    trigger: string,
-    expansion: string
-  ): Promise<boolean> {
-    try {
-      this.log('TextBlitz: Trying Tier 3 - Clipboard');
-
-      // Save current clipboard
-      let previousClipboard = '';
-      try {
-        previousClipboard = await navigator.clipboard.readText();
-      } catch (e) {
-        // No clipboard permission
-      }
-
-      // Copy expansion to clipboard
-      await navigator.clipboard.writeText(expansion);
-
-      // Focus element
-      element.focus();
-
-      // Select trigger if in input/textarea
-      if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
-        const cursorPos = element.selectionStart ?? element.value.length;
-        const triggerStart = cursorPos - trigger.length;
-        element.setSelectionRange(triggerStart, cursorPos);
-      } else if (element.isContentEditable) {
-        // For contenteditable, select trigger via execCommand
-        const selection = window.getSelection();
-        if (selection && selection.rangeCount > 0) {
-          const range = selection.getRangeAt(0);
-          let { startContainer, startOffset } = range;
-
-          if (startContainer.nodeType === Node.TEXT_NODE) {
-            const textNode = startContainer as Text;
-            const text = textNode.textContent || '';
-            if (text.substring(0, startOffset).endsWith(trigger)) {
-              const newRange = document.createRange();
-              newRange.setStart(textNode, startOffset - trigger.length);
-              newRange.setEnd(textNode, startOffset);
-              selection.removeAllRanges();
-              selection.addRange(newRange);
-            }
-          }
-        }
-      }
-
-      // Paste
-      const pasted = document.execCommand('paste', false);
-
-      // Restore clipboard
-      if (previousClipboard) {
-        try {
-          await navigator.clipboard.writeText(previousClipboard);
-        } catch (e) {
-          // Ignore
-        }
-      }
-
-      if (!pasted) return false;
-
-      this.log('TextBlitz: ✅ Tier 3 succeeded');
-      return true;
-    } catch (error) {
-      this.log('TextBlitz: Tier 3 failed:', error);
-      return false;
-    }
-  }
-
-  // TIER 4: Keyboard Simulation (slowest but most reliable)
-  private static async tier4Keyboard(
-    element: HTMLElement,
-    trigger: string,
-    expansion: string
-  ): Promise<boolean> {
-    try {
-      this.log('TextBlitz: Trying Tier 4 - Keyboard Simulation');
-
-      element.focus();
-
-      // Simulate backspaces to delete trigger
-      for (let i = 0; i < trigger.length; i++) {
-        this.simulateKey(element, 'Backspace', 'Backspace', 8);
-        await this.delay(10);
-      }
-
-      // Type expansion character by character
-      for (const char of expansion) {
-        const code = char === '\n' ? 'Enter' : char;
-        const keyCode = char.charCodeAt(0);
-        this.simulateKey(element, char, code, keyCode);
-        await this.delay(10);
-      }
-
-      this.log('TextBlitz: ✅ Tier 4 succeeded');
-      return true;
-    } catch (error) {
-      this.log('TextBlitz: Tier 4 failed:', error);
-      return false;
-    }
-  }
-
-  // Simulate keyboard event
-  private static simulateKey(element: HTMLElement, key: string, code: string, keyCode: number) {
-    const options = {
-      key,
-      code,
-      keyCode,
-      which: keyCode,
-      bubbles: true,
-      cancelable: true,
-      composed: true
-    };
-
-    element.dispatchEvent(new KeyboardEvent('keydown', options));
-    element.dispatchEvent(new KeyboardEvent('keypress', options));
-    element.dispatchEvent(new KeyboardEvent('keyup', options));
-  }
-
-  // Delay helper
-  private static delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
-  // MAIN REPLACE METHOD - Try all tiers with retry logic
+  /**
+   * Main replacement method
+   *
+   * @param element - Target element
+   * @param trigger - Trigger text to replace
+   * @param expansion - Replacement text
+   * @param caseTransform - Optional case transformation
+   * @param typedTrigger - Actual typed trigger (may differ in case)
+   * @returns true if replacement succeeded
+   */
   static async replace(
     element: HTMLElement,
     trigger: string,
     expansion: string,
     caseTransform?: CaseTransform,
-    retryCount: number = 0
+    typedTrigger?: string
   ): Promise<boolean> {
+    const triggerToRemove = typedTrigger || trigger;
     const context = {
       element: logger.getElementContext(element),
       site: logger.getSiteContext(),
@@ -427,20 +57,13 @@ export class TextReplacer {
     try {
       logger.info('expansion', 'Starting replacement', context);
 
-      // Validate element still exists and is in document
+      // Validate element
       if (!document.contains(element)) {
-        logger.warn('expansion', 'Element no longer in document', context);
+        logger.warn('expansion', 'Element not in document', context);
         return false;
       }
 
-      // Check if element is still focused (helps detect cursor movement)
-      const isFocused = document.activeElement === element;
-      if (!isFocused) {
-        logger.warn('expansion', 'Element lost focus, may have cursor movement', context);
-        // Continue anyway - might still work
-      }
-
-      // Process commands
+      // Process commands in expansion
       let processedExpansion = await CommandParser.processCommands(expansion);
 
       // Apply case transformation
@@ -448,206 +71,136 @@ export class TextReplacer {
         processedExpansion = CaseTransformer.transform(processedExpansion, caseTransform, trigger);
       }
 
-      // Parse cursor (simplified - just remove {cursor} for now)
-      const cursorMarker = '{cursor}';
-      if (processedExpansion.includes(cursorMarker)) {
-        processedExpansion = processedExpansion.replace(cursorMarker, '');
+      // Remove {cursor} marker (for now)
+      if (processedExpansion.includes('{cursor}')) {
+        processedExpansion = processedExpansion.replace('{cursor}', '');
       }
 
-      // Split by keyboard actions (join for simplicity)
+      // Remove keyboard actions (for now)
       const { chunks } = CommandParser.splitTextByKeyboardActions(processedExpansion);
       const finalExpansion = chunks.join('');
 
-      logger.debug('expansion', `Final expansion: "${finalExpansion}"`, context);
+      this.log('Final expansion:', finalExpansion);
 
-      // Check for Google Docs FIRST (special handling required)
-      const isGoogleDocs = this.isGoogleDocsEditor(element);
-      if (isGoogleDocs) {
-        logger.info('expansion', 'Google Docs detected, using specialized handler', context);
-        const success = await this.googleDocsReplace(element, trigger, finalExpansion);
-        if (success) {
-          logger.info('tier', 'GoogleDocs tier succeeded', { ...context, tier: 'GoogleDocs' });
-          return true;
-        } else {
-          logger.warn('tier', 'GoogleDocs tier failed, falling back to standard tiers', { ...context, tier: 'GoogleDocs' });
-        }
-      }
-
-      // Check for CKEditor
-      const isCKEditor = CKEditorHandler.detect(element);
-      if (isCKEditor) {
-        logger.info('expansion', 'CKEditor detected, using specialized handler', context);
-        const success = await CKEditorHandler.replace(element, trigger, finalExpansion);
-        if (success) {
-          logger.info('tier', 'Tier5-CKEditor succeeded', { ...context, tier: 'CKEditor' });
-          return true;
-        } else {
-          logger.warn('tier', 'Tier5-CKEditor failed, falling back to standard tiers', { ...context, tier: 'CKEditor' });
-        }
-      }
-
-      // Detect framework
-      const framework = this.detectFramework(element);
-      logger.debug('expansion', `Detected framework: ${framework}`, { ...context, tier: framework });
-
-      // Try tiers in order
-      const tiers = [
-        { name: 'Tier0-DirectManipulation', fn: () => this.tier0DirectManipulation(element, trigger, finalExpansion) },
-        { name: 'Tier1-ExecCommand', fn: () => this.tier1ExecCommand(element, trigger, finalExpansion) },
-        { name: 'Tier2-AggressiveEvents', fn: () => this.tier2AggressiveEvents(element, trigger, finalExpansion, framework) },
-        { name: 'Tier3-Clipboard', fn: () => this.tier3Clipboard(element, trigger, finalExpansion) },
-        { name: 'Tier4-Keyboard', fn: () => this.tier4Keyboard(element, trigger, finalExpansion) }
-      ];
-
-      const failedTiers: string[] = [];
-
-      for (const tier of tiers) {
-        logger.debug('tier', `Trying ${tier.name}`, { ...context, tier: tier.name });
-
-        const success = await tier.fn();
-
-        if (success) {
-          // Verify it worked
-          await this.delay(50); // Give DOM time to update
-          const verified = this.verifyInsertion(element, finalExpansion);
-
-          if (verified) {
-            logger.info('tier', `${tier.name} succeeded`, { ...context, tier: tier.name });
-            return true;
-          } else {
-            logger.warn('tier', `${tier.name} reported success but verification failed`, { ...context, tier: tier.name });
-            failedTiers.push(`${tier.name} (verification failed)`);
-          }
-        } else {
-          failedTiers.push(tier.name);
-        }
-      }
-
-      // All tiers failed - log detailed error
-      const errorContext = {
-        ...context,
-        error: `All ${failedTiers.length} tiers failed: ${failedTiers.join(', ')}`,
-        retryCount
-      };
-
-      logger.error('fail', 'All replacement tiers failed', errorContext);
-
-      // Retry logic - wait 200ms and try once more
-      if (retryCount === 0) {
-        logger.info('retry', 'Waiting 200ms before retry attempt', errorContext);
-        await this.delay(200);
-
-        // Verify element is still valid before retry
-        if (!document.contains(element)) {
-          logger.error('retry', 'Element removed from document before retry', errorContext);
-          return false;
-        }
-
-        logger.info('retry', 'Attempting retry (1/1)', errorContext);
-        return await this.replace(element, trigger, expansion, caseTransform, 1);
-      }
-
-      // Final failure after retry
-      logger.error('fail', 'Final failure after retry', errorContext);
-      console.error('TextBlitz: ❌ All replacement tiers failed after retry');
-      console.error('Copy debug info with: logger.formatForGitHub() in console');
-
-      return false;
-    } catch (error) {
-      const errorContext = {
-        ...context,
-        error: error instanceof Error ? error.message : String(error),
-        retryCount
-      };
-      logger.error('fail', 'Fatal error in replace method', errorContext);
-      console.error('TextBlitz: Fatal error in replace:', error);
-      return false;
-    }
-  }
-
-  // Google Docs detection
-  private static isGoogleDocsEditor(element: HTMLElement): boolean {
-    // Check if we're in Google Docs by hostname
-    if (window.location.hostname.includes('docs.google.com')) {
-      return true;
-    }
-
-    // Check for Google Docs-specific class names
-    if (element.classList.contains('kix-cursor') ||
-        element.closest('.kix-appview-editor') ||
-        document.querySelector('.kix-appview-editor')) {
-      return true;
-    }
-
-    return false;
-  }
-
-  // Google Docs-specific replacement handler
-  private static async googleDocsReplace(
-    element: HTMLElement,
-    trigger: string,
-    expansion: string
-  ): Promise<boolean> {
-    try {
-      this.log('TextBlitz: Trying Google Docs handler');
-
-      // Focus the editor
-      element.focus();
-
-      // Delete trigger using backspace simulation
-      for (let i = 0; i < trigger.length; i++) {
-        document.execCommand('delete', false);
-      }
-
-      // Insert expansion text using insertText
-      const inserted = document.execCommand('insertText', false, expansion);
-
-      if (!inserted) {
-        this.log('TextBlitz: Google Docs insertText failed');
+      // Get handler for this element
+      const handler = this.registry.getHandler(element);
+      if (!handler) {
+        logger.error('expansion', 'No handler available for element', context);
         return false;
       }
 
-      this.log('TextBlitz: ✅ Google Docs handler succeeded');
-      return true;
+      logger.info('handler', `Using ${handler.name} handler`, context);
+
+      // Save content before replacement (for rollback)
+      const contentBefore = this.getElementText(element);
+
+      // Try replacement
+      const success = await handler.replace(element, triggerToRemove, finalExpansion);
+
+      if (success) {
+        logger.info('success', `${handler.name} handler succeeded`, context);
+        return true;
+      }
+
+      // Handler failed, try fallback chain
+      logger.warn('handler', `${handler.name} handler failed, trying fallback chain`, context);
+
+      const handlerChain = this.registry.getHandlerChain(element);
+      for (const fallbackHandler of handlerChain) {
+        if (fallbackHandler === handler) continue; // Skip the one we already tried
+
+        logger.info('fallback', `Trying fallback: ${fallbackHandler.name}`, context);
+
+        const fallbackSuccess = await fallbackHandler.replace(element, triggerToRemove, finalExpansion);
+
+        if (fallbackSuccess) {
+          logger.info('success', `Fallback ${fallbackHandler.name} succeeded`, context);
+          return true;
+        }
+      }
+
+      // All handlers failed - rollback
+      logger.error('fail', 'All handlers failed, rolling back', context);
+      this.rollback(element, contentBefore);
+
+      return false;
+
     } catch (error) {
-      this.log('TextBlitz: Google Docs handler failed:', error);
+      const errorContext = {
+        ...context,
+        error: error instanceof Error ? error.message : String(error)
+      };
+      logger.error('fail', 'Fatal error in replace', errorContext);
+      console.error('TextBlitz: Fatal error:', error);
       return false;
     }
   }
 
-  static isValidInputElement(element: HTMLElement): boolean {
-    this.log('TextBlitz: isValidInputElement check on', element.tagName,
-      element instanceof HTMLInputElement ? `type=${(element as HTMLInputElement).type}` : '');
+  /**
+   * Get element text content
+   */
+  private static getElementText(element: HTMLElement): string {
+    if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
+      return element.value;
+    }
+    return element.textContent || '';
+  }
 
+  /**
+   * Rollback element to previous content
+   */
+  private static rollback(element: HTMLElement, previousContent: string): void {
+    try {
+      if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
+        element.value = previousContent;
+        element.dispatchEvent(new Event('input', { bubbles: true }));
+      } else if (element.isContentEditable) {
+        element.textContent = previousContent;
+        element.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+      this.log('Rolled back to previous content');
+    } catch (error) {
+      console.error('TextBlitz: Rollback failed:', error);
+    }
+  }
+
+  /**
+   * Check if element is valid for text expansion
+   */
+  static isValidInputElement(element: HTMLElement): boolean {
     // Skip password fields
     if (element instanceof HTMLInputElement && element.type === 'password') {
-      this.log('TextBlitz: Skipping password field');
       return false;
     }
 
     // Skip hidden fields
     if (element instanceof HTMLInputElement && element.type === 'hidden') {
-      this.log('TextBlitz: Skipping hidden field');
       return false;
     }
 
     // Skip incompatible input types
     if (element instanceof HTMLInputElement) {
-      const incompatibleTypes = ['number', 'date', 'time', 'color', 'range', 'file', 'datetime-local', 'month', 'week'];
+      const incompatibleTypes = [
+        'number', 'date', 'time', 'color', 'range',
+        'file', 'datetime-local', 'month', 'week'
+      ];
       if (incompatibleTypes.includes(element.type)) {
-        this.log('TextBlitz: Skipping incompatible input type:', element.type);
         return false;
       }
     }
 
     // Accept inputs, textareas, and contenteditable
-    const isValid = (
+    return (
       element instanceof HTMLInputElement ||
       element instanceof HTMLTextAreaElement ||
       element.isContentEditable
     );
+  }
 
-    this.log('TextBlitz: isValidInputElement returning:', isValid);
-    return isValid;
+  /**
+   * List all available handlers (for debugging)
+   */
+  static listHandlers(): string[] {
+    return this.registry.listHandlers();
   }
 }
