@@ -171,6 +171,13 @@ export class WysiwygEditor {
             <div class="cmd-desc">Press Tab key</div>
           </div>
         </button>
+        <button type="button" class="command-menu-item" data-cmd="delay">
+          <span class="cmd-icon">⏱️</span>
+          <div>
+            <div class="cmd-name">Delay</div>
+            <div class="cmd-desc">Pause before continuing</div>
+          </div>
+        </button>
       </div>
       <div class="command-category">
         <div class="command-category-title">Forms</div>

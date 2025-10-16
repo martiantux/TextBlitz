@@ -38,7 +38,7 @@ export class StandardHandler extends BaseHandler {
 
     // Handle chunked insertion with keyboard actions
     if (chunks && chunks.length > 0 && actions && actions.length > 0) {
-      return await this.replaceWithChunks(element, beforeTrigger, afterCursor, chunks, actions, trigger, expansion);
+      return await this.replaceWithChunks(element, beforeTrigger, afterCursor, chunks, actions, trigger, expansion, cursorOffset);
     }
 
     // Standard replacement without chunks
@@ -70,7 +70,8 @@ export class StandardHandler extends BaseHandler {
     chunks: string[],
     actions: KeyboardAction[],
     trigger: string,
-    expansion: string
+    expansion: string,
+    cursorOffset?: number
   ): Promise<boolean> {
     this.log(`Replacing with ${chunks.length} chunks and ${actions.length} actions`);
 
@@ -78,6 +79,15 @@ export class StandardHandler extends BaseHandler {
 
     // Insert chunks with actions
     for (let i = 0; i < chunks.length; i++) {
+      // Skip empty chunks
+      if (chunks[i].length === 0 && i < chunks.length - 1) {
+        // Execute action and continue
+        if (i < actions.length) {
+          await this.executeKeyboardAction(element, actions[i]);
+        }
+        continue;
+      }
+
       currentValue += chunks[i];
 
       // Set value
@@ -95,6 +105,17 @@ export class StandardHandler extends BaseHandler {
       // Execute keyboard action after this chunk (if exists)
       if (i < actions.length) {
         await this.executeKeyboardAction(element, actions[i]);
+      }
+    }
+
+    // Apply cursor offset if specified (after all chunks inserted)
+    if (cursorOffset !== undefined) {
+      const finalCursorPos = beforeTrigger.length + cursorOffset;
+      try {
+        element.setSelectionRange(finalCursorPos, finalCursorPos);
+        this.log(`Set cursor to offset ${cursorOffset} (absolute pos ${finalCursorPos})`);
+      } catch (e) {
+        this.log('Failed to set cursor position:', e);
       }
     }
 

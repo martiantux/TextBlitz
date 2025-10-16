@@ -503,6 +503,48 @@
       "usageCount": 0,
       "createdAt": 1697203200000,
       "lastUsed": null
+    },
+    {
+      "id": "test-cursor-delay-fix",
+      "label": "⭐ FIX TEST: {cursor} + {delay} (previously broken)",
+      "trigger": "tcursordelay",
+      "expansion": "Start{cursor} Middle{delay +1s} End",
+      "caseSensitive": false,
+      "enabled": true,
+      "triggerMode": "word",
+      "folder": "Work",
+      "type": "static",
+      "usageCount": 0,
+      "createdAt": 1697203200000,
+      "lastUsed": null
+    },
+    {
+      "id": "test-cursor-tab-fix",
+      "label": "⭐ FIX TEST: {cursor} + {tab} (previously broken)",
+      "trigger": "tcursortab",
+      "expansion": "Field1:{cursor}{tab}Field2",
+      "caseSensitive": false,
+      "enabled": true,
+      "triggerMode": "word",
+      "folder": "Work",
+      "type": "static",
+      "usageCount": 0,
+      "createdAt": 1697203200000,
+      "lastUsed": null
+    },
+    {
+      "id": "test-consecutive-commands",
+      "label": "⭐ FIX TEST: Consecutive commands (empty chunks)",
+      "trigger": "tconsec",
+      "expansion": "A{delay +0.5s}{enter}B",
+      "caseSensitive": false,
+      "enabled": true,
+      "triggerMode": "word",
+      "folder": "Work",
+      "type": "static",
+      "usageCount": 0,
+      "createdAt": 1697203200000,
+      "lastUsed": null
     }
   ]
 }
