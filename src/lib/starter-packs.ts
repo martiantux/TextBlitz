@@ -305,4 +305,69 @@ export const STARTER_PACKS: SnippetPack[] = [
     createdAt: Date.now(),
     updatedAt: Date.now(),
   },
+
+  // 4. Test & Development Pack
+  {
+    id: 'test-dev-pack',
+    name: '🧪 Test & Development',
+    description: 'Comprehensive test suite for all TextBlitz features: {date}, {time}, {clipboard}, {cursor}, {enter}, {tab}, {delay}, forms, and fixes',
+    icon: '🧪',
+    author: 'TextBlitz',
+    version: '1.0.0',
+    tags: ['testing', 'development', 'commands', 'forms'],
+    snippets: [
+      // Date/Time Commands
+      { id: 'test-tdate', label: 'Test: Date default', trigger: 'tdate', expansion: '{date}', caseSensitive: false, enabled: true, triggerMode: 'word', createdAt: Date.now(), usageCount: 0, type: 'static' },
+      { id: 'test-tdateus', label: 'Test: Date US format', trigger: 'tdateus', expansion: '{date:MM/DD/YYYY}', caseSensitive: false, enabled: true, triggerMode: 'word', createdAt: Date.now(), usageCount: 0, type: 'static' },
+      { id: 'test-tdatelong', label: 'Test: Date long format', trigger: 'tdatelong', expansion: '{date:MMMM D, YYYY}', caseSensitive: false, enabled: true, triggerMode: 'word', createdAt: Date.now(), usageCount: 0, type: 'static' },
+      { id: 'test-tdateord', label: 'Test: Date ordinal', trigger: 'tdateord', expansion: '{date:MMMM Do YYYY}', caseSensitive: false, enabled: true, triggerMode: 'word', createdAt: Date.now(), usageCount: 0, type: 'static' },
+      { id: 'test-tdate3m', label: 'Test: Date +3 months', trigger: 't3months', expansion: '{date:MMMM Do YYYY shift +3M}', caseSensitive: false, enabled: true, triggerMode: 'word', createdAt: Date.now(), usageCount: 0, type: 'static' },
+      { id: 'test-tdate1y', label: 'Test: Date -1 year', trigger: 't1year', expansion: '{date shift -1Y}', caseSensitive: false, enabled: true, triggerMode: 'word', createdAt: Date.now(), usageCount: 0, type: 'static' },
+      { id: 'test-tdate7d', label: 'Test: Date +7 days', trigger: 't7days', expansion: '{date shift +7d}', caseSensitive: false, enabled: true, triggerMode: 'word', createdAt: Date.now(), usageCount: 0, type: 'static' },
+      { id: 'test-ttime', label: 'Test: Time default', trigger: 'ttime', expansion: '{time}', caseSensitive: false, enabled: true, triggerMode: 'word', createdAt: Date.now(), usageCount: 0, type: 'static' },
+      { id: 'test-ttime12', label: 'Test: Time 12h', trigger: 'ttime12', expansion: '{time:12h}', caseSensitive: false, enabled: true, triggerMode: 'word', createdAt: Date.now(), usageCount: 0, type: 'static' },
+
+      // Clipboard & Cursor
+      { id: 'test-tclip', label: 'Test: Clipboard', trigger: 'tclip', expansion: '{clipboard}', caseSensitive: false, enabled: true, triggerMode: 'word', createdAt: Date.now(), usageCount: 0, type: 'static' },
+      { id: 'test-tsig', label: 'Test: Cursor positioning', trigger: 'tsig', expansion: 'Best,\n{cursor}\nSent {date}', caseSensitive: false, enabled: true, triggerMode: 'word', createdAt: Date.now(), usageCount: 0, type: 'static' },
+      { id: 'test-cursor-basic', label: 'Test: {cursor} basic', trigger: 'tcursor1', expansion: 'Hello {cursor} world', caseSensitive: false, enabled: true, triggerMode: 'word', createdAt: Date.now(), usageCount: 0, type: 'static' },
+      { id: 'test-cursor-quotes', label: 'Test: {cursor} in quotes', trigger: 'tcursor2', expansion: 'console.log(\'{cursor}\');', caseSensitive: false, enabled: true, triggerMode: 'word', createdAt: Date.now(), usageCount: 0, type: 'static' },
+      { id: 'test-cursor-start', label: 'Test: {cursor} at start', trigger: 'tcursor3', expansion: '{cursor}Start here', caseSensitive: false, enabled: true, triggerMode: 'word', createdAt: Date.now(), usageCount: 0, type: 'static' },
+      { id: 'test-cursor-end', label: 'Test: {cursor} at end', trigger: 'tcursor4', expansion: 'End here{cursor}', caseSensitive: false, enabled: true, triggerMode: 'word', createdAt: Date.now(), usageCount: 0, type: 'static' },
+
+      // Keyboard Commands
+      { id: 'test-tkeyboard', label: 'Test: Keyboard automation', trigger: 'tkeyboard', expansion: 'out {enter} {delay +0.3s} {tab} left {enter} {tab} money {enter}', caseSensitive: false, enabled: true, triggerMode: 'word', createdAt: Date.now(), usageCount: 0, type: 'static' },
+      { id: 'test-enter-basic', label: 'Test: {enter} newlines', trigger: 'tenter1', expansion: 'Line 1{enter}Line 2{enter}Line 3', caseSensitive: false, enabled: true, triggerMode: 'word', createdAt: Date.now(), usageCount: 0, type: 'static' },
+      { id: 'test-tab-basic', label: 'Test: {tab} navigation', trigger: 'ttab1', expansion: 'Field1{tab}Field2{tab}Field3', caseSensitive: false, enabled: true, triggerMode: 'word', createdAt: Date.now(), usageCount: 0, type: 'static' },
+      { id: 'test-delay-short', label: 'Test: {delay} 0.5s', trigger: 'tdelay1', expansion: 'Fast{delay +0.5s}Slow', caseSensitive: false, enabled: true, triggerMode: 'word', createdAt: Date.now(), usageCount: 0, type: 'static' },
+      { id: 'test-delay-ms', label: 'Test: {delay} milliseconds', trigger: 'tdelay2', expansion: 'Before{delay +500ms}After', caseSensitive: false, enabled: true, triggerMode: 'word', createdAt: Date.now(), usageCount: 0, type: 'static' },
+      { id: 'test-delaylong', label: 'Test: {delay} 3 seconds', trigger: 'tdelay3s', expansion: 'Before delay{delay +3s}After 3 seconds', caseSensitive: false, enabled: true, triggerMode: 'word', createdAt: Date.now(), usageCount: 0, type: 'static' },
+
+      // Form Fields
+      { id: 'test-formtext', label: 'Test: Form text input', trigger: 'tformtext', expansion: 'Hello {formtext: label=Name}, how are you today?', caseSensitive: false, enabled: true, triggerMode: 'word', createdAt: Date.now(), usageCount: 0, type: 'static' },
+      { id: 'test-formmenu', label: 'Test: Form dropdown', trigger: 'tformmenu', expansion: 'Status: {formmenu: label=Status; options=Active,Pending,Closed}', caseSensitive: false, enabled: true, triggerMode: 'word', createdAt: Date.now(), usageCount: 0, type: 'static' },
+      { id: 'test-formdate', label: 'Test: Form date picker', trigger: 'tformdate', expansion: 'Due date: {formdate: label=Due Date}', caseSensitive: false, enabled: true, triggerMode: 'word', createdAt: Date.now(), usageCount: 0, type: 'static' },
+      { id: 'test-formtoggle', label: 'Test: Form checkbox', trigger: 'tformtoggle', expansion: 'Include signature: {formtoggle: label=Include Signature}', caseSensitive: false, enabled: true, triggerMode: 'word', createdAt: Date.now(), usageCount: 0, type: 'static' },
+      { id: 'test-formpara', label: 'Test: Form paragraph', trigger: 'tformpara', expansion: 'Notes:\n{formparagraph: label=Notes}', caseSensitive: false, enabled: true, triggerMode: 'word', createdAt: Date.now(), usageCount: 0, type: 'static' },
+      { id: 'test-formmulti', label: 'Test: Multiple forms', trigger: 'tformmulti', expansion: 'Customer: {formtext: label=Customer Name}\nStatus: {formmenu: label=Status; options=New,In Progress,Resolved}\nDue: {formdate: label=Due Date}\nNotes: {formparagraph: label=Notes}', caseSensitive: false, enabled: true, triggerMode: 'word', createdAt: Date.now(), usageCount: 0, type: 'static' },
+      { id: 'test-formfull', label: 'Test: Full form automation', trigger: 'tformfull', expansion: 'out {enter} {delay +0.3s} {tab} left {enter} {tab} money {enter} {tab} OUTBOUND', caseSensitive: false, enabled: true, triggerMode: 'word', createdAt: Date.now(), usageCount: 0, type: 'static' },
+
+      // Complex Combinations
+      { id: 'test-reassess', label: 'Test: Clipboard + Date math', trigger: 'treassess', expansion: '{clipboard} REASSESS IN 3 MONTHS - NEXT POSSIBLE ASSESSMENT DATE {date:MMMM Do YYYY shift +3M}', caseSensitive: false, enabled: true, triggerMode: 'word', createdAt: Date.now(), usageCount: 0, type: 'static' },
+      { id: 'test-combo', label: 'Test: Complex combo', trigger: 'tcombo', expansion: 'Hi {clipboard},{cursor}\n\nFollow up on {date:MMMM Do YYYY shift +7d}{tab}{tab}', caseSensitive: false, enabled: true, triggerMode: 'word', createdAt: Date.now(), usageCount: 0, type: 'static' },
+      { id: 'test-cursor-date', label: 'Test: {cursor} + {date}', trigger: 'tcursordate', expansion: 'Best regards,\n{cursor}\nSent on {date}', caseSensitive: false, enabled: true, triggerMode: 'word', createdAt: Date.now(), usageCount: 0, type: 'static' },
+      { id: 'test-cursor-clipboard', label: 'Test: {cursor} + {clipboard}', trigger: 'tcursorclip', expansion: 'Pasted: {clipboard}\nYour input: {cursor}', caseSensitive: false, enabled: true, triggerMode: 'word', createdAt: Date.now(), usageCount: 0, type: 'static' },
+      { id: 'test-enter-tab-combo', label: 'Test: {enter} + {tab}', trigger: 'tentertab', expansion: 'Username{tab}Password{enter}Submit', caseSensitive: false, enabled: true, triggerMode: 'word', createdAt: Date.now(), usageCount: 0, type: 'static' },
+      { id: 'test-all-commands', label: 'Test: All commands', trigger: 'tallcmds', expansion: 'Name: {cursor}{tab}Date: {date}{enter}Time: {time}{delay +1s}Done!', caseSensitive: false, enabled: true, triggerMode: 'word', createdAt: Date.now(), usageCount: 0, type: 'static' },
+      { id: 'test-function-cursor', label: 'Test: Function template', trigger: 'tfunc', expansion: 'function {cursor}() {\n  \n}', caseSensitive: false, enabled: true, triggerMode: 'word', createdAt: Date.now(), usageCount: 0, type: 'static' },
+      { id: 'test-email-cursor', label: 'Test: Email signature', trigger: 'temail', expansion: 'Hi,\n\n{cursor}\n\nBest regards,\nYour Name\n{date}', caseSensitive: false, enabled: true, triggerMode: 'word', createdAt: Date.now(), usageCount: 0, type: 'static' },
+
+      // Regression Tests (previously broken features that were fixed)
+      { id: 'test-cursor-delay-fix', label: '⭐ FIX TEST: {cursor} + {delay}', trigger: 'tcursordelay', expansion: 'Start{cursor} Middle{delay +1s} End', caseSensitive: false, enabled: true, triggerMode: 'word', createdAt: Date.now(), usageCount: 0, type: 'static' },
+      { id: 'test-cursor-tab-fix', label: '⭐ FIX TEST: {cursor} + {tab}', trigger: 'tcursortab', expansion: 'Field1:{cursor}{tab}Field2', caseSensitive: false, enabled: true, triggerMode: 'word', createdAt: Date.now(), usageCount: 0, type: 'static' },
+      { id: 'test-consecutive-commands', label: '⭐ FIX TEST: Consecutive commands', trigger: 'tconsec', expansion: 'A{delay +0.5s}{enter}B', caseSensitive: false, enabled: true, triggerMode: 'word', createdAt: Date.now(), usageCount: 0, type: 'static' },
+    ],
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  },
 ];
