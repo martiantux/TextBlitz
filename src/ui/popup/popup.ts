@@ -82,13 +82,18 @@ class PopupUI {
       this.submitBugReport();
     });
 
-    // Update log preview when checkbox changes
+    // Update log preview when checkboxes change
     document.getElementById('bug-include-logs')?.addEventListener('change', (e) => {
       const checkbox = e.target as HTMLInputElement;
       const preview = document.getElementById('log-preview');
       if (preview) {
         preview.style.display = checkbox.checked ? 'block' : 'none';
       }
+    });
+
+    // Update preview when snippet checkbox changes
+    document.getElementById('bug-include-snippet')?.addEventListener('change', () => {
+      this.loadLogPreview();
     });
   }
 
@@ -116,12 +121,33 @@ class PopupUI {
     document.getElementById('bug-report-modal')?.classList.remove('active');
   }
 
-  private loadLogPreview() {
+  private async loadLogPreview() {
     const preview = document.getElementById('log-preview');
     if (!preview) return;
 
-    const logs = logger.getLogsPreview();
-    preview.textContent = logs;
+    // Check if snippet should be included
+    const includeSnippet = (document.getElementById('bug-include-snippet') as HTMLInputElement)?.checked || false;
+
+    let snippetData = null;
+    if (includeSnippet) {
+      const snippets = await StorageManager.getSnippets();
+      const recentSnippets = Object.values(snippets)
+        .filter(s => s.lastUsed)
+        .sort((a, b) => (b.lastUsed || 0) - (a.lastUsed || 0));
+
+      if (recentSnippets.length > 0) {
+        snippetData = {
+          trigger: recentSnippets[0].trigger,
+          label: recentSnippets[0].label,
+          expansion: recentSnippets[0].expansion,
+          type: recentSnippets[0].type,
+        };
+      }
+    }
+
+    // Show EXACTLY what will be submitted (for PII review)
+    const formatted = logger.formatForGitHub(includeSnippet, snippetData);
+    preview.textContent = formatted;
   }
 
   private async submitBugReport() {
@@ -139,7 +165,7 @@ class PopupUI {
 
     try {
       submitBtn.disabled = true;
-      this.showStatus('error', '⏳ Submitting bug report...');
+      this.showStatus('error', '⏳ Preparing bug report...');
 
       // Build report
       let report = `## User Description\n\n`;
@@ -168,34 +194,52 @@ class PopupUI {
       // Add formatted logs
       report += logger.formatForGitHub(includeSnippet, snippetData);
 
-      // Submit to serverless proxy
-      const response = await fetch(BUG_REPORT_API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          title: `Bug: ${whatHappened.substring(0, 60)}...`,
-          body: report,
-        }),
-      });
+      // Check if automated submission is configured
+      const isProxyConfigured = !BUG_REPORT_API_URL.includes('YOUR_VERCEL_FUNCTION_URL');
 
-      if (!response.ok) {
-        throw new Error(`Server returned ${response.status}`);
+      if (isProxyConfigured) {
+        try {
+          // Try automated submission first
+          this.showStatus('error', '⏳ Submitting to GitHub...');
+          const response = await fetch(BUG_REPORT_API_URL, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              title: `Bug: ${whatHappened.substring(0, 60)}...`,
+              body: report,
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`Server returned ${response.status}`);
+          }
+
+          const result = await response.json();
+
+          this.showStatus('success', `✅ Bug report submitted! Issue #${result.issueNumber || 'created'}`);
+
+          // Close modal after 2 seconds
+          setTimeout(() => {
+            this.hideBugReportModal();
+          }, 2000);
+          return;
+        } catch (proxyError) {
+          console.warn('Automated submission failed, falling back to clipboard:', proxyError);
+          // Fall through to clipboard fallback
+        }
       }
 
-      const result = await response.json();
+      // Fallback: Copy to clipboard
+      await navigator.clipboard.writeText(report);
+      this.showStatus('success', '📋 Report copied to clipboard! Please paste at:\ngithub.com/martiantux/TextBlitz/issues/new');
 
-      this.showStatus('success', `✅ Bug report submitted! Issue #${result.issueNumber || 'created'}`);
-
-      // Close modal after 2 seconds
-      setTimeout(() => {
-        this.hideBugReportModal();
-      }, 2000);
+      // Keep modal open so user can see the instructions
 
     } catch (error) {
       console.error('Bug report submission failed:', error);
-      this.showStatus('error', `❌ Failed to submit: ${error instanceof Error ? error.message : 'Unknown error'}. You can report directly at github.com/martiantux/TextBlitz/issues`);
+      this.showStatus('error', `❌ Failed: ${error instanceof Error ? error.message : 'Unknown error'}.\nTry manually reporting at github.com/martiantux/TextBlitz/issues`);
     } finally {
       submitBtn.disabled = false;
     }

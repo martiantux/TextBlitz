@@ -25,7 +25,7 @@ class TextBlitzExpander {
   private checkTimeout: number | null = null;
 
   constructor() {
-    this.trie = new SnippetTrie(false);
+    this.trie = new SnippetTrie();
     this.formPopup = new FormPopup();
     this.lockManager = ElementLockManager.getInstance();
     this.initialize();
@@ -256,7 +256,9 @@ class TextBlitzExpander {
           }
         },
         () => {
-          console.log('TextBlitz: Form cancelled by user');
+          if (this.settings?.debugMode) {
+            console.log('TextBlitz: Form cancelled by user');
+          }
           resolve();
         }
       );

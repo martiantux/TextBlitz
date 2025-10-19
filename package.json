@@ -1,18 +1,27 @@
 {
   "name": "textblitz",
-  "version": "0.8.7",
+  "version": "0.9.0",
   "description": "Lightning-fast text expansion for Chrome. Free and open source.",
   "type": "module",
   "scripts": {
     "dev": "npm run build && vite build --watch",
     "build": "vite build && vite build --config vite.config.content.ts",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "test:run": "vitest run"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/martiantux/TextBlitz.git"
   },
-  "keywords": ["text-expansion", "productivity", "chrome-extension", "snippets"],
+  "keywords": [
+    "text-expansion",
+    "productivity",
+    "chrome-extension",
+    "snippets"
+  ],
   "author": "",
   "license": "MIT",
   "bugs": {
@@ -20,9 +29,14 @@
   },
   "homepage": "https://github.com/martiantux/TextBlitz#readme",
   "devDependencies": {
+    "@playwright/test": "^1.56.1",
     "@types/chrome": "^0.1.24",
     "@vitejs/plugin-react": "^5.0.4",
+    "@vitest/ui": "^3.2.4",
+    "happy-dom": "^20.0.5",
     "typescript": "^5.9.3",
-    "vite": "^7.1.9"
+    "vite": "^7.1.9",
+    "vitest": "^3.2.4",
+    "vitest-chrome": "^0.1.0"
   }
 }

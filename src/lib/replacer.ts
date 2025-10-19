@@ -3,6 +3,7 @@ import { CommandParser } from './command-parser';
 import { CaseTransformer } from './case-transform';
 import { logger } from './logger';
 import { HandlerRegistry } from './handlers/handler-registry';
+import { ElementLockManager } from './element-lock';
 
 /**
  * NEW TextReplacer - Uses modular handler system
@@ -63,8 +64,11 @@ export class TextReplacer {
         return false;
       }
 
+      // Strip note commands first (they are comments, not output)
+      let processedExpansion = CommandParser.stripNotes(expansion);
+
       // Process commands in expansion
-      let processedExpansion = await CommandParser.processCommands(expansion);
+      processedExpansion = await CommandParser.processCommands(processedExpansion);
 
       // Apply case transformation
       if (caseTransform && caseTransform !== 'none') {
@@ -154,6 +158,9 @@ export class TextReplacer {
       logger.error('fail', 'All handlers failed, rolling back', context);
       this.rollback(element, contentBefore);
 
+      // Mark element as failed to prevent retry loops
+      ElementLockManager.getInstance().markFailed(element);
+
       return false;
 
     } catch (error) {
@@ -163,6 +170,10 @@ export class TextReplacer {
       };
       logger.error('fail', 'Fatal error in replace', errorContext);
       console.error('TextBlitz: Fatal error:', error);
+
+      // Mark element as failed to prevent retry loops
+      ElementLockManager.getInstance().markFailed(element);
+
       return false;
     }
   }

@@ -1,6 +1,6 @@
 // Keyboard action types
 export interface KeyboardAction {
-  type: 'enter' | 'tab' | 'delay';
+  type: 'enter' | 'tab' | 'delay' | 'key';
   options?: string;
 }
 
@@ -110,6 +110,9 @@ export abstract class BaseHandler implements ReplacementHandler {
       case 'delay':
         await this.executeDelay(action.options);
         break;
+      case 'key':
+        await this.executeKey(element, action.options);
+        break;
     }
   }
 
@@ -175,5 +178,34 @@ export abstract class BaseHandler implements ReplacementHandler {
 
     this.log(`Executing {delay} for ${delayMs}ms`);
     await this.delay(delayMs);
+  }
+
+  // Execute {key: X} command
+  private async executeKey(element: HTMLElement, keyName?: string): Promise<void> {
+    if (!keyName) {
+      console.warn('TextBlitz: {key} command requires a key name');
+      return;
+    }
+
+    // Import CommandParser for key mapping
+    const { CommandParser } = await import('../command-parser');
+    const keyInfo = CommandParser.normalizeKeyName(keyName);
+
+    if (!keyInfo) {
+      console.warn(`TextBlitz: Unknown key name: ${keyName}`);
+      return;
+    }
+
+    this.log(`Executing {key: ${keyName}} → ${keyInfo.code}`);
+
+    // Dispatch keyboard event
+    const keyEvent = new KeyboardEvent('keydown', {
+      key: keyInfo.key,
+      code: keyInfo.code,
+      keyCode: keyInfo.keyCode,
+      bubbles: true,
+      cancelable: true
+    });
+    element.dispatchEvent(keyEvent);
   }
 }

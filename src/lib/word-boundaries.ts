@@ -10,7 +10,8 @@ const WORD_BOUNDARY_CHARS = new Set([
 ]);
 
 export function isWordBoundary(char: string | undefined): boolean {
-  if (!char || char.length === 0) return true;
+  if (char === undefined) return true; // Start or end of text
+  if (char.length === 0) return true; // Empty string edge case
   return WORD_BOUNDARY_CHARS.has(char);
 }
 
@@ -34,8 +35,11 @@ export function shouldTriggerMatch(
 
     case 'word-both':
       // Started AND ended by word break - trigger must be isolated word
-      // "btw" only works when surrounded: " btw " or at boundaries
-      return isWordBoundary(charBefore) && isWordBoundary(charAfter);
+      // "btw " works (with space after), "btw" alone doesn't (end of text)
+      // Start-of-text is OK, but end-of-text requires actual delimiter
+      const beforeBoundary = isWordBoundary(charBefore);
+      const afterBoundary = charAfter !== undefined && isWordBoundary(charAfter);
+      return beforeBoundary && afterBoundary;
 
     default:
       console.warn('Unknown trigger mode:', triggerMode);

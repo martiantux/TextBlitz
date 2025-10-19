@@ -448,7 +448,7 @@ class OptionsPage {
     const { shouldTriggerMatch } = await import('../../lib/word-boundaries');
 
     const snippets = await StorageManager.getSnippets();
-    const trie = new SnippetTrie(false);
+    const trie = new SnippetTrie();
     trie.rebuild(snippets);
 
     let checkTimeout: number | null = null;

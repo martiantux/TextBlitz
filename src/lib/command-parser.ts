@@ -1,11 +1,11 @@
 // Command parser for {command:options} syntax
-// Supports {date}, {time}, {clipboard}, {cursor}, {enter}, {tab}, {delay}
+// Supports {date}, {time}, {clipboard}, {cursor}, {enter}, {tab}, {delay}, {note}, {site}, {key}
 // Also supports form commands: {formtext}, {formparagraph}, {formmenu}, {formdate}, {formtoggle}
 
 import type { FormField } from './types';
 
 export interface ParsedCommand {
-  type: 'date' | 'time' | 'clipboard' | 'cursor' | 'enter' | 'tab' | 'delay' | 'form';
+  type: 'date' | 'time' | 'clipboard' | 'cursor' | 'enter' | 'tab' | 'delay' | 'site' | 'key' | 'form';
   options?: string;
   startIndex: number;
   endIndex: number;
@@ -15,10 +15,48 @@ export interface ParsedCommand {
 
 export class CommandParser {
   // Match {command} or {command:options} or {command options}
-  private static readonly COMMAND_REGEX = /\{(date|time|clipboard|cursor|enter|tab|delay)(?:[\s:]([^}]+))?\}/g;
+  private static readonly COMMAND_REGEX = /\{(date|time|clipboard|cursor|enter|tab|delay|site|key)(?:[\s:]([^}]+))?\}/g;
 
   // Match form commands: {formtext: label=Name}, {formmenu: label=Status; options=Active,Inactive}
   private static readonly FORM_COMMAND_REGEX = /\{(formtext|formparagraph|formmenu|formdate|formtoggle):([^}]+)\}/g;
+
+  // Match note commands: {note}...{endnote} or {note: inline text}
+  // Block form: {note}...{endnote} (without colon after note)
+  private static readonly NOTE_BLOCK_REGEX = /\{note\}(.*?)\{endnote\}/gs;
+  // Inline form: {note: text} (with colon)
+  private static readonly NOTE_INLINE_REGEX = /\{note:\s*[^}]*\}/g;
+
+  // Key name to KeyboardEvent code mapping
+  static readonly KEY_MAP: Record<string, {code: string; key: string; keyCode?: number}> = {
+    'enter': { code: 'Enter', key: 'Enter', keyCode: 13 },
+    'tab': { code: 'Tab', key: 'Tab', keyCode: 9 },
+    'escape': { code: 'Escape', key: 'Escape', keyCode: 27 },
+    'esc': { code: 'Escape', key: 'Escape', keyCode: 27 },
+    'backspace': { code: 'Backspace', key: 'Backspace', keyCode: 8 },
+    'delete': { code: 'Delete', key: 'Delete', keyCode: 46 },
+    'arrowup': { code: 'ArrowUp', key: 'ArrowUp', keyCode: 38 },
+    'arrowdown': { code: 'ArrowDown', key: 'ArrowDown', keyCode: 40 },
+    'arrowleft': { code: 'ArrowLeft', key: 'ArrowLeft', keyCode: 37 },
+    'arrowright': { code: 'ArrowRight', key: 'ArrowRight', keyCode: 39 },
+    'home': { code: 'Home', key: 'Home', keyCode: 36 },
+    'end': { code: 'End', key: 'End', keyCode: 35 },
+    'pageup': { code: 'PageUp', key: 'PageUp', keyCode: 33 },
+    'pagedown': { code: 'PageDown', key: 'PageDown', keyCode: 34 },
+    'space': { code: 'Space', key: ' ', keyCode: 32 },
+    // Function keys
+    'f1': { code: 'F1', key: 'F1', keyCode: 112 },
+    'f2': { code: 'F2', key: 'F2', keyCode: 113 },
+    'f3': { code: 'F3', key: 'F3', keyCode: 114 },
+    'f4': { code: 'F4', key: 'F4', keyCode: 115 },
+    'f5': { code: 'F5', key: 'F5', keyCode: 116 },
+    'f6': { code: 'F6', key: 'F6', keyCode: 117 },
+    'f7': { code: 'F7', key: 'F7', keyCode: 118 },
+    'f8': { code: 'F8', key: 'F8', keyCode: 119 },
+    'f9': { code: 'F9', key: 'F9', keyCode: 120 },
+    'f10': { code: 'F10', key: 'F10', keyCode: 121 },
+    'f11': { code: 'F11', key: 'F11', keyCode: 122 },
+    'f12': { code: 'F12', key: 'F12', keyCode: 123 },
+  };
 
   // Parse all commands from text
   static parse(text: string): ParsedCommand[] {
@@ -112,6 +150,41 @@ export class CommandParser {
     return commands.map(cmd => cmd.formField!).filter(Boolean);
   }
 
+  // Strip note commands from text (they are comments, not output)
+  // Supports both {note}...{endnote} blocks and {note: inline text}
+  static stripNotes(text: string): string {
+    return text
+      .replace(this.NOTE_BLOCK_REGEX, '') // Remove {note}...{endnote} blocks
+      .replace(this.NOTE_INLINE_REGEX, ''); // Remove {note: text} inline
+  }
+
+  // Get site information based on parameter
+  // Supports: domain, title, url, selection
+  static getSiteInfo(param: string): string {
+    const normalized = param.toLowerCase().trim();
+
+    switch (normalized) {
+      case 'domain':
+        return window.location.hostname;
+      case 'title':
+        return document.title;
+      case 'url':
+        return window.location.href;
+      case 'selection':
+        return window.getSelection()?.toString() || '';
+      default:
+        console.warn(`TextBlitz: Unknown site parameter: ${param}`);
+        return '';
+    }
+  }
+
+  // Normalize key name and return key info from KEY_MAP
+  // Returns null if key not found
+  static normalizeKeyName(keyName: string): {code: string; key: string; keyCode?: number} | null {
+    const normalized = keyName.toLowerCase().trim();
+    return this.KEY_MAP[normalized] || null;
+  }
+
   // Get ordinal suffix for day (1st, 2nd, 3rd, 4th, etc.)
   private static getOrdinalSuffix(day: number): string {
     if (day >= 11 && day <= 13) return 'th';
@@ -174,17 +247,26 @@ export class CommandParser {
     const monthName = workingDate.toLocaleDateString('en-US', { month: 'long' });
     const monthNameShort = workingDate.toLocaleDateString('en-US', { month: 'short' });
 
-    // Format replacements (order matters - Do before D, MMMM before MM)
-    return format
-      .replace('YYYY', String(year))
-      .replace('YY', String(year).slice(-2))
-      .replace('MMMM', monthName)
-      .replace('MMM', monthNameShort)
-      .replace('Do', `${day}${this.getOrdinalSuffix(day)}`)
-      .replace('MM', month)
-      .replace('M', String(workingDate.getMonth() + 1))
-      .replace('DD', dayPadded)
-      .replace('D', String(day));
+    // Format replacements - match all patterns and replace simultaneously
+    // This avoids the issue where "MMMM" → "March" then "M" in "March" gets replaced
+    const replacements: Record<string, string> = {
+      'YYYY': String(year),
+      'YY': String(year).slice(-2),
+      'MMMM': monthName,
+      'MMM': monthNameShort,
+      'MM': month,
+      'M': String(workingDate.getMonth() + 1),
+      'Do': `${day}${this.getOrdinalSuffix(day)}`,
+      'DD': dayPadded,
+      'D': String(day),
+    };
+
+    // Build regex that matches all patterns (longest first)
+    const patterns = Object.keys(replacements).sort((a, b) => b.length - a.length);
+    const regex = new RegExp(patterns.join('|'), 'g');
+
+    // Replace all matches at once
+    return format.replace(regex, (match) => replacements[match] || match);
   }
 
   // Format a time based on format string
@@ -260,10 +342,14 @@ export class CommandParser {
             replacement = cmd.rawMatch; // Keep original if clipboard fails
           }
           break;
+        case 'site':
+          replacement = this.getSiteInfo(cmd.options || 'url');
+          break;
         case 'cursor':
         case 'enter':
         case 'tab':
         case 'delay':
+        case 'key':
           // Don't replace these - handled separately by TextReplacer
           continue;
         default:
@@ -276,19 +362,19 @@ export class CommandParser {
     return result;
   }
 
-  // Extract keyboard actions from text (enter, tab, delay)
+  // Extract keyboard actions from text (enter, tab, delay, key)
   // Returns {text: cleanText, actions: [{type, options, position}]}
   static extractKeyboardActions(text: string): {
     text: string;
-    actions: Array<{ type: 'enter' | 'tab' | 'delay'; options?: string; position: number }>;
+    actions: Array<{ type: 'enter' | 'tab' | 'delay' | 'key'; options?: string; position: number }>;
   } {
     const commands = this.parse(text);
-    const actions: Array<{ type: 'enter' | 'tab' | 'delay'; options?: string; position: number }> = [];
+    const actions: Array<{ type: 'enter' | 'tab' | 'delay' | 'key'; options?: string; position: number }> = [];
     let result = text;
     let offset = 0;
 
     for (const cmd of commands) {
-      if (cmd.type === 'enter' || cmd.type === 'tab' || cmd.type === 'delay') {
+      if (cmd.type === 'enter' || cmd.type === 'tab' || cmd.type === 'delay' || cmd.type === 'key') {
         // Remove the command from text and track position
         const position = cmd.startIndex - offset;
         actions.push({ type: cmd.type, options: cmd.options, position });
@@ -305,11 +391,11 @@ export class CommandParser {
   // Example: "A{delay +1s}B{tab}C" → chunks: ["A", "B", "C"], actions: [delay, tab]
   static splitTextByKeyboardActions(text: string): {
     chunks: string[];
-    actions: Array<{ type: 'enter' | 'tab' | 'delay'; options?: string }>;
+    actions: Array<{ type: 'enter' | 'tab' | 'delay' | 'key'; options?: string }>;
   } {
     const commands = this.parse(text);
     const keyboardCommands = commands.filter(
-      cmd => cmd.type === 'enter' || cmd.type === 'tab' || cmd.type === 'delay'
+      cmd => cmd.type === 'enter' || cmd.type === 'tab' || cmd.type === 'delay' || cmd.type === 'key'
     );
 
     if (keyboardCommands.length === 0) {
@@ -317,7 +403,7 @@ export class CommandParser {
     }
 
     const chunks: string[] = [];
-    const actions: Array<{ type: 'enter' | 'tab' | 'delay'; options?: string }> = [];
+    const actions: Array<{ type: 'enter' | 'tab' | 'delay' | 'key'; options?: string }> = [];
     let lastIndex = 0;
 
     for (const cmd of keyboardCommands) {

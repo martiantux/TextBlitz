@@ -1,2 +1,2 @@
-const s=new Set([" ","	",`
-`,"\r",".",",",";",":","!","?","-","_","(",")","[","]","{","}",'"',"'","/","\\","|","<",">"]);function r(n){return!n||n.length===0?!0:s.has(n)}function a(n,c,e,t){const o=n.length>0?n[n.length-1]:void 0,u=e.length>0?e[0]:void 0;switch(t){case"anywhere":return!0;case"word":return r(o);case"word-both":return r(o)&&r(u);default:return console.warn("Unknown trigger mode:",t),!1}}export{r as isWordBoundary,a as shouldTriggerMatch};
+const c=new Set([" ","	",`
+`,"\r",".",",",";",":","!","?","-","_","(",")","[","]","{","}",'"',"'","/","\\","|","<",">"]);function n(r){return r===void 0||r.length===0?!0:c.has(r)}function i(r,d,e,o){const t=r.length>0?r[r.length-1]:void 0,u=e.length>0?e[0]:void 0;switch(o){case"anywhere":return!0;case"word":return n(t);case"word-both":const s=n(t),a=u!==void 0&&n(u);return s&&a;default:return console.warn("Unknown trigger mode:",o),!1}}export{n as isWordBoundary,i as shouldTriggerMatch};

@@ -4,12 +4,14 @@ node_modules/
 .DS_Store
 .vscode/
 *.zip
-HANDOVER.md
-CLAUDE.md
+
+# Internal/session docs (not for public repo)
+HANDOVER*.md
+*_CHECKLIST.md
+*CHECKLIST.md
+BETA_*.md
+TESTING_*.md
+*_REVIEW.md
+*_STRATEGY.md
 .claude/
-MVP_CHECKLIST.md
-TESTING_CONTENTEDITABLE.md
-BETA_CHECKLIST.md
-TESTING.md
-TESTING_CHECKLIST.md
-TESTING-PLAN.md
+CLAUDE.md

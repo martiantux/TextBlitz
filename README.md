@@ -22,7 +22,7 @@ Built for anyone who types the same things repeatedly.
 
 ---
 
-## ✨ Current Features (v0.8.0)
+## ✨ Current Features (v0.9.0)
 
 ### What Works Now
 - ⚡ **Text expansion** - Works in all input types (text, email, search, textarea, etc.)
@@ -35,6 +35,9 @@ Built for anyone who types the same things repeatedly.
 - 📋 **{clipboard} command** - Insert clipboard content into snippets
 - ⌨️ **{enter} & {tab}** - Simulate keyboard presses for form automation
 - ⏱️ **{delay}** - Pause between actions ({delay +0.3s} or {delay +300ms})
+- 🔑 **{key}** - Simulate keyboard events ({key: Escape}, {key: ArrowDown}, {key: F5})
+- 📝 **{note}** - Internal comments stripped from output ({note: comment} or {note}...{endnote})
+- 🌐 **{site}** - Webpage context ({site: domain|title|url|selection})
 - 🤖 **LLM-powered snippets** - 4 providers (Groq, OpenAI, Anthropic, Gemini), 8 models
 - ✨ **Snippet generator** - Create snippets from natural language descriptions
 - 💰 **Usage & cost tracking** - Monitor API usage, tokens, and estimated costs per provider
@@ -50,6 +53,7 @@ Built for anyone who types the same things repeatedly.
 - 💾 **Import/Export** - Backup and restore your snippets (including individual folders)
 - 🚀 **Fast matching** - Trie data structure for O(m) lookup time
 - 🔒 **Privacy-first** - Your snippets never leave your computer, API keys stored locally
+- 🧪 **Test coverage** - 230 unit tests passing, comprehensive error handling
 - 📈 **Usage tracking** - See which snippets you use most
 - 🐛 **Debug mode** - Optional verbose logging for troubleshooting
 - 📋 **Snippet duplication** - Clone existing snippets with one click
@@ -59,11 +63,13 @@ Built for anyone who types the same things repeatedly.
 - 🔄 **Case transformation** - 6 modes including match trigger case (btw → "by the way", BTW → "BY THE WAY")
 - 📦 **Snippet Packs** - Curated collections for developers, customer service, ADHD productivity, and more
 
-### Current Status (v0.8.0)
-- ✅ **Cross-site compatibility** - Works on Google Docs, ChatGPT, Discord, Gmail, GitHub, Reddit, and all standard inputs
+### Current Status (v0.9.0)
+- ✅ **Beta ready** - 230 unit tests passing, comprehensive error handling
+- ✅ **Cross-site compatibility** - Works on Google Docs, ChatGPT, Claude.ai, Discord, Gmail, GitHub, Reddit
 - ✅ **Reliable expansion** - Clean trigger deletion, no doubling, proper cursor positioning
 - ✅ **Professional editor** - Full-page WYSIWYG editor with drag-and-drop command pills
-- ✅ **Production ready** - Tested on major sites, defensive error handling
+- ✅ **Bug reporting** - Built-in debug report generation for GitHub issues
+- ✅ **Production ready** - Tested on major sites, defensive error handling, modular architecture
 
 ### Coming Soon (see ROADMAP.md)
 - 💡 **Inline tooltips** - Contextual help without cluttering UI (v0.9.0+)
@@ -292,25 +298,23 @@ npm run build
 
 See [ROADMAP.md](./ROADMAP.md) for detailed feature plans and version milestones.
 
-**v0.8.0 - Complete! ✅ WYSIWYG Editor**
-- **Full-page snippet editor:** Dedicated editing page with rich formatting tools
-- **WYSIWYG toolbar:** Bold, italic, underline, strikethrough, font sizes
-- **Drag-and-drop command pills:** Reorder commands by dragging within editor
-- **Command insertion dropdown:** Organized categories (Basic, Keyboard, Forms)
-- **Professional UI:** Consistent design system matching options page theme
-- **Dark mode support:** Editor inherits theme preference automatically
-- **All previous features:** Reliability improvements, structured logging, error reporting
+**v0.9.0 - Beta Ready! ✅ Testing & Stability**
+- **Test infrastructure:** 230 unit tests passing, comprehensive coverage
+- **New commands:** {note} for comments, {site} for webpage context, {key} for keyboard events
+- **Bug reporting:** Built-in debug report generation for GitHub issues
+- **Architecture refinements:** Modular handler system, comprehensive error handling
+- **Cross-site validation:** Tested on Google Docs, Gmail, ChatGPT, Discord, GitHub, Reddit
+- **Production hardening:** Element locking, rollback mechanisms, defensive coding
 
-**Next Up - v0.9.0: Beta Testing & Site Compatibility**
-- Better contenteditable support (Gmail, Google Docs, Slack)
-- Multi-node text handling and execCommand fallback
-- Friend beta testing for real-world validation
-- Performance testing with 100+ snippets
-- Bug fixes and edge cases
+**Next Up - Friend Beta Testing**
+- Distribute v0.9.0 to limited beta testers
+- Gather real-world usage feedback
+- Fix reported bugs and edge cases
+- Performance validation with heavy usage
 
 **Road to v1.0.0 Chrome Web Store:**
-- **v0.9.0 Beta**: ContentEditable improvements, friend testing, bug fixes
-- **v1.0.0**: Final polish & Chrome Web Store launch 🚀
+- **v0.9.x**: Beta iterations, integration tests, final polish
+- **v1.0.0**: Chrome Web Store launch 🚀
 
 **Post-Launch Power Features:**
 - **v1.1.0+**: Conditionals, formulas, snippet chaining

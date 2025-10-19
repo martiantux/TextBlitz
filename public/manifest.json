@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "TextBlitz",
-  "version": "0.8.7",
-  "description": "Lightning-fast text expansion. No paywalls, no BS. Just free, open-source productivity.",
+  "version": "0.9.0",
+  "description": "Lightning-fast text expansion. BETA - report bugs via extension popup!",
   "permissions": [
     "storage",
     "clipboardRead",

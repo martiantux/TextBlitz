@@ -8,24 +8,21 @@ class TrieNode {
 
 export class SnippetTrie {
   private root: TrieNode = new TrieNode();
-  private caseSensitive: boolean;
 
-  constructor(caseSensitive = false) {
-    this.caseSensitive = caseSensitive;
-  }
-
-  private normalizeKey(char: string): string {
-    return this.caseSensitive ? char : char.toLowerCase();
+  constructor() {
+    // Trie is always case-insensitive for fast lookups
+    // Per-snippet case sensitivity is handled in expander.ts
   }
 
   insert(snippet: Snippet): void {
     if (!snippet.enabled) return;
 
-    const trigger = this.caseSensitive ? snippet.trigger : snippet.trigger.toLowerCase();
+    // Always normalize to lowercase for trie storage
+    const trigger = snippet.trigger.toLowerCase();
     let node = this.root;
 
     for (const char of trigger) {
-      const key = this.normalizeKey(char);
+      const key = char.toLowerCase();
       if (!node.children.has(key)) {
         node.children.set(key, new TrieNode());
       }
@@ -33,15 +30,15 @@ export class SnippetTrie {
     }
 
     node.isEndOfWord = true;
-    node.snippet = snippet;
+    node.snippet = snippet; // Store original snippet with caseSensitive flag
   }
 
   search(text: string): Snippet | null {
-    const searchText = this.caseSensitive ? text : text.toLowerCase();
+    const searchText = text.toLowerCase();
     let node = this.root;
 
     for (const char of searchText) {
-      const key = this.normalizeKey(char);
+      const key = char.toLowerCase();
       if (!node.children.has(key)) {
         return null;
       }

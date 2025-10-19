@@ -4,6 +4,7 @@ export class StorageManager {
   private static snippetCache: Record<string, Snippet> = {};
   private static settingsCache: Settings = DEFAULT_SETTINGS;
   private static initialized = false;
+  private static initPromise: Promise<void> | null = null;
 
   static async initialize(): Promise<void> {
     if (this.initialized) {
@@ -11,7 +12,20 @@ export class StorageManager {
       return;
     }
 
-    // SET THIS IMMEDIATELY to prevent re-entry!!!
+    // Return existing init promise if initialization in progress
+    if (this.initPromise) {
+      return this.initPromise;
+    }
+
+    // Start initialization and cache the promise
+    this.initPromise = this._doInitialize();
+    return this.initPromise;
+  }
+
+  private static async _doInitialize(): Promise<void> {
+    // Defensive - prevent double init
+    if (this.initialized) return;
+
     this.initialized = true;
     console.log('StorageManager: Starting initialization...');
 
@@ -31,7 +45,6 @@ export class StorageManager {
     try {
       // Add timeout to prevent hanging forever
       const TIMEOUT_MS = 5000;
-      console.log(`StorageManager: Getting data with ${TIMEOUT_MS}ms timeout...`);
 
       const data = await Promise.race([
         chrome.storage.local.get(['snippets', 'settings']),
@@ -47,12 +60,10 @@ export class StorageManager {
         if (!snippet.triggerMode) {
           snippet.triggerMode = 'word';
           needsUpdate = true;
-          console.log('StorageManager: Added default triggerMode to snippet', snippet.id);
         }
         if (!snippet.label) {
           snippet.label = snippet.trigger; // Use trigger as label if missing
           needsUpdate = true;
-          console.log('StorageManager: Added default label to snippet', snippet.id);
         }
       }
 
@@ -81,11 +92,9 @@ export class StorageManager {
         if (areaName === 'local') {
           if (changes.snippets) {
             this.snippetCache = changes.snippets.newValue || {};
-            console.log('StorageManager: Snippets updated from external change');
           }
           if (changes.settings) {
             this.settingsCache = changes.settings.newValue || DEFAULT_SETTINGS;
-            console.log('StorageManager: Settings updated from external change');
           }
         }
       });
@@ -93,6 +102,7 @@ export class StorageManager {
       console.log('StorageManager: ✅ Initialized successfully');
     } catch (error) {
       this.initialized = false; // Reset on error
+      this.initPromise = null; // Clear promise cache to allow retry
       console.error('StorageManager: ❌ Failed to initialize:', error);
       throw error;
     }
