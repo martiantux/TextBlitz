@@ -71,8 +71,10 @@ export class CommandParser {
 
     while ((match = regex.exec(text)) !== null) {
       const [rawMatch, type, options] = match;
+      // Normalize clipboardh1-10 to 'clipboard' so case statement matches
+      const normalizedType = type.match(/^clipboardh\d+$/) ? 'clipboard' : type;
       commands.push({
-        type: type as ParsedCommand['type'],
+        type: normalizedType as ParsedCommand['type'],
         options: options?.trim() || undefined,
         startIndex: match.index,
         endIndex: match.index + rawMatch.length,
@@ -372,8 +374,8 @@ export class CommandParser {
           // Check if this is clipboard history (clipboardh1, clipboardh2, etc.)
           const historyMatch = cmd.rawMatch.match(/clipboardh(\d+)/);
           if (historyMatch) {
-            const index = parseInt(historyMatch[1], 10) - 1; // h1 = index 0, h2 = index 1
-            replacement = this.clipboardHistory[index] || '';
+            const index = parseInt(historyMatch[1], 10); // h1 = index 1, h2 = index 2
+            replacement = this.getClipboardHistory(index);
           } else {
             // Regular clipboard - read current and update history
             try {

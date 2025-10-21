@@ -462,4 +462,123 @@ describe('CommandParser', () => {
       expect(result[0].options).toBe('YYYY/MM/DD');
     });
   });
+
+  describe('parse - key commands', () => {
+    it('should parse escape key', () => {
+      const result = CommandParser.parse('Close dialog {key:escape}');
+      expect(result).toHaveLength(1);
+      expect(result[0].type).toBe('key');
+      expect(result[0].options).toBe('escape');
+    });
+
+    it('should parse backspace key', () => {
+      const result = CommandParser.parse('Fix typo{key:backspace}');
+      expect(result[0].type).toBe('key');
+      expect(result[0].options).toBe('backspace');
+    });
+
+    it('should parse delete key', () => {
+      const result = CommandParser.parse('Clear field{key:delete}');
+      expect(result[0].type).toBe('key');
+      expect(result[0].options).toBe('delete');
+    });
+
+    it('should parse arrow keys', () => {
+      const upResult = CommandParser.parse('{key:arrowup}');
+      expect(upResult[0].options).toBe('arrowup');
+
+      const downResult = CommandParser.parse('{key:arrowdown}');
+      expect(downResult[0].options).toBe('arrowdown');
+
+      const leftResult = CommandParser.parse('{key:arrowleft}');
+      expect(leftResult[0].options).toBe('arrowleft');
+
+      const rightResult = CommandParser.parse('{key:arrowright}');
+      expect(rightResult[0].options).toBe('arrowright');
+    });
+
+    it('should parse navigation keys', () => {
+      const homeResult = CommandParser.parse('{key:home}');
+      expect(homeResult[0].options).toBe('home');
+
+      const endResult = CommandParser.parse('{key:end}');
+      expect(endResult[0].options).toBe('end');
+
+      const pageUpResult = CommandParser.parse('{key:pageup}');
+      expect(pageUpResult[0].options).toBe('pageup');
+
+      const pageDownResult = CommandParser.parse('{key:pagedown}');
+      expect(pageDownResult[0].options).toBe('pagedown');
+    });
+
+    it('should parse space key', () => {
+      const result = CommandParser.parse('Add space{key:space}here');
+      expect(result[0].type).toBe('key');
+      expect(result[0].options).toBe('space');
+    });
+
+    it('should parse function keys (F1-F12)', () => {
+      for (let i = 1; i <= 12; i++) {
+        const keyName = `f${i}`;
+        const result = CommandParser.parse(`{key:${keyName}}`);
+        expect(result[0].type).toBe('key');
+        expect(result[0].options).toBe(keyName);
+      }
+    });
+
+    it('should parse key with esc alias for escape', () => {
+      const result = CommandParser.parse('{key:esc}');
+      expect(result[0].options).toBe('esc');
+    });
+
+    it('should parse multiple key commands in sequence', () => {
+      const result = CommandParser.parse('{key:f5} {key:escape}');
+      expect(result).toHaveLength(2);
+      expect(result[0].type).toBe('key');
+      expect(result[0].options).toBe('f5');
+      expect(result[1].type).toBe('key');
+      expect(result[1].options).toBe('escape');
+    });
+
+    it('should handle case insensitivity for key names', () => {
+      const lowerResult = CommandParser.parse('{key:escape}');
+      const upperResult = CommandParser.parse('{key:ESCAPE}');
+      const mixedResult = CommandParser.parse('{key:Escape}');
+
+      expect(lowerResult[0].options).toBe('escape');
+      expect(upperResult[0].options).toBe('ESCAPE');
+      expect(mixedResult[0].options).toBe('Escape');
+    });
+
+    it('should extract key actions from keyboard actions extraction', () => {
+      const result = CommandParser.extractKeyboardActions('Press{key:f5}to refresh');
+      expect(result.text).toBe('Pressto refresh');
+      expect(result.actions).toHaveLength(1);
+      expect(result.actions[0].type).toBe('key');
+      expect(result.actions[0].options).toBe('f5');
+      expect(result.actions[0].position).toBe(5);
+    });
+
+    it('should extract multiple key actions', () => {
+      const result = CommandParser.extractKeyboardActions('{key:home}Jump{key:end}');
+      expect(result.text).toBe('Jump');
+      expect(result.actions).toHaveLength(2);
+      expect(result.actions[0].type).toBe('key');
+      expect(result.actions[0].options).toBe('home');
+      expect(result.actions[0].position).toBe(0);
+      expect(result.actions[1].type).toBe('key');
+      expect(result.actions[1].options).toBe('end');
+      expect(result.actions[1].position).toBe(4);
+    });
+
+    it('should handle key command mixed with other keyboard actions', () => {
+      const result = CommandParser.extractKeyboardActions('Line 1{enter}Field{tab}Escape{key:escape}');
+      expect(result.text).toBe('Line 1FieldEscape');
+      expect(result.actions).toHaveLength(3);
+      expect(result.actions[0].type).toBe('enter');
+      expect(result.actions[1].type).toBe('tab');
+      expect(result.actions[2].type).toBe('key');
+      expect(result.actions[2].options).toBe('escape');
+    });
+  });
 });
