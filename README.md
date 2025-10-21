@@ -33,6 +33,7 @@ Built for anyone who types the same things repeatedly.
 - 🔢 **Ordinal dates** - {date:MMMM Do YYYY} → "October 13th, 2025"
 - ⏰ **{time} command** - Insert times with 12h/24h formats
 - 📋 **{clipboard} command** - Insert clipboard content into snippets
+- 📋 **Clipboard history** - Access previous clipboard items ({clipboardh1}, {clipboardh2}, up to 10 items)
 - ⌨️ **{enter} & {tab}** - Simulate keyboard presses for form automation
 - ⏱️ **{delay}** - Pause between actions ({delay +0.3s} or {delay +300ms})
 - 🔑 **{key}** - Simulate keyboard events ({key: Escape}, {key: ArrowDown}, {key: F5})
@@ -71,8 +72,8 @@ Built for anyone who types the same things repeatedly.
 - ✅ **Bug reporting** - Built-in debug report generation for GitHub issues
 - ✅ **Production ready** - Tested on major sites, defensive error handling, modular architecture
 
-### Coming Soon (see ROADMAP.md)
-- 💡 **Inline tooltips** - Contextual help without cluttering UI (v0.9.0+)
+### Future Roadmap
+- 💡 **Inline tooltips** - Contextual help without cluttering UI (v1.0.x)
 - ⚙️ **Power features** - Conditionals, formulas (v1.1.0+ post-launch)
 
 ---

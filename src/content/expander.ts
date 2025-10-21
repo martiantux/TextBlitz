@@ -10,13 +10,7 @@ import { logger } from '../lib/logger';
 import { ElementLockManager } from '../lib/element-lock';
 import { SiteDetector } from '../lib/site-detector';
 
-/**
- * NEW ARCHITECTURE:
- * - Single detection path via input events only
- * - Element-level locking prevents concurrent expansions
- * - Debounced checking prevents event loops
- * - Site-specific handling for Google Docs/React/Vue
- */
+// Single detection path with element-level locking and site-specific handling
 class TextBlitzExpander {
   private trie: SnippetTrie;
   private settings: Settings | null = null;

@@ -1,9 +1,6 @@
 import { StorageManager } from '../../lib/storage';
 import { logger } from '../../lib/logger';
 
-// Configure this URL after deploying the serverless proxy
-const BUG_REPORT_API_URL = 'https://YOUR_VERCEL_FUNCTION_URL/api/create-issue';
-
 class PopupUI {
   constructor() {
     this.initialize();
@@ -194,48 +191,21 @@ class PopupUI {
       // Add formatted logs
       report += logger.formatForGitHub(includeSnippet, snippetData);
 
-      // Check if automated submission is configured
-      const isProxyConfigured = !BUG_REPORT_API_URL.includes('YOUR_VERCEL_FUNCTION_URL');
-
-      if (isProxyConfigured) {
-        try {
-          // Try automated submission first
-          this.showStatus('error', '⏳ Submitting to GitHub...');
-          const response = await fetch(BUG_REPORT_API_URL, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              title: `Bug: ${whatHappened.substring(0, 60)}...`,
-              body: report,
-            }),
-          });
-
-          if (!response.ok) {
-            throw new Error(`Server returned ${response.status}`);
-          }
-
-          const result = await response.json();
-
-          this.showStatus('success', `✅ Bug report submitted! Issue #${result.issueNumber || 'created'}`);
-
-          // Close modal after 2 seconds
-          setTimeout(() => {
-            this.hideBugReportModal();
-          }, 2000);
-          return;
-        } catch (proxyError) {
-          console.warn('Automated submission failed, falling back to clipboard:', proxyError);
-          // Fall through to clipboard fallback
-        }
-      }
-
-      // Fallback: Copy to clipboard
+      // Copy to clipboard
       await navigator.clipboard.writeText(report);
-      this.showStatus('success', '📋 Report copied to clipboard! Please paste at:\ngithub.com/martiantux/TextBlitz/issues/new');
 
-      // Keep modal open so user can see the instructions
+      // Show options for submitting
+      const githubUrl = 'https://github.com/martiantux/TextBlitz/issues/new';
+
+      this.showStatus('success',
+        '📋 Report copied to clipboard!\n\n' +
+        'Submit via:\n' +
+        `• GitHub: ${githubUrl}\n` +
+        `• Email: bradley@hammond.im\n\n` +
+        'Click outside to close'
+      );
+
+      // Keep modal open so user can see the options
 
     } catch (error) {
       console.error('Bug report submission failed:', error);

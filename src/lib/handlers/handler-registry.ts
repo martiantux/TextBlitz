@@ -4,14 +4,7 @@ import { ReactHandler } from './react-handler';
 import { ContentEditableHandler } from './contenteditable-handler';
 import { StandardHandler } from './standard-handler';
 
-/**
- * Handler Registry - manages all site-specific replacement handlers
- *
- * To add support for a new site:
- * 1. Create new handler class extending BaseHandler
- * 2. Add to registry in constructor
- * 3. Handler automatically used when canHandle() returns true
- */
+// Manages site-specific replacement handlers in priority order
 export class HandlerRegistry {
   private handlers: ReplacementHandler[] = [];
   private debugMode = false;
@@ -40,10 +33,7 @@ export class HandlerRegistry {
     });
   }
 
-  /**
-   * Get appropriate handler for element
-   * Returns first handler where canHandle() returns true
-   */
+  // Get first handler that can handle this element
   getHandler(element: HTMLElement): ReplacementHandler | null {
     for (const handler of this.handlers) {
       if (handler.canHandle(element)) {
@@ -56,16 +46,12 @@ export class HandlerRegistry {
     return null;
   }
 
-  /**
-   * Get all handlers that can handle this element (for fallback chain)
-   */
+  // Get all handlers that can handle this element (for fallback chain)
   getHandlerChain(element: HTMLElement): ReplacementHandler[] {
     return this.handlers.filter(h => h.canHandle(element));
   }
 
-  /**
-   * List all registered handlers (for debugging)
-   */
+  // List all registered handlers for debugging
   listHandlers(): string[] {
     return this.handlers.map(h => `${h.name} (priority: ${h.priority})`);
   }

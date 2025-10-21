@@ -5,16 +5,7 @@ import { logger } from './logger';
 import { HandlerRegistry } from './handlers/handler-registry';
 import { ElementLockManager } from './element-lock';
 
-/**
- * NEW TextReplacer - Uses modular handler system
- *
- * Key improvements:
- * - Modular handlers for different sites
- * - Easy to add new site support
- * - Fallback chain if handler fails
- * - Comprehensive logging
- * - Content verification
- */
+// Modular handler system for site-specific text replacement
 export class TextReplacer {
   private static debugMode = false;
   private static registry = new HandlerRegistry();
@@ -31,16 +22,7 @@ export class TextReplacer {
     }
   }
 
-  /**
-   * Main replacement method
-   *
-   * @param element - Target element
-   * @param trigger - Trigger text to replace
-   * @param expansion - Replacement text
-   * @param caseTransform - Optional case transformation
-   * @param typedTrigger - Actual typed trigger (may differ in case)
-   * @returns true if replacement succeeded
-   */
+  // Replace trigger with expansion in element, handling case transformation
   static async replace(
     element: HTMLElement,
     trigger: string,

@@ -14,8 +14,13 @@ export interface ParsedCommand {
 }
 
 export class CommandParser {
+  // Clipboard history storage (max 10 items)
+  private static clipboardHistory: string[] = [];
+  private static readonly MAX_HISTORY = 10;
+
   // Match {command} or {command:options} or {command options}
-  private static readonly COMMAND_REGEX = /\{(date|time|clipboard|cursor|enter|tab|delay|site|key)(?:[\s:]([^}]+))?\}/g;
+  // Added clipboardh\d+ for clipboard history (clipboardh1, clipboardh2, etc.)
+  private static readonly COMMAND_REGEX = /\{(date|time|clipboard(?:h\d+)?|cursor|enter|tab|delay|site|key)(?:[\s:]([^}]+))?\}/g;
 
   // Match form commands: {formtext: label=Name}, {formmenu: label=Status; options=Active,Inactive}
   private static readonly FORM_COMMAND_REGEX = /\{(formtext|formparagraph|formmenu|formdate|formtoggle):([^}]+)\}/g;
@@ -178,6 +183,35 @@ export class CommandParser {
     }
   }
 
+  // Add item to clipboard history
+  // History is FIFO: [most recent, 2nd recent, 3rd recent, ...]
+  // clipboardh1 = most recent, clipboardh2 = 2nd recent, etc.
+  private static addToHistory(text: string): void {
+    // Don't add empty or duplicate (if same as last)
+    if (!text || (this.clipboardHistory.length > 0 && this.clipboardHistory[0] === text)) {
+      return;
+    }
+
+    // Add to front of array
+    this.clipboardHistory.unshift(text);
+
+    // Keep only MAX_HISTORY items
+    if (this.clipboardHistory.length > this.MAX_HISTORY) {
+      this.clipboardHistory = this.clipboardHistory.slice(0, this.MAX_HISTORY);
+    }
+  }
+
+  // Get clipboard history item by index (1-based: 1 = most recent)
+  // Returns empty string if index out of bounds
+  static getClipboardHistory(index: number): string {
+    return this.clipboardHistory[index - 1] || '';
+  }
+
+  // Clear clipboard history (useful for privacy)
+  static clearClipboardHistory(): void {
+    this.clipboardHistory = [];
+  }
+
   // Normalize key name and return key info from KEY_MAP
   // Returns null if key not found
   static normalizeKeyName(keyName: string): {code: string; key: string; keyCode?: number} | null {
@@ -335,11 +369,20 @@ export class CommandParser {
           replacement = this.formatTime(now, cmd.options);
           break;
         case 'clipboard':
-          try {
-            replacement = await navigator.clipboard.readText();
-          } catch (e) {
-            console.warn('TextBlitz: Clipboard access denied or unavailable');
-            replacement = cmd.rawMatch; // Keep original if clipboard fails
+          // Check if this is clipboard history (clipboardh1, clipboardh2, etc.)
+          const historyMatch = cmd.rawMatch.match(/clipboardh(\d+)/);
+          if (historyMatch) {
+            const index = parseInt(historyMatch[1], 10) - 1; // h1 = index 0, h2 = index 1
+            replacement = this.clipboardHistory[index] || '';
+          } else {
+            // Regular clipboard - read current and update history
+            try {
+              replacement = await navigator.clipboard.readText();
+              this.addToHistory(replacement);
+            } catch (e) {
+              console.warn('TextBlitz: Clipboard access denied or unavailable');
+              replacement = cmd.rawMatch; // Keep original if clipboard fails
+            }
           }
           break;
         case 'site':

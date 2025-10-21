@@ -222,7 +222,7 @@ Interactive forms with popup UI + advanced organization features
 - [x] 3 curated starter packs created
 - [x] LLM system prompt improved for clean output
 - [x] Pack browser UI in options page with preview and install functionality
-- [ ] Manual testing pending (see BETA_CHECKLIST.md)
+- [x] Manual testing complete
 
 **🎯 Milestone Reached**: TextBlitz v0.6.0 is feature-complete with pack browser UI, curated snippet packs, case transformation, and improved LLM output quality
 
@@ -285,6 +285,7 @@ Consolidated beta release combining site compatibility, testing, and polish. Rea
   - [x] {note} - Internal comments ({note: text} or {note}...{endnote})
   - [x] {site} - Webpage context ({site: domain|title|url|selection})
   - [x] {key: X} - Keyboard events (24 keys: Escape, ArrowDown, F5, etc.)
+  - [x] {clipboardh1-10} - Clipboard history (access last 10 copied items)
 
 - [x] **Bug reporting system:**
   - [x] Built-in debug report generator (getTextBlitzDebugReport())
@@ -310,7 +311,7 @@ Consolidated beta release combining site compatibility, testing, and polish. Rea
 
 - [x] **Feature validation:**
   - [x] All trigger modes work (word, word-both, anywhere)
-  - [x] All commands work (date, time, clipboard, cursor, enter, tab, delay, key, note, site)
+  - [x] All commands work (date, time, clipboard, clipboardh1-10, cursor, enter, tab, delay, key, note, site)
   - [x] Forms work (formtext, formmenu, formdate, formtoggle, formparagraph)
   - [x] Case transformation works (6 modes including match)
   - [x] LLM features work (4 providers, 8 models, usage tracking)
